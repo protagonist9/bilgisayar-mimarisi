@@ -15,11 +15,11 @@
 \begin{tikzpicture}[remember picture, overlay]
 
     % === TAM SAYFA ARKA PLAN GÖRSELİ ===
-    % Görsel yatay formatta; dikeyde sayfayı kaplayacak şekilde ölçekle, yanlarda kırp
+    % Görsel dikey formatta; genişliği sayfaya sığdır, üst/alttan minimal kırpma
     \begin{scope}
         \clip (current page.south west) rectangle (current page.north east);
         \node[inner sep=0pt] at (current page.center) {%
-            \includegraphics[height=\paperheight]{gorseller/kapak-arkaplan.png}%
+            \includegraphics[width=\paperwidth]{gorseller/kapak-arkaplan.png}%
         };
     \end{scope}
 
