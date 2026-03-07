@@ -1,0 +1,48 @@
+name: LaTeX Derleme
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Depoyu indir
+        uses: actions/checkout@v4
+
+      - name: LaTeX derle
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: ana-kitap.tex
+          latexmk_use_lualatex: true
+          extra_system_packages: "biber"
+          # 3 kez derle (çapraz referanslar için)
+          args: "-lualatex -interaction=nonstopmode -file-line-error"
+
+      - name: PDF'i artifact olarak yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilgisayar-mimarisi-pdf
+          path: ana-kitap.pdf
+
+      # Tag push edildiğinde Release oluştur
+      - name: GitHub Release oluştur
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ana-kitap.pdf
+          name: "Bilgisayar Mimarisi ${{ github.ref_name }}"
+          body: |
+            ## Bilgisayar Mimarisi: RISC-V Tabanlı Yaklaşım
+
+            **Sürüm**: ${{ github.ref_name }}
+            **Tarih**: ${{ github.event.head_commit.timestamp }}
+
+            PDF dosyasını indirmek için aşağıdaki bağlantıyı kullanın.
+          draft: false
+          prerelease: false

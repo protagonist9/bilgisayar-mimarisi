@@ -1,0 +1,40 @@
+# LaTeX derleme çıktıları
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lon
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.nav
+*.snm
+*.vrb
+*.xdv
+
+# Derlenen PDF (Releases'den indirilecek)
+*.pdf
+
+# İşletim sistemi dosyaları
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editör dosyaları
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Yedek dosyalar
+*_backup.tex

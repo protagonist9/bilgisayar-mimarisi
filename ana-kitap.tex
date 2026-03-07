@@ -1,0 +1,129 @@
+% =============================================================
+% Bilgisayar Mimarisi
+% Oğuz Ergin
+% =============================================================
+\documentclass[12pt, a4paper, twoside, openright]{book}
+
+% Preamble dosyasını dahil et
+\input{preamble}
+
+% Renk modu seçimi (renkli / iki renkli / tek renkli baskı)
+\input{renk-modu}
+
+% --- Yalnızca belirli bölümü derlemek için (bitince kaldır) ---
+% Şu an yalnızca Bölüm 1 yayında — yeni bölümler eklendikçe güncellenir
+\includeonly{bolum01-giris/bolum01}
+
+\begin{document}
+
+% --- Ön Sayfalar ---
+\frontmatter
+
+% Kapak Sayfası (Devre Tahtası konsepti)
+\input{kapak}
+
+% Künyeli Boş Sayfa
+\cleardoublepage
+\thispagestyle{empty}
+\vspace*{\fill}
+\noindent
+{\small
+\textbf{Bilgisayar Mimarisi} --- RISC-V Tabanlı Yaklaşım\\[3pt]
+Prof.\ Dr.\ Oğuz Ergin\\[6pt]
+1.\ Baskı, \the\year\\[12pt]
+Bu kitap, lisans düzeyinde bilgisayar mimarisi derslerinde ders kitabı
+olarak kullanılmak üzere hazırlanmıştır.\\[6pt]
+Kitaptaki tüm mimari eser fotoğrafları Wikimedia Commons'tan
+Creative Commons (CC BY-SA) lisansı altında alınmıştır.\\[6pt]
+Bu eser CC BY-SA 4.0 lisansı ile lisanslanmıştır.\\
+\url{https://creativecommons.org/licenses/by-sa/4.0/}
+}
+\vspace{2cm}
+
+% İthaf
+\cleardoublepage
+\thispagestyle{empty}
+\vspace*{1.5cm}
+\begin{center}
+\includegraphics[width=0.85\textwidth]{gorseller/ithaf-canakkale.jpg}
+
+\vspace{12pt}
+\textit{\large Vatan uğruna can veren bu ülkenin\\[6pt]
+gerçek mimarlarının anısına \ldots}
+\end{center}
+\vspace*{\fill}
+\cleardoublepage
+
+% Önsöz
+\chapter*{Önsöz}
+\addcontentsline{toc}{chapter}{Önsöz}
+
+Bu kitap, lisans düzeyindeki bilgisayar mimarisi derslerinde kaynak kitap olarak kullanılmak üzere hazırlanmıştır. Kitabın amacı, bilgisayar mühendisliği ve ilgili mühendislik dallarındaki öğrencilere, modern bilgisayar sistemlerinin temel yapısını ve çalışma prensiplerini Türkçe olarak sunmaktır.
+
+Kitap boyunca RISC-V buyruk kümesi mimarisi temel alınmıştır. RISC-V, açık kaynaklı ve modüler yapısıyla hem akademik hem de endüstriyel alanda giderek yaygınlaşan modern bir mimaridir. Bu tercih, öğrencilerin güncel ve geleceğe yönelik bir mimari üzerinden kavramları öğrenmesini sağlamaktadır.
+
+İlk bölümde bilgisayarların tarihsel gelişimi ve temel kavramlar ele alınmaktadır. İkinci bölümde başarım değerlendirmesi, üçüncü bölümde buyruk kümesi mimarisi, dördüncü bölümde aritmetik işlemler, beşinci bölümde işlemci tasarımı ve altıncı bölümde boru hattı yöntemleri anlatılmaktadır. Yedinci bölüm bellek hiyerarşisine, sekizinci bölüm giriş/çıkış sistemlerine ayrılmıştır. Dokuzuncu bölümde çok çekirdekli işlemciler, onuncu bölümde GPU ve hızlandırıcılar, on birinci bölümde ise güncel mimari eğilimleri tartışılmaktadır. Ek~A'da sayı sistemleri ve kodlama, Ek~B'de sayısal tasarım temelleri, Ek~C'de RISC-V referans kartı, Ek~D'de ise uygulamalı çalışma rehberi ve mini projeler sunulmaktadır.
+
+Her bölümün başında, Türkiye'nin mimari mirasından bir eser fotoğrafı yer almaktadır. Bu eserler, bilgisayar mimarisi kavramlarıyla tematik bir bağ kurularak seçilmiştir.
+
+Bu kitabın hazırlanmasında destek ve katkılarından dolayı Kasırga araştırma takımındaki öğrencilerime teşekkür ederim.
+
+\vspace{1cm}
+\begin{flushright}
+\textit{Oğuz Ergin}\\
+Ankara, \the\year
+\end{flushright}
+\cleardoublepage
+
+% İçindekiler
+\tableofcontents
+\cleardoublepage
+\listoffigures
+\cleardoublepage
+\listoftables
+\cleardoublepage
+\listofbilginotlari
+
+% --- Ana İçerik ---
+\mainmatter
+
+\include{bolum01-giris/bolum01}
+\include{bolum02-basarim/bolum02}
+\include{bolum03-buyruk-kumesi/bolum03}
+\include{bolum04-aritmetik/bolum04}
+\include{bolum05-islemci-tasarimi/bolum05}
+\include{bolum06-boru-hatti/bolum06}
+\include{bolum07-bellek/bolum07}
+\include{bolum08-giris-cikis/bolum08}
+\include{bolum09-cok-cekirdekli/bolum09}
+\include{bolum10-gpu-hizlandiricilar/bolum10}
+\include{bolum11-guncel-mimariler/bolum11}
+
+% --- Ekler ---
+\appendix
+\include{ekA-sayi-sistemleri/ekA}
+\include{ekB-sayisal-tasarim/ekB}
+\include{ekC-risc-v-referans/ekC}
+\include{ekD-pratik-rehber/ekD}
+
+% --- Arka Sayfalar ---
+\backmatter
+
+% Terimler Sözlüğü
+\chapter*{Terimler Sözlüğü}
+\addcontentsline{toc}{chapter}{Terimler Sözlüğü}
+\input{terimler-sozlugu}
+
+% Kaynakça (metin içi atıf verilen kaynaklar)
+\printbibliography[keyword=atif, title={Kaynakça}]
+
+% Önerilen Kaynaklar (ek okuma listesi)
+\nocite{*}
+\printbibliography[notkeyword=atif, title={Önerilen Kaynaklar}]
+
+% Dizin
+\printindex
+
+\input{yazar-hakkinda}
+
+\end{document}
