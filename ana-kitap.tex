@@ -71,7 +71,7 @@ Bu kitabın hazırlanmasında destek ve katkılarından dolayı Kasırga araşt�
 \vspace{1cm}
 \begin{flushright}
 \textit{Oğuz Ergin}\\
-Ankara, \the\year
+Sharjah, \the\year
 \end{flushright}
 \cleardoublepage
 
@@ -83,6 +83,26 @@ Ankara, \the\year
 \listoftables
 \cleardoublepage
 \listofbilginotlari
+
+% --- Henüz yayınlanmamış bölümlerin etiketleri ---
+% (includeonly nedeniyle çapraz referanslar ?? göstermesin diye)
+\makeatletter
+\newcommand{\phantomlabel}[2]{%
+  \begingroup
+    \def\@currentlabel{#2}%
+    \label{#1}%
+  \endgroup
+}
+\makeatother
+\phantomlabel{chap:basarim}{2}
+\phantomlabel{chap:buyruk-kumesi}{3}
+\phantomlabel{chap:aritmetik}{4}
+\phantomlabel{chap:islemci-tasarimi}{5}
+\phantomlabel{chap:boruhatti}{6}
+\phantomlabel{chap:bellek}{7}
+\phantomlabel{chap:giris-cikis}{8}
+\phantomlabel{chap:cok-cekirdekli}{9}
+\phantomlabel{chap:gpu-hizlandiricilar}{10}
 
 % --- Ana İçerik ---
 \mainmatter
