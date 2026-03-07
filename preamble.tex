@@ -10,7 +10,12 @@
 
 % --- Yazı Tipi: Libertinus ---
 \usepackage{libertinus}
-\setmonofont{Consolas}[Scale=0.82]    % Monospace: Consolas (Unicode/Türkçe destekli)
+% Monospace: Consolas (Windows) veya DejaVu Sans Mono (Linux/CI)
+\IfFontExistsTF{Consolas}{%
+  \setmonofont{Consolas}[Scale=0.82]%
+}{%
+  \setmonofont{DejaVu Sans Mono}[Scale=0.82]%
+}
 
 % --- Sayfa Düzeni ---
 \usepackage[a4paper, margin=2.5cm, top=3cm, bottom=3cm, headheight=25pt]{geometry}
@@ -55,7 +60,11 @@
 \IfFontExistsTF{Apple Symbols}{%
   \newfontfamily\symbolfont{Apple Symbols}%
 }{%
-  \newfontfamily\symbolfont{Segoe UI Symbol}%
+  \IfFontExistsTF{Segoe UI Symbol}{%
+    \newfontfamily\symbolfont{Segoe UI Symbol}%
+  }{%
+    \newfontfamily\symbolfont{DejaVu Sans}%
+  }%
 }
 \AtBeginDocument{\def\checkmark{{\symbolfont ✓}}}
 
@@ -183,6 +192,7 @@
 \makeindex
 
 % --- Özel Ortamlar (Environments) ---
+\usepackage{multicol}
 \usepackage{tcolorbox}
 \tcbuselibrary{breakable, skins}
 
