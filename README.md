@@ -40,10 +40,10 @@ Bu kitap, RISC-V buyruk kümesi mimarisi temelinde yazılmış Türkçe bir bilg
 | 9 | Çok Çekirdekli İşlemciler | 🔧 Hazırlanıyor |
 | 10 | GPU ve Hızlandırıcılar | 🔧 Hazırlanıyor |
 | 11 | Güncel Mimariler | 🔧 Hazırlanıyor |
-| Ek A | Sayı Sistemleri | 🔧 Hazırlanıyor |
-| Ek B | Sayısal Tasarım | 🔧 Hazırlanıyor |
-| Ek C | RISC-V Referans | 🔧 Hazırlanıyor |
-| Ek D | Pratik Rehber | 🔧 Hazırlanıyor |
+| Ek A | Sayı Sistemleri ve Kodlama | ✅ Yayında |
+| Ek B | Sayısal Tasarım Temelleri | 🔧 Hazırlanıyor |
+| Ek C | RISC-V Referans Kartı | ✅ Yayında |
+| Ek D | Uygulamalı Çalışma Rehberi | ✅ Yayında |
 
 ## Derleme
 
