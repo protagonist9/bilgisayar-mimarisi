@@ -2,6 +2,35 @@
 % Bilgisayar Mimarisi Kitabı - Kaynakça
 % =============================================================
 
+@article{moore1965,
+    author    = {Moore, Gordon E.},
+    title     = {Cramming More Components onto Integrated Circuits},
+    journal   = {Electronics},
+    volume    = {38},
+    number    = {8},
+    pages     = {114--117},
+    year      = {1965},
+}
+
+@article{kilby1964,
+    author    = {Kilby, Jack S.},
+    title     = {Miniaturized Electronic Circuits},
+    journal   = {US Patent},
+    number    = {3,138,743},
+    year      = {1964},
+    note      = {İlk tümleşik devre patenti},
+}
+
+@article{gustafson1988,
+    author    = {Gustafson, John L.},
+    title     = {Reevaluating {Amdahl's} Law},
+    journal   = {Communications of the ACM},
+    volume    = {31},
+    number    = {5},
+    pages     = {532--533},
+    year      = {1988},
+}
+
 @book{patterson2020,
     author    = {Patterson, David A. and Hennessy, John L.},
     title     = {Computer Organization and Design: The Hardware/Software Interface},
@@ -127,5 +156,125 @@
     year      = {2001},
     pages     = {197--206},
     doi       = {10.1109/HPCA.2001.903263},
+    keywords  = {atif},
+}
+
+% =============================================================
+% Sınama Programı Kümeleri (Benchmarks)
+% =============================================================
+
+@inproceedings{bucek2018,
+    author    = {Bucek, James and Lange, Klaus-Dieter and v. Kistowski, J\'{o}akim},
+    title     = {{SPEC CPU2017}: Next-Generation Compute Benchmark},
+    booktitle = {Companion of the 2018 ACM/SPEC International Conference on Performance Engineering (ICPE)},
+    year      = {2018},
+    pages     = {41--42},
+    publisher = {ACM},
+    doi       = {10.1145/3185768.3185771},
+    keywords  = {atif},
+}
+
+@article{henning2006,
+    author  = {Henning, John L.},
+    title   = {{SPEC CPU2006} Benchmark Descriptions},
+    journal = {ACM SIGARCH Computer Architecture News},
+    volume  = {34},
+    number  = {4},
+    pages   = {1--17},
+    year    = {2006},
+    doi     = {10.1145/1186736.1186737},
+    keywords = {atif},
+}
+
+@techreport{galon2012,
+    author      = {Gal-On, Shay and Levy, Markus},
+    title       = {Exploring {CoreMark} -- A Benchmark Maximizing Simplicity and Efficacy},
+    institution = {EEMBC (Embedded Microprocessor Benchmark Consortium)},
+    year        = {2012},
+    url         = {https://www.eembc.org/techlit/articles/coremark-whitepaper.pdf},
+    keywords    = {atif},
+}
+
+@inproceedings{bienia2008,
+    author    = {Bienia, Christian and Kumar, Sanjeev and Singh, Jaswinder Pal and Li, Kai},
+    title     = {The {PARSEC} Benchmark Suite: Characterization and Architectural Implications},
+    booktitle = {Proceedings of the 17th International Conference on Parallel Architectures and Compilation Techniques (PACT)},
+    year      = {2008},
+    pages     = {72--81},
+    publisher = {ACM},
+    doi       = {10.1145/1454115.1454128},
+    keywords  = {atif},
+}
+
+@inproceedings{woo1995,
+    author    = {Woo, Steven Cameron and Ohara, Moriyoshi and Torrie, Evan and Singh, Jaswinder Pal and Gupta, Anoop},
+    title     = {The {SPLASH-2} Programs: Characterization and Methodological Considerations},
+    booktitle = {Proceedings of the 22nd Annual International Symposium on Computer Architecture (ISCA)},
+    year      = {1995},
+    pages     = {24--36},
+    publisher = {ACM},
+    doi       = {10.1145/223982.223990},
+    keywords  = {atif},
+}
+
+@misc{tpc,
+    author       = {{Transaction Processing Performance Council}},
+    title        = {{TPC} Benchmarks},
+    howpublished = {\url{https://www.tpc.org/}},
+    year         = {2024},
+    keywords     = {atif},
+}
+
+@article{dongarra2003,
+    author  = {Dongarra, Jack J. and Luszczek, Piotr and Petitet, Antoine},
+    title   = {The {LINPACK} Benchmark: Past, Present and Future},
+    journal = {Concurrency and Computation: Practice and Experience},
+    volume  = {15},
+    number  = {9},
+    pages   = {803--820},
+    year    = {2003},
+    doi     = {10.1002/cpe.728},
+    keywords = {atif},
+}
+
+@inproceedings{mattson2020,
+    author    = {Mattson, Peter and Cheng, Christine and Coleman, Cody and Diamos, Greg and Micikevicius, Paulius and Patterson, David and Tang, Hanlin and Wei, Gu-Yeon and others},
+    title     = {{MLPerf} Training Benchmark},
+    booktitle = {Proceedings of Machine Learning and Systems (MLSys)},
+    volume    = {2},
+    pages     = {336--349},
+    year      = {2020},
+    keywords  = {atif},
+}
+
+@misc{geekbench,
+    author       = {{Primate Labs}},
+    title        = {Geekbench 6 -- Cross-Platform Benchmark},
+    howpublished = {\url{https://www.geekbench.com/}},
+    year         = {2023},
+    keywords     = {atif},
+}
+
+% =============================================================
+% Amdahl Yasası
+% =============================================================
+
+@inproceedings{amdahl1967,
+    author    = {Amdahl, Gene M.},
+    title     = {Validity of the Single Processor Approach to Achieving Large Scale Computing Capabilities},
+    booktitle = {Proceedings of the AFIPS Spring Joint Computer Conference},
+    year      = {1967},
+    pages     = {483--485},
+    publisher = {ACM},
+    doi       = {10.1145/1465482.1465560},
+    keywords  = {atif},
+}
+
+@techreport{vonneumann1945,
+    author    = {Von Neumann, John},
+    title     = {First Draft of a Report on the {EDVAC}},
+    institution = {University of Pennsylvania, Moore School of Electrical Engineering},
+    year      = {1945},
+    note      = {Contract No.\ W-670-ORD-4926},
     keywords  = {atif},
 }

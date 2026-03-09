@@ -1,0 +1,2272 @@
+% =============================================================
+% Bölüm 2: Bilgisayar Başarımı
+% =============================================================
+\chapter{Bilgisayar Başarımı}
+\label{chap:basarim}
+\bolumfoto{gorseller/bolum02-dolmabahce.jpg}{Dolmabahçe Sarayı Saat Kulesi -- İstanbul}
+
+\begin{tcolorbox}[
+    colback=blokyesil!15,
+    colframe=sinyalyesil!60!black,
+    title={\textbf{Öğrenme Hedefleri}},
+    fonttitle=\bfseries,
+    rounded corners,
+    boxrule=0.8pt
+]
+Bu bölümü tamamladığınızda aşağıdakileri yapabileceksiniz:
+\begin{itemize}[nosep, leftmargin=*]
+    \item Başarım kavramını tanımlamak ve farklı iş yükleri için başarım ölçütlerini ayırt etmek.
+    \item Yürütme zamanı denklemini (buyruk sayısı, BBÇ, saat sıklığı) kurmak ve hesaplama yapmak.
+    \item İşlem hacmi ile gecikme arasındaki farkı açıklamak.
+    \item MIPS, MFLOPS ve FLOPS ölçütlerinin güçlü ve zayıf yönlerini tartışmak.
+    \item SPEC sınama programlarının nasıl çalıştığını ve SPEC puanının nasıl hesaplandığını açıklamak.
+    \item Amdahl Yasası'nı uygulamak ve hızlanma üst sınırını hesaplamak.
+    \item Gustafson Yasası'nın Amdahl'dan farkını gerekçelendirmek.
+    \item Bellek duvarı ve güç-başarım dengesinin mimari tasarıma etkisini tartışmak.
+\end{itemize}
+\end{tcolorbox}
+
+``Hangi bilgisayar daha hızlı?'' Basit görünen bu soru, aslında basit bir yanıtı olmayan bir sorudur. Bir süper bilgisayar hava tahmin modelini saniyeler içinde çözebilir; ancak aynı makineyi bir akıllı telefon uygulaması çalıştırmak için kullanmak anlamsız olur. \emph{Başarım}\index{başarım} (performans), bir bilgisayarın belirli bir iş yükünü ne kadar verimli gerçekleştirdiğini ölçen kavramdır ve ``hızlı'' kelimesinin ne anlama geldiği iş yüküne göre değişir.
+
+Aslında ``Hangi bilgisayar daha hızlı?'' sorusundan önce sorulması gereken çok daha temel bir soru vardır: \emph{``Sen bu bilgisayarla ne yapacaksın?''} Bu soruya verilen yanıt, kişiden kişiye kökten değişir:
+\begin{itemize}[nosep]
+    \item Bir \textbf{öğrenci} ``Ödev yapacağım, kod yazacağım, ara sıra oyun oynayacağım'' der --- ona yeterli tepki süresi ve makul bir fiyat gerekir.
+    \item Bir \textbf{oyun geliştiricisi} ``Saniyede 120 kare ile gerçek zamanlı 3B sahne çizeceğim'' der --- düşük gecikme ve güçlü bir grafik işlemcisi ister.
+    \item Bir \textbf{veri merkezi yöneticisi} ``Saniyede yüz bin örün isteğine yanıt vereceğim'' der --- yüksek işlem hacmi ve enerji verimliliği arar.
+    \item Bir \textbf{gömülü sistem mühendisi} ``Sensör verisini on yıl boyunca pille işleyeceğim'' der --- en düşük güç tüketimi birincil hedeftir.
+    \item Bir \textbf{yapay zekâ araştırmacısı} ``Milyarlarca parametreli bir modeli eğiteceğim'' der --- maksimum hesaplama gücü ve bellek bant genişliği arar.
+\end{itemize}
+Görüldüğü gibi herkes ``hızlı bir bilgisayar'' istemektedir; ama ``hızlı'' kelimesinin anlamı herkes için farklıdır. Gereksinimler tanımlanmadan ölçüt seçilemez; ölçüt seçilmeden ölçüm yapılamaz. Bu yüzden bu bölüme ``Hangi bilgisayar daha hızlı?'' sorusunun ötesine geçerek, ``İyi başarım \emph{kimin için} ve \emph{neye göre} tanımlanır?'' sorusuyla başlıyoruz.
+
+\begin{terimnotu}
+\textbf{başarım} (\emph{performance})\,: \emph{Başarmak} (to accomplish) fiilinden \emph{-ım} ekiyle. Bir sistemin bir işi ne kadar ``başarıyla'' gerçekleştirdiğinin ölçüsüdür. Fransızca kökenli \emph{performans} sözcüğünün Türkçe karşılığı olarak türetilmiştir.\\[4pt]
+\textbf{sınama programı} (\emph{benchmark})\,: \emph{Sınamak} (to test) fiilinden \emph{-ma} ekiyle oluşan \emph{sınama} ve \emph{program} sözcüklerinin birleşimi. Bir sistemin başarımını ölçmek için kullanılan standart test programıdır. İngilizce \emph{benchmark} ``referans noktası'' anlamına gelir. Bazı kaynaklarda \emph{denektaşı} (deneme taşı --- kuyumcuların altın ayarını sınadığı taş) terimi de kullanılır; bu kitapta \emph{sınama programı} tercih edilmiştir.
+\end{terimnotu}
+
+Bir otomobil alırken yalnızca en yüksek hızına bakılmaz; yakıt tüketimi, güvenlik donanımı, konfor düzeyi ve fiyatı da değerlendirilir. Bilgisayar başarımı da öyle: tek bir sayıya indirgemek yerine iş yükünün niteliğine uygun ölçütleri birlikte ele almak gerekir. Bu bölümde önce gereksinimlerin nasıl belirlendiğini, ardından başarımın nasıl tanımlanıp ölçüldüğünü, FLOPS ve SPEC gibi karşılaştırma ölçütlerini, tarihsel başarım eğilimlerini ve Amdahl Yasası'nın tasarım kararlarına etkisini ele alacağız.
+
+
+% -----------------------------------------------------------------
+% 2.1 Gereksinim Belirleme
+% -----------------------------------------------------------------
+\section{Gereksinim Belirleme}
+\label{sec:gereksinim-belirleme}
+
+Bir bilgisayar mimarı, tasarıma başlamadan önce sistemin hangi koşullarda, hangi iş yüklerini, hangi kısıtlar altında çalıştırması gerektiğini tanımlamalıdır. Bu süreç \emph{gereksinim belirleme}\index{gereksinim belirleme} olarak adlandırılır ve başarım ölçümünün mantıksal ilk adımıdır.
+
+\begin{tanim}[Tasarım İlkesi 0: Önce gereksinimleri belirle]
+Başarımı ölçmek için önce neyin ``başarılı'' sayılacağını tanımlamak gerekir\index{gereksinim}. Gereksinimler tanımlanmadan seçilen herhangi bir ölçüt --- saat sıklığı, MIPS ya da FLOPS --- yanıltıcı sonuçlar verebilir. Doğru soru ``Bu bilgisayar hızlı mı?'' değil, ``Bu bilgisayar \emph{hedeflenen iş yükünü kabul edilebilir kısıtlar altında} çalıştırabiliyor mu?'' sorusudur.
+\end{tanim}
+
+
+\subsection{Gereksinimden Ölçüme Giden Yol}
+\label{subsec:gereksinimden-olcume}
+
+Başarım değerlendirmesi üç aşamalı bir süreçtir. Şekil~\ref{fig:gereksinim-dongusu}'nde gösterildiği gibi bu aşamalar döngüsel bir ilişki içindedir: ölçüm sonuçları gereksinimlerin yeniden gözden geçirilmesine yol açabilir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=0.82, every node/.style={transform shape},
+    kutu/.style={draw, line width=1.2pt, rounded corners=8pt,
+        minimum width=3.4cm, minimum height=1.2cm,
+        font=\normalsize\bfseries, align=center,
+        drop shadow={shadow xshift=0.4mm, shadow yshift=-0.4mm, opacity=0.12}},
+    ok/.style={->, line width=2.2pt}
+]
+    % Simetrik bounding box: "Gereksinim Belirleme" kutusunu sayfa ortasına hizalar
+    \useasboundingbox (-8.5,-4.2) rectangle (8.5,3.5);
+    % Kutular: üçgen yerleşim, alt kutular yanlara açık
+    \node[kutu, fill=blokyesil] (ger) at (0, 2.8)     {Gereksinim\\Belirleme};
+    \node[kutu, fill=blokmavi]  (olc) at (-3.8, -2.0)  {Ölçüt\\Seçimi};
+    \node[kutu, fill=bloksari]  (olm) at (3.8, -2.0)   {Ölçüm ve\\Değerlendirme};
+
+    % --- Oklar: kutu kenarından kenarına, dışarıdan kavisli ---
+    % Yön: Gereksinim → Ölçüt → Ölçüm → Gereksinim (saat yönü)
+
+    % Ok 1: Gereksinim → Ölçüt  (sol taraf)
+    \draw[ok, sinyalyesil!70!black]
+        (ger.210) to[bend right=35] (olc.50);
+
+    % Ok 2: Ölçüt → Ölçüm  (alt taraf)
+    \draw[ok, sinyalmavi!70!black]
+        (olc.330) to[bend right=35] (olm.210);
+
+    % Ok 3: Ölçüm → Gereksinim  (sağ taraf)
+    \draw[ok, sinyalkirmizi!70!black]
+        (olm.130) to[bend right=35] (ger.330);
+
+    % --- Etiketler: okların orta noktasında, dış tarafta ---
+    \node[font=\normalsize, text=gray!60!black, align=right, anchor=east]
+        at (-3.6, 0.5) {``Ne istiyoruz?''\\sorusunun yanıtı};
+    \node[font=\normalsize, text=gray!60!black, align=center, anchor=north]
+        at (0, -3.8) {Uygun ölçüt ve yöntem};
+    \node[font=\normalsize, text=gray!60!black, align=left, anchor=west]
+        at (3.6, 0.5) {Sonuçlar gereksinimleri\\karşılıyor mu?};
+\end{tikzpicture}
+\caption{Gereksinimden ölçüme giden üç aşamalı döngü}
+\label{fig:gereksinim-dongusu}
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Gereksinim belirleme:} Sistemin hangi iş yükünü çalıştıracağı, kabul edilebilir gecikme ve işlem hacmi değerleri, güç ve maliyet bütçesi tanımlanır.
+    \item \textbf{Ölçüt seçimi:} Gereksinimlere uygun başarım ölçütleri (yürütme zamanı, işlem hacmi, FLOPS/watt vb.) belirlenir.
+    \item \textbf{Ölçüm ve değerlendirme:} Seçilen ölçütler standart iş yükleri üzerinde ölçülür ve sonuçlar gereksinimlerle karşılaştırılır. Gereksinimler karşılanmıyorsa döngü yeniden başlar.
+\end{enumerate}
+
+
+\subsection{Uygulama Alanlarına Göre Gereksinimler}
+\label{subsec:uygulama-gereksinimleri}
+
+Farklı uygulama alanları temelden farklı başarım gereksinimleri ortaya koyar. Tablo~\ref{tab:gereksinim-matrisi}, altı temel uygulama alanını birincil gereksinim, kısıt ve tipik ölçüt açısından karşılaştırmaktadır.
+
+\begin{table}[H]
+\centering
+\caption{Uygulama alanlarına göre başarım gereksinimleri}
+\label{tab:gereksinim-matrisi}
+\small
+\begin{tabular}{lp{2.8cm}p{2.8cm}p{2.8cm}}
+\toprule
+\textbf{Uygulama alanı} & \textbf{Birincil gereksinim} & \textbf{Temel kısıt} & \textbf{Tipik ölçüt} \\
+\midrule
+Gömülü / IoT          & Düşük güç, düşük maliyet & Sınırlı alan ve pil & mW/işlem \\
+Masaüstü / oyun       & Düşük gecikme            & Maliyet, gürültü     & Yürütme zamanı (ms) \\
+Sunucu / bulut        & Yüksek işlem hacmi             & Enerji, soğutma      & İşlem/sn/watt \\
+Mobil                 & Pil ömrü, tepki süresi   & Termal kısıt         & FLOPS/watt \\
+YZ eğitimi            & Maksimum hesaplama gücü  & Bellek bant genişliği & TFLOPS (FP16/BF16) \\
+HPC / bilimsel        & Çift duyarlık başarımı   & Ölçeklenebilirlik    & FP64 PFLOPS \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Bu tablodan önemli bir sonuç çıkar: ``en iyi bilgisayar'' diye evrensel bir kavram yoktur. Bir süper bilgisayar, bilimsel hesaplama için en iyisi olabilir ama bir akıllı saatin içine sığmaz; bir IoT sensör düğümü on yıl pille çalışabilir ama bir derin öğrenme modeli eğitemez. Dolayısıyla başarım her zaman \emph{bağlama göre} tanımlanmalıdır.
+
+
+\begin{ornek}[2.1]
+Bir video sıkıştırma yazılımı üç farklı platformda çalıştırılacaktır. Her platformun gereksinimlerini ve uygun başarım ölçütünü belirleyin.
+
+\begin{center}
+\small
+\begin{tabular}{lp{4.5cm}l}
+\toprule
+\textbf{Platform} & \textbf{Senaryo} & \textbf{Uygun ölçüt} \\
+\midrule
+Akıllı telefon & Kullanıcı kısa video kaydeder; pil ömrü can alıcı & Kare/joule \\
+Masaüstü & Video editörü gerçek zamanlı önizleme ister & Kare/saniye \\
+Yayın sunucusu & Binlerce kullanıcıya eş zamanlı yayın & Eş zamanlı akış/sunucu \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Çözüm:} Aynı yazılım, üç farklı platformda üç farklı ölçütle değerlendirilmelidir. Akıllı telefonda enerji başına kare sayısı (kare/joule), masaüstünde saniye başına kare sayısı (kare/saniye --- bir gecikme ölçütü), yayın sunucusunda ise eş zamanlı akış sayısı (işlem hacmi ölçütü) birincil başarım göstergesidir. Yalnızca ``saniye başına kare'' ölçerek üç platformu karşılaştırmak yanıltıcı sonuçlar verir.
+\end{ornek}
+
+
+\begin{bilginot}[Yanlış Ölçütle Ölçmek: Goodhart Yasası]
+İngiliz iktisatçı Charles Goodhart\index{Goodhart yasası} 1975'te şu gözlemi formüle etmiştir: ``Bir ölçüt hedefe dönüştüğünde, iyi bir ölçüt olmaktan çıkar.'' Bu ilke bilgisayar mimarisinde de geçerlidir. 2000'li yılların başında işlemci üreticileri saat sıklığını (GHz) pazarlama aracı olarak kullandığında, tasarımlar yalnızca saat sıklığını artırmaya yöneldi --- daha derin boru hatları, daha yüksek güç tüketimi ve bazı iş yüklerinde düşen gerçek başarım. Intel'in Pentium~4 serisi bu tuzağın somut bir örneğidir: 3,8\,GHz'lik Pentium~4, birçok iş yükünde 2\,GHz'lik rakiplerinden yavaş çalışıyordu. Ölçüt seçimi, gereksinimlerden bağımsız yapıldığında benzer tuzaklara düşme riski her zaman vardır.
+\end{bilginot}
+
+
+% -----------------------------------------------------------------
+% 2.2 Başarım Ölçütleri
+% -----------------------------------------------------------------
+\section{Başarım Ölçütleri}
+\label{sec:basarim-olcut}
+
+Gereksinimler belirlendikten sonra sıra, bu gereksinimleri somut sayılara dönüştürecek ölçütlerin tanımlanmasına gelir. Sayısal devrelerde hiçbir işlem sıfır zamanda gerçekleşmez; yapılan her işlemin devre düzeyinde bir gecikmesi vardır. Bu yüzden başarımın en temel ölçüsü, bir işin tamamlanması için geçen süredir. Peki bu süreyi neler belirler? Bu alt bölümde yürütme zamanını oluşturan bileşenleri teker teker inceleyelim.
+
+\subsection{Yürütme Zamanı}
+\label{subsec:yurutme-zamani}
+
+Sayısal devrelerin başarımı her zaman \emph{zaman} ile ölçülür. Bir mantık devresine giriş verildiği andan doğru çıkışın elde edildiği ana kadar geçen süre, o devrenin hızını belirler. Bir toplayıcı devresi iki sayıyı 2~nanosaniyede topluyorsa, aynı işi 5~nanosaniyede yapan bir toplayıcıdan daha hızlıdır. Aynı ilke bilgisayar düzeyinde de geçerlidir: bir programın başlatılmasından tamamlanmasına kadar geçen süre, o bilgisayarın ilgili iş yükündeki başarımının en doğrudan göstergesidir.
+
+Bir işin başlangıcı ile bitişi arasında geçen bu süreye \emph{yürütme zamanı}\index{yürütme zamanı} ya da tepki zamanı (\emph{execution time}) denir. Yürütme zamanı ile başarım arasındaki ilişki ters orantılıdır: süre ne kadar kısaysa başarım o kadar yüksektir. Tıpkı bir maratoncu gibi --- İstanbul Maratonu'nu 2~saatte koşan atlet, 3~saatte koşandan daha başarılıdır çünkü aynı işi daha kısa sürede tamamlamıştır. Bu ters orantıyı şöyle ifade ederiz:
+
+\begin{equation}
+\text{Başarım} \propto \frac{1}{\text{Yürütme zamanı}}
+\label{eq:basarim}
+\end{equation}
+
+Burada $\propto$ simgesi ``ile orantılıdır'' anlamına gelir. Bu ifadeyi bir \emph{eşitlik} olarak yazmak ($\text{Başarım} = 1/\text{Yürütme zamanı}$) cazip görünse de o zaman başarımın birimi $1/\text{saniye}$ --- hertz (Hz) --- olurdu --- ki bu fiziksel olarak anlamsızdır. ``Bu bilgisayarın başarımı 0,1~Hz'dir'' demek ne bir mühendise ne de bir kullanıcıya bir şey ifade eder.
+
+Gerçekte başarım her zaman \emph{karşılaştırmalı} olarak ölçülür\index{karşılaştırmalı başarım}. ``Bu bilgisayar hızlıdır'' cümlesi tek başına eksiktir; ``Bu bilgisayar \emph{şu bilgisayardan} hızlıdır'' ya da ``Bu bilgisayar \emph{geçen yılki modelden} hızlıdır'' demek gerekir. Günlük hayatta da böyle yaparız: yeni çıkan bir akıllı telefonun tanıtımında ``önceki modelden \%30 daha hızlı'' denir, ``başarımı 0,05~Hz'dir'' denmez. Yeni bir otomobil tanıtılırken ``0--100~km/sa hızlanma 4,5~saniye'' dendiğinde bile zihinsel olarak bunu bildiğimiz başka otomobillerle karşılaştırırız.
+
+İşte bu nedenle başarımın doğal ifade biçimi iki sistemin \emph{oranıdır}:
+\begin{equation}
+\frac{\text{Başarım}_A}{\text{Başarım}_B} = \frac{\text{Yürütme zamanı}_B}{\text{Yürütme zamanı}_A} = n
+\label{eq:basarim-karsilastirma}
+\end{equation}
+
+\noindent ``A, B'den $n$ kat hızlıdır'' demek, A'nın aynı programı B'den $n$~kat daha kısa sürede çalıştırdığı anlamına gelir. Oran hesabında orantı sabiti sadeleştiği için birim sorunu ortadan kalkar. Örneğin bir program A~bilgisayarında 20~saniyede, B~bilgisayarında 60~saniyede tamamlanıyorsa A, B'den $60/20 = 3$ kat hızlıdır. Önemli olan 20~saniyenin mutlak değeri değil, B'ye göre 3 kat daha kısa olmasıdır.
+
+\begin{bilginot}[``2~kat daha hızlı'' mı, ``2~katı kadar hızlı'' mı?]
+Günlük dilde ``A, B'den 2~kat \emph{daha} hızlı'' ile ``A, B'nin 2~\emph{katı kadar} hızlı'' ifadeleri sıklıkla birbirinin yerine kullanılır; ancak dikkatli okunduğunda farklı anlamlara gelebilir. ``2~katı kadar hızlı'' açıkça hızlanma $= 2$ demektir: A'nın başarımı B'nin başarımının 2 katıdır. ``2~kat \emph{daha} hızlı'' ise B'nin hızına ek olarak 2~kat fazlasını --- toplam 3~katı --- ima edebilir; tıpkı ``100~TL'den 50~TL \emph{daha} fazla'' dendiğinde 150~TL anlaşılması gibi.
+
+Mühendislik ve bilimsel yazında bu belirsizlikten kaçınmak gerekir. Bu kitapta ``$n$~kat hızlı'' ve ``$n$~kat daha hızlı'' ifadelerinin her ikisi de Denklem~\ref{eq:basarim-karsilastirma}'daki oranı, başka deyişle \emph{hızlanma $= n$} anlamını taşır. Belirsizlik riski olan yerlerde oran doğrudan verilmelidir: ``A'nın yürütme zamanı B'nin yarısıdır'' ya da ``hızlanma 2$\times$'' gibi.
+\end{bilginot}
+
+Başarımın bu karşılaştırmalı doğası önemli bir sonuç doğurur: \emph{mutlak başarım} diye bir kavram yoktur\index{mutlak başarım}. Hiçbir bilgisayar için ``bu bilgisayarın başarımı şu kadardır'' gibi tek başına anlamlı bir sayı verilemez --- başarım her zaman bir referansa göre ölçülür. Dahası, her sistem daha iyisini yapabilecek bir tasarımla karşılaştırılabilir; her zaman daha hızlı bir çözüm üretilebilir. Bugünün en hızlı süper bilgisayarı, birkaç yıl sonra orta düzey bir sistemin gerisinde kalabilir. Bu gerçek, bilgisayar mimarisini sürekli gelişen bir mühendislik alanı kılar: bugünün en iyi tasarımı, yarının başlangıç noktasıdır.
+
+Yürütme zamanı iki farklı biçimde ölçülebilir:
+
+\begin{itemize}
+    \item \textbf{Geçen zaman}\index{geçen zaman} (elapsed time / wall-clock time): Programın başlatılmasından tamamlanmasına kadar duvardaki saatte geçen toplam süre. Disk erişimi, bellek erişimi, giriş/çıkış (G/Ç) bekleme süreleri ve işletim sisteminin diğer programlara ayırdığı zaman dilimlerini de kapsar.
+    \item \textbf{MİB zamanı}\index{MİB zamanı} (CPU time): Yalnızca işlemcinin ilgili program için harcadığı süre. G/Ç bekleme süreleri ve başka programların yürütülmesine ayrılan zaman dahil değildir.
+\end{itemize}
+
+MİB zamanı kendi içinde de ikiye ayrılır: \emph{kullanıcı MİB zamanı}\index{kullanıcı MİB zamanı} (programın kendi buyruklarının yürütülmesi) ve \emph{sistem MİB zamanı}\index{sistem MİB zamanı} (program adına çalışan işletim sistemi çağrıları). Başarım karşılaştırmalarında genellikle \emph{kullanıcı MİB zamanı} tercih edilir çünkü işletim sistemi ek yükü, G/Ç süreleri ve sistemdeki diğer programlar donanımdan bağımsız olarak değişkenlik gösterir. Bir programın geçen zamanı 10 saniye olabilir ama bunun yalnızca 3~saniyesi gerçekten işlemcide harcanmış, geri kalanı diskten veri okunması beklenilerek geçirilmiş olabilir.
+
+\noindent Bu kitapta aksi belirtilmedikçe ``yürütme zamanı'' ile \emph{MİB zamanını} kastediyoruz. Denklem~\ref{eq:basarim}'deki ters orantı ve Denklem~\ref{eq:basarim-karsilastirma}'deki karşılaştırma da bu MİB zamanı üzerine kuruludur.
+
+\subsection{Saat Sıklığı ve Çevrim Zamanı}
+\label{subsec:saat-sikligi}
+
+Bir kadırgadaki davulcuyu düşünün: davulcu düzenli aralıklarla davula vurur ve her vuruşta tüm kürekçiler aynı anda kürek çeker. Davulcu hızlanırsa kadırga hızlanır; ama kürekçiler yetişemeyecek kadar hızlı vurursa düzen bozulur. İşlemcideki \emph{saat sinyali}\index{saat sinyali} tam olarak bu davulcunun rolünü üstlenir: düzenli aralıklarla yükselen ve düşen bir kare dalga üreterek işlemcinin tüm birimlerinin --- yazmaçların, toplayıcıların, bellek denetleyicisinin --- aynı anda adım atmasını sağlar. Şekil~\ref{fig:saat-darbeleri}'de bu kare dalga sinyali gösterilmektedir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth]
+    \def\P{2.2}   % Bir çevrim genişliği
+    \def\H{1.3}   % Sinyal yüksekliği
+
+    % Saat etiketi (sola kaydırılmış)
+    \node[font=\small\bfseries, left] at (-0.8, \H/2) {Saat};
+
+    % Yatay kesikli çizgiler — mantık düzeylerini gösterir
+    \draw[densely dashed, gray!55] (-0.5, 0) -- ({5*\P+0.3}, 0);
+    \draw[densely dashed, gray!55] (-0.5, \H) -- ({5*\P+0.3}, \H);
+
+    % Dikey kesikli çizgiler (çevrim sınırları — her yükselen kenarda)
+    \foreach \n in {0,...,5} {
+        \draw[dashed, gray!60] ({\n*\P}, -1.05) -- ({\n*\P}, \H+1.05);
+    }
+
+    % Açık mavi dolgu — yüksek (1) bölümleri vurgular
+    \foreach \n in {0,...,4} {
+        \fill[sinyalmavi!12] ({\n*\P}, 0) rectangle ({\n*\P+\P/2}, \H);
+    }
+
+    % Dalga formu çizimi (5 tam çevrim)
+    \draw[sinyalmavi, line width=2pt]
+        (0, 0)
+        \foreach \n in {0,...,4} {
+            -- ({\n*\P}, \H) -- ({\n*\P+\P/2}, \H) -- ({\n*\P+\P/2}, 0) -- ({(\n+1)*\P}, 0)
+        };
+
+    % Mantık düzeyi etiketleri
+    \node[font=\footnotesize\bfseries, text=gray, left] at (-0.5, \H) {1};
+    \node[font=\footnotesize\bfseries, text=gray, left] at (-0.5, 0) {0};
+
+    % Çevrim numaraları — yatay çift yönlü oklar (üstte)
+    \foreach \n [evaluate=\n as \nn using int(\n+1)] in {0,...,4} {
+        \draw[<->, thick, gray] ({\n*\P+0.06}, \H+0.8) -- ({(\n+1)*\P-0.06}, \H+0.8);
+        \node[font=\scriptsize\bfseries, text=gray, fill=white, inner sep=1pt]
+            at ({\n*\P+\P/2}, \H+0.8) {\nn. çevrim};
+    }
+
+    % Çevrim zamanı ölçü oku (ikinci çevrim altında)
+    \draw[<->, thick, gray] ({\P+0.06}, -0.7) -- ({2*\P-0.06}, -0.7);
+    \node[font=\small\bfseries, below, text=gray] at ({1.5*\P}, -0.7)
+        {Çevrim zamanı ($T$)};
+
+    % Saat sıklığı formülü
+    \node[font=\small\bfseries, text=gray, anchor=west] at ({5*\P+0.3}, \H/2)
+        {$f = \dfrac{1}{T}$};
+
+    % Yükselen kenar (4. çevrimin başında)
+    \draw[->, sinyalkirmizi, very thick] ({3*\P}, -0.05) -- ({3*\P}, \H+0.05);
+    \node[font=\scriptsize, text=sinyalkirmizi, fill=white, inner sep=1pt, above]
+        at ({3*\P}, \H+0.15) {Yükselen kenar};
+
+    % Düşen kenar (4. çevrimin ortasında)
+    \draw[->, sinyalyesil, very thick] ({3*\P+\P/2}, \H+0.05) -- ({3*\P+\P/2}, -0.05);
+    \node[font=\scriptsize, text=sinyalyesil, fill=white, inner sep=1pt, below]
+        at ({3*\P+\P/2}, -0.15) {Düşen kenar};
+\end{tikzpicture}
+\caption{İşlemci saat darbeleri: çevrim zamanı ($T$) ve saat sıklığı ($f = 1/T$)}
+\label{fig:saat-darbeleri}
+\end{figure}
+
+Saatin iki yükselen ya da iki düşen darbesi arasında geçen süreye \emph{çevrim zamanı}\index{çevrim zamanı} denir. 1 saniyelik zaman aralığındaki çevrim sayısı ise \emph{saat vuruşu sıklığı}\index{saat sıklığı} (frekans) olarak tanımlanır. Peki işlemci hangi kenarı kullanır? Büyük çoğunluk \emph{yükselen kenarı}\index{yükselen kenar} temel alır: flip-floplar yalnızca saat sinyali 0'dan 1'e geçtiğinde yeni değerlerini yakalar, geri kalan sürede içeriklerini korur. Düşen kenar kullanılarak da aynı sonuç elde edilebilir; önemli olan tasarım boyunca tutarlı bir seçim yapılmasıdır.\footnote{Bazı bellek teknolojileri her iki kenarı da kullanır. DDR (Double Data Rate) bellek adını tam da buradan alır: hem yükselen hem düşen kenarda veri aktararak aynı saat sıklığında iki kat bant genişliği sağlar.}
+
+\begin{equation}
+\text{Çevrim zamanı} = \frac{1}{\text{Saat sıklığı}}
+\label{eq:cevrim-zamani}
+\end{equation}
+
+Sıklık birimi olan Hertz\index{Hertz}, bir saniyede bir olayın kaç kere gerçekleştiğini gösterir. Kadırga benzetmemize dönersek: davulcu davula saniyede 2~kez vuruyorsa vuruş sıklığı 2\,Hz, çevrim zamanı ise $1/2 = 0{,}5$\,saniyedir. Günümüz işlemcilerinde saat sıklığı milyar Hertz (GHz) mertebesindedir --- 4\,GHz'lik bir işlemcide davulcu saniyede 4 milyar kez vurmakta, her vuruş yalnızca 0,25\,ns sürmektedir.
+
+İşlemcinin içinde zaman kavramını anlamasının tek yolu saat vuruşlarını --- başka bir deyişle çevrimleri --- saymasıdır. İşlemci ``10 nanosaniye geçti'' diye düşünmez; onun bildiği tek şey ``5 çevrim geçti''dir. Bu nedenle işlemci içindeki tüm zamanlar \emph{çevrim sayısı}\index{çevrim sayısı} cinsinden ifade edilir: bir bellek erişimi kaç çevrim sürer, bir çarpma kaç çevrimde tamamlanır, bir program baştan sona kaç çevrimde biter --- hepsi çevrim sayısıyla ölçülür. Saat sıklığı bilindiği için çevrim sayısını gerçek zamana dönüştürmek kolaydır: 5\,GHz'lik bir işlemcide 10 çevrim, $10 \times 0{,}2\;\text{ns} = 2\;\text{ns}$ demektir.
+
+Bir programın yürütülmesi sırasında işlemcinin harcadığı toplam saat çevrimi sayısına \emph{çevrim sayısı} (cycle count) denir. Çevrim sayısı programdan programa büyük farklılık gösterir: basit bir toplama işlemi birkaç düzine çevrimde tamamlanabilirken, karmaşık bir sıralama algoritması milyarlarca çevrim gerektirebilir. Çevrim sayısını belirleyen iki temel etken vardır: programda kaç buyruk yürütüldüğü ve her bir buyruğun kaç çevrimde tamamlandığı. Bu ayrıntılı çözümlemeyi bir sonraki alt bölümde BBÇ kavramıyla ele alacağız; şimdilik çevrim sayısını bilinen bir değer olarak kabul edelim.
+
+Çevrim sayısı ile çevrim zamanını çarparak programın toplam yürütme zamanını elde ederiz:
+\begin{equation}
+\text{Yürütme zamanı} = \text{Çevrim sayısı} \times \text{Çevrim zamanı} = \frac{\text{Çevrim sayısı}}{\text{Saat sıklığı}}
+\label{eq:yurutme-zamani}
+\end{equation}
+
+Bu formülü küçük bir örnekle pekiştirelim. İki firmayı düşünelim: her ikisi de RISC-V BKM'sini kullanan bir işlemci üretmektedir ve aynı programı çalıştıracaklardır. Aynı BKM, aynı program; dolayısıyla her iki işlemci de bu programı aynı çevrim sayısında --- diyelim 12 milyar çevrimde --- tamamlar.\footnote{Gerçekte aynı BKM'yi kullanan iki farklı işlemci, mikromimari farklılıkları nedeniyle aynı programı farklı çevrim sayılarında tamamlayabilir. Burada karşılaştırmayı yalınlaştırmak için çevrim sayısını sabit tutuyoruz.} Fark, üretim teknolojisindedir: İşlemci~A eski 7\,nm süreçle üretilmiş ve 3\,GHz'de çalışmaktadır; İşlemci~B ise daha yeni 5\,nm süreçle üretilmiş ve transistörleri daha hızlı anahtarlama yapabildiği için 4\,GHz'e ulaşmaktadır. Denklem~\ref{eq:yurutme-zamani}'i uygularsak:
+%
+\[
+T_A = \frac{12 \times 10^9}{3 \times 10^9} = 4\;\text{s}, \qquad
+T_B = \frac{12 \times 10^9}{4 \times 10^9} = 3\;\text{s}
+\]
+%
+Her iki işlemci aynı BKM'yi kullanıp aynı programı çalıştırdığı hâlde, yalnızca üretim teknolojisindeki fark saat sıklığını değiştirmiş ve İşlemci~B programı \%25 daha kısa sürede tamamlamıştır. Başarımı etkileyen etkenlerin yalnızca yazılım ya da mimari tasarımla sınırlı olmadığı, yarı-iletken üretim teknolojisinin de doğrudan başarımı belirlediği burada açıkça görülmektedir.
+
+Saat sıklığını fiziksel olarak belirleyen etken, işlemcideki \emph{kritik yol gecikmesidir}\index{kritik yol}. Kritik yol, bir saat çevrimi içinde sinyalin geçmesi gereken en uzun mantık kapısı zinciridir. Çevrim zamanı bu gecikmenin altına düşürülemez; aksi halde sinyaller hedef noktasına ulaşmadan yeni çevrim başlar ve devre yanlış sonuçlar üretir. Saat sıklığını artırmanın bir yolu kritik yoldaki kapı sayısını azaltmaktır --- örneğin boru hattı aşamalarını daha ince dilimlere bölmek gibi --- ancak bu genellikle her çevrimde yapılan iş miktarını düşürür ve BBÇ'yi artırır. İşte saat sıklığı ile BBÇ arasındaki bu ödünleşme, başarım mühendisliğinin temel zorluklarından biridir.
+
+\begin{terimnotu}
+\textbf{ödünleşme} (\emph{trade-off})\,: \emph{Ödün} ``taviz, bir şeyden vazgeçme'' demektir; \emph{-leşme} eki karşılıklılık bildirir. Bir özelliği kazanmak için başka birinden vazgeçmeyi --- İngilizce \emph{trade-off} (takas) kavramını --- ifade eder. Bilgisayar mimarisinde neredeyse her tasarım kararı bir ödünleşme barındırır.\index{ödünleşme}
+\end{terimnotu}
+
+Kritik yol gecikmesini belirleyen yalnızca mantık kapıları değildir; kapılar arasındaki \emph{tel gecikmeleri}\index{tel gecikmesi} de toplam gecikmenin önemli bir bölümünü oluşturur. Bunu anlamak için evrendeki en hızlı şeyden --- ışık hızından --- başlayalım. Işık boşlukta saniyede yaklaşık 300\,000\,km yol alır; bu, Dünya'nın çevresini bir saniyede yedi buçuk kez dolanabilecek, akıl almaz bir hızdır. Şimdi 4\,GHz'lik bir işlemciyi düşünelim: bir saat çevrimi yalnızca 250\,ps (pikosaniye, $250 \times 10^{-12}$\,s) sürer. Bu sürede ışık bile yalnızca
+%
+\[
+3 \times 10^{8}\;\text{m/s} \times 250 \times 10^{-12}\;\text{s} = 0{,}075\;\text{m} = 7{,}5\;\text{cm}
+\]
+%
+yol alabilir --- bir ana kartın uzun kenarından bile kısadır! Üstelik işlemcinin içindeki sinyaller boşlukta değil, bakır teller üzerinde ilerler; bakırda yayılma hızı ışık hızının yaklaşık üçte ikisine (${\sim}\,2 \times 10^{8}$\,m/s) düşer ve bir çevrimdeki menzil yalnızca ${\sim}\,5$\,cm'ye iner. Mantık kapılarının kendi anahtarlama gecikmeleri de bu bütçeden pay aldığında, kritik yol üzerindeki fiziksel tel uzunluğu birkaç santimetreyi geçemez.
+
+Bu fiziksel gerçek doğrudan bir tasarım ilkesine yol açar: bir birimi küçültmek, içindeki telleri kısaltır ve sinyal gecikmesini azaltır; dolayısıyla daha yüksek saat sıklığına olanak tanır. Tersine, büyük bir yazmaç dosyası veya geniş bir çoklayıcı daha uzun teller ve daha fazla kapı gecikmesi demektir --- fiziksel boyut doğrudan hızı sınırlar.
+
+\begin{tanim}[Tasarım İlkesi 1: Küçük olan hızlıdır]
+\index{tasarım ilkeleri!küçük olan hızlıdır}
+Donanımda küçük yapılar büyük yapılardan daha hızlı çalışır. Daha az sayıda eleman, daha kısa bağlantı hatları ve daha az kapı gecikmesi anlamına gelir. Bu ilke, yazmaç dosyasının boyutundan önbellek büyüklüğüne, boru hattı aşamalarının karmaşıklığından veri yolu genişliğine kadar pek çok mimari kararı doğrudan etkiler. Tabii ki ``küçük'' her zaman ``daha iyi'' demek değildir: az sayıda yazmaç derleyicilerin elini bağlar, küçük bir önbellek isabet oranını düşürür. İyi bir tasarım, küçüklüğün hız avantajı ile büyüklüğün işlevsel avantajı arasında doğru dengeyi bulmaktır.
+\end{tanim}
+
+Denklem~\ref{eq:yurutme-zamani}'nin önemli bir iletisi vardır: saat sıklığını iki katına çıkarmak, çevrim sayısı aynı kalırsa yürütme zamanını yarıya düşürür. Ancak yürütme zamanını belirleyen yalnızca saat sıklığı değildir; programın kaç buyruktan oluştuğu ve her buyruğun kaç çevrimde tamamlandığı da denkleme girer. Sonraki iki alt bölümde bu kavramları ele alacağız.
+
+
+\subsection{Buyruk Sayısı}
+\label{subsec:buyruk-sayisi}
+
+Bir programın yürütme zamanını etkileyen ikinci büyük bileşen, programın işlemci tarafından yürütülmesi gereken toplam \textbf{buyruk sayısıdır}\index{buyruk sayısı} (\emph{instruction count}). Aynı üst düzey program --- örneğin C++ ile yazılmış bir oyun --- farklı BKM'ler için derlendiğinde farklı sayıda makine buyruğu üretir.
+
+Bunu somut bir örnekle düşünelim. \emph{Kızgın Kuşlar} (\kizginkus)\index{Kızgın Kuşlar} oyununu hem bir iPhone'da (ARM işlemci) hem de Intel tabanlı bir dizüstü bilgisayarda (x86 işlemci) oynayan kişi, oyun deneyiminde bir fark görmez. Oysa derleyici aynı kaynak kodundan iki çok farklı buyruk dizisi üretmiştir: x86'nın karmaşık buyrukları az sayıda buyrukla çok iş yapabilirken, ARM'ın daha basit buyrukları aynı işi daha çok buyrukla ifade eder. RISC-V\@'e derlendiğinde ise buyruk sayısı yine farklı olacaktır. Kullanıcı aynı kuşu aynı hedefe fırlatsa da perde arkasında yürütülen buyruk sayısı platformdan platforma değişir.
+
+Tablo~\ref{tab:buyruk-karsilastirma} bu farkı somut biçimde gösterir. Oyundaki hasar hesabını gerçekleyen tek satırlık bir C ifadesi üç farklı BKM'de derlendiğinde birbirinden çok farklı makine buyruklarına dönüşür:
+
+\begin{table}[H]
+\centering
+\caption[Aynı C kodunun üç farklı BKM'de derlenmesi]{Tek satırlık bir C ifadesinin (\texttt{puan = hasar[tur] * carpan}) üç farklı BKM'de derlenmiş hâli. Buyruk ayrıntılarını Bölüm~\ref{chap:buyruk-kumesi}'de öğreneceğiz; burada önemli olan buyruk sayısı ve türlerindeki farktır.}
+\label{tab:buyruk-karsilastirma}
+\small
+\begin{tabular}{@{}c@{\quad}l@{\qquad}l@{\qquad}l@{}}
+\toprule
+ & \textbf{x86 (CISC)} & \textbf{ARM (RISC)} & \textbf{RISC-V (RISC)} \\
+\midrule
+1 & \texttt{mov eax, [tur]}          & \texttt{ldr r0, [r4]}             & \texttt{lw t0, 0(a4)} \\
+2 & \texttt{mov eax, [hasar+eax*4]}  & \texttt{ldr r1, [r5, r0, lsl \#2]} & \texttt{slli t0, t0, 2} \\
+3 & \texttt{imul eax, [carpan]}      & \texttt{ldr r2, [r6]}             & \texttt{add t0, a5, t0} \\
+4 & \texttt{mov [puan], eax}         & \texttt{mul r0, r1, r2}           & \texttt{lw t1, 0(t0)} \\
+5 &                                  & \texttt{str r0, [r7]}             & \texttt{lw t2, 0(a6)} \\
+6 &                                  &                                   & \texttt{mul t0, t1, t2} \\
+7 &                                  &                                   & \texttt{sw t0, 0(a7)} \\
+\midrule
+  & \textbf{4 buyruk}                & \textbf{5 buyruk}                 & \textbf{7 buyruk} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+x86, \texttt{mov eax, [hasar+eax*4]} gibi tek buyrukta \emph{ölçekli dizin adresleme}\index{ölçekli dizin adresleme} yapabildiği ve \texttt{imul eax, [carpan]} ile bellekten doğrudan çarpma gerçekleştirebildiği için aynı işi yalnızca 4 buyrukla bitirir. ARM'ın kaydırma birimi (\emph{barrel shifter})\index{barrel shifter|see{kaydırma birimi}} adres hesabını yükleme buyruğunun içine gömer; buyruk sayısı 5'e düşer. RISC-V ise en yalın yapıdadır: dizin hesabı (\texttt{slli}~+~\texttt{add}) ve veri yükleme ayrı buyruklarda yapılır, toplam 7 buyruk gerekir. Ancak ``az buyruk~=~hızlı'' demek değildir; karmaşık bir buyruk daha çok çevrimde tamamlanabilir. Bu dengeyi BBÇ kavramıyla ele alacağız.
+
+Buyruk sayısını belirleyen başlıca etkenler şunlardır:
+\begin{itemize}
+    \item \textbf{BKM:} CISC mimariler (x86 gibi) karmaşık buyruklar sunarak daha az buyrukla aynı işi yapabilir; RISC mimariler (ARM, RISC-V\@ gibi) basit buyruklar kullanır ve genellikle daha fazla buyruk üretir.
+    \item \textbf{Derleyici:} Aynı BKM için bile farklı eniyileme düzeyleri (\texttt{-O0}, \texttt{-O2}, \texttt{-O3}) buyruk sayısını önemli ölçüde değiştirir. Eniyileyici bir derleyici gereksiz buyrukları eler, döngüleri açar veya buyrukları birleştirir.
+    \item \textbf{Programlama dili ve algoritma:} Üst düzey dildeki bir satır, seçilen algoritmaya ve veri yapısına bağlı olarak onlarca ya da yüzlerce makine buyruğuna dönüşebilir.
+\end{itemize}
+
+Buyruk sayısı tek başına başarımı belirlemez --- az buyruk her zaman daha hızlı demek değildir. Her buyruğun kaç çevrimde tamamlandığı da en az o kadar önemlidir. İşte bir sonraki kavram, tam da bu soruyu yanıtlar.
+
+
+\subsection{Buyruk Başına Çevrim (BBÇ)}
+\label{subsec:bbc}
+
+Saat sıklığı, davulcunun ne kadar sık vurduğunu söyler; buyruk sayısı, yürütülecek adım sayısını verir. Ancak bir işlemcinin birim zamanda ne kadar iş bitirdiğini anlamak için üçüncü bir bileşen daha gerekir: her buyruğun ortalama kaç çevrimde tamamlandığı. Aynı saat sıklığında çalışan iki işlemciden biri her buyruğu 2 çevrimde, diğeri 4 çevrimde bitiriyorsa, birincisi iki kat daha fazla iş yapar. İşte bu ``buyruk başına çevrim'' kavramı, saat sıklığının ve buyruk sayısının tek başına anlatamadığı gerçeği ortaya koyar.
+
+\begin{terimnotu}[BBÇ — Buyruk Başına Çevrim]
+İngilizcede \emph{CPI — Cycles Per Instruction} olarak bilinen bu ölçüt, bir buyruğun yürütülmesi için harcanan ortalama saat çevrimi sayısını verir. Kitapta kısaca \textbf{BBÇ} olarak kullanılmaktadır.
+\end{terimnotu}
+
+\textbf{Buyruk Başına Çevrim}\index{buyruk başına çevrim}\index{BBÇ}\index{CPI|see{BBÇ}} (BBÇ), programın çalıştırılması için gereken buyruklardan her birisinin yürütülmesi için geçen ortalama çevrim sayısıdır:
+
+\begin{equation}
+\text{BBÇ} = \frac{\text{Toplam çevrim sayısı}}{\text{Buyruk sayısı}}
+\label{eq:bbc}
+\end{equation}
+
+Farklı buyruk türleri farklı sayıda çevrime ihtiyaç duyar. Örneğin bir toplama buyruğu 1 çevrimde, bir bellek erişim buyruğu 3--5 çevrimde tamamlanabilir. Bir programın toplam çevrim sayısı, her buyruk türünün gerektirdiği çevrim sayısı ile o buyruktan kaç kere yürütüldüğünün çarpımlarının toplamıdır:
+\begin{equation}
+\text{Toplam çevrim sayısı} = \sum_{i=1}^{n} \text{Çevrim}_i \times S_i
+\label{eq:toplam-cevrim}
+\end{equation}
+Burada $n$ programdaki buyruk türlerinin sayısını, $\text{Çevrim}_i$ ilgili buyruğun kaç çevrimde işlendiğini, $S_i$ ise buyruğun programın işletilmesi sırasında kaç kere yürütüldüğünü gösterir.
+
+Tablo~\ref{tab:buyruk-karsilastirma}'teki Kızgın Kuşlar\index{Kızgın Kuşlar} örneğiyle BBÇ'yi somutlaştıralım. RISC-V kodundaki 7~buyruğu türlerine göre sınıflandırıp her türe basit bir çevrim maliyeti atayalım:\footnote{Buradaki çevrim sayıları kavramsal anlaşılırlık için seçilmiş yalınlaştırılmış değerlerdir. Gerçek çevrim maliyetleri mikromimari tasarıma bağlıdır ve boru hattı, önbellek yapısı gibi etkenlere göre değişir.}
+
+\begin{center}
+\begin{minipage}[t]{0.46\textwidth}
+\centering
+\small
+\textbf{RISC-V\!: 7 buyruk}\\[4pt]
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Buyruk türü} & \textbf{Çvr.} & \textbf{Adet} & \textbf{Top.} \\
+\midrule
+Aritmetik (\texttt{add}, \texttt{slli}) & 1 & 2 & 2 \\
+Yükleme (\texttt{lw})                   & 2 & 3 & 6 \\
+Saklama (\texttt{sw})                    & 2 & 1 & 2 \\
+Çarpma (\texttt{mul})                    & 3 & 1 & 3 \\
+\midrule
+\textbf{Toplam}                          &   & \textbf{7} & \textbf{13} \\
+\bottomrule
+\end{tabular}
+\\[6pt]
+$\text{BBÇ} = 13\,/\,7 \approx 1{,}86$
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.50\textwidth}
+\centering
+\small
+\textbf{x86\!: 4 buyruk}\\[4pt]
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Buyruk türü} & \textbf{Çvr.} & \textbf{Adet} & \textbf{Top.} \\
+\midrule
+Yükleme (\texttt{mov})            & 2 & 1 & 2 \\
+Dizinli yükleme (\texttt{mov})    & 3 & 1 & 3 \\
+Bellek iş. çarpma (\texttt{imul}) & 4 & 1 & 4 \\
+Saklama (\texttt{mov})            & 2 & 1 & 2 \\
+\midrule
+\textbf{Toplam}                    &   & \textbf{4} & \textbf{11} \\
+\bottomrule
+\end{tabular}
+\\[6pt]
+$\text{BBÇ} = 11\,/\,4 = 2{,}75$
+\end{minipage}
+\end{center}
+
+RISC-V daha çok buyruk kullanıyor ama her biri daha az çevrime mal oluyor (BBÇ $\approx 1{,}86$); x86 ise daha az buyrukla işi yapıyor ama her buyruğu daha çok çevrim gerektiriyor (BBÇ $= 2{,}75$). Dikkat çekici nokta şudur: buyruk sayıları arasında neredeyse iki kat fark varken (4'e karşı 7), toplam çevrim sayıları çok daha yakındır (11'e karşı 13). İşte BBÇ'nin buyruk sayısıyla birlikte değerlendirilmesinin gerekliliği burada ortaya çıkar.
+
+\subsubsection*{Çevrim Başına Buyruk (ÇBB)}
+
+BBÇ'nin tersi olan \textbf{Çevrim Başına Buyruk}\index{çevrim başına buyruk}\index{ÇBB} (\emph{Instructions Per Cycle} --- ÇBB), her saat çevriminde tamamlanan ortalama buyruk sayısını verir:
+\begin{equation}
+\text{ÇBB} = \frac{1}{\text{BBÇ}}
+\label{eq:cbb}
+\end{equation}
+
+\noindent BBÇ'nin düşük olması istenirken ÇBB'nin yüksek olması istenir; ikisi aynı bilgiyi ters yönden ifade eder. Yukarıdaki örnekte RISC-V'in ÇBB'si $1/1{,}86 \approx 0{,}54$, x86'nın ÇBB'si $1/2{,}75 \approx 0{,}36$'dır: RISC-V her çevrimde ortalama yarım buyruk bitirirken x86 üçte birden biraz fazlasını bitirir. Çağdaş çok yollu işlemciler ise her çevrimde birden fazla buyruk başlatıp tamamlayabildiği için ÇBB\,$>$\,1 değerlerine ulaşabilir. İşlemci üreticileri başarım sunumlarında genellikle ÇBB'yi tercih eder çünkü ``daha yüksek = daha iyi'' sezgisi daha kolay kavranır.
+
+\subsection{Hepsini Bir Araya Getirelim: Yürütme Zamanı Denklemi}
+\label{subsec:yurutme-zamani-denklemi}
+
+Önceki üç alt bölümde başarımın üç temel bileşenini ayrı ayrı tanıdık: saat sıklığı (davulcunun vuruş hızı), buyruk sayısı (yürütülecek adım sayısı) ve BBÇ (her adımın kaç vuruşta tamamlandığı). Şimdi bu üçünü tek bir denklemde bir araya getiriyoruz:
+
+\begin{equation}
+\text{Yürütme zamanı} = \text{Buyruk sayısı} \times \text{BBÇ} \times \text{Çevrim zamanı} = \frac{\text{Buyruk sayısı} \times \text{BBÇ}}{\text{Saat sıklığı}}
+\label{eq:yurutme-zamani-bbc}
+\end{equation}
+
+Denklemin birim çözümlemesini yaparak doğruluğunu sınayabiliriz --- her çarpan bir öncekinin birimini götürür ve geriye yalnızca ``saniye'' kalır:
+
+\begin{equation}
+\text{Yürütme zamanı} = \frac{\text{Buyruk sayısı}}{\text{program}} \times \frac{\text{Çevrim sayısı}}{\text{buyruk}} \times \frac{\text{saniye}}{\text{çevrim}}
+\label{eq:yurutme-birim}
+\end{equation}
+
+Bu denklemin en can alıcı iletisi şudur: \textbf{üç bileşen birbirinden bağımsız değildir.} Birini iyileştirmeye çalışmak, diğerlerini kötüleştirebilir:
+\begin{itemize}
+    \item Saat sıklığını artırmak için boru hattı derinleştirilir $\rightarrow$ BBÇ artar (her buyruk daha çok aşamadan geçer).
+    \item Buyruk sayısını azaltmak için karmaşık buyruklar tanımlanır (CISC yaklaşımı) $\rightarrow$ BBÇ artar (karmaşık buyruklar daha çok çevrim ister).
+    \item BBÇ'yi düşürmek için sırasız yürütüm kullanılır $\rightarrow$ devre karmaşıklığı artar ve saat sıklığı düşebilir.
+\end{itemize}
+
+Dolayısıyla herhangi bir bileşeni tek başına eniyilemeye çalışmak yanıltıcıdır. Bir bileşendeki kazanım, diğerindeki kayıpla silinebilir. İyi bir tasarımcı her zaman \emph{toplam yürütme zamanına} bakar, tek bir bileşene değil. Bu etkileşimlerin ayrıntılı dökümünü Bölüm~\ref{subsec:basarim-faktorleri}'de inceleyeceğiz.
+
+\begin{tanim}[Tasarım İlkesi 2: İyi tasarım, iyi ödünleşme gerektirir]
+Mühendislikte bedava kazanım yoktur\index{ödünleşme}\index{trade-off|see{ödünleşme}}: bir özelliği iyileştirmek, neredeyse her zaman bir başka özellikten ödün vermeyi gerektirir. Saat sıklığını artırmak güç tüketimini yükseltir; işlem hacmini artırmak gecikmeyi büyütebilir; güç tüketimini düşürmek başarımı sınırlar; yonga alanını büyütmek maliyeti artırır. İyi bir mimar, bu ödünleşmelerin farkında olarak hedef iş yüküne en uygun dengeyi kurar. Örneğin masaüstü bilgisayar tasarımcısı düşük gecikmeye, sunucu tasarımcısı yüksek işlem hacmine, gömülü sistem tasarımcısı ise düşük güç tüketimine öncelik verir --- her biri farklı bir ödünleşme tercihidir.
+\end{tanim}
+
+\begin{ornek}[2.2]
+100 buyruktan oluşan \texttt{Personel.java} programının kullandığı buyruk türleri ve bu buyruk türlerinin program içindeki oranı tabloda verilmiştir. Bu program işlemcisi 200\,MHz olan bir bilgisayarda kaç saniyede yürütülür? Tüm program için BBÇ nedir?
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Buyruk türü} & \textbf{Kullanım yüzdesi} & \textbf{Gereken Çevrim Sayısı} \\
+\midrule
+K & \%38 & 1 \\
+L & \%15 & 3 \\
+M & \%42 & 4 \\
+N & \%5  & 5 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Çözüm:} Programda K türü buyruklardan 38, L'den 15, M'den 42, N'den 5 adet bulunmaktadır.
+
+\[
+\text{BBÇ} = \frac{38 \times 1 + 15 \times 3 + 42 \times 4 + 5 \times 5}{100} = \frac{276}{100} = 2{,}76
+\]
+
+\[
+\text{Yürütme zamanı} = \frac{100 \times 2{,}76}{200 \times 10^6} = 1{,}38 \times 10^{-6} \text{ sn} = 1{,}38 \; \mu\text{sn}
+\]
+\end{ornek}
+
+
+\begin{ornek}[2.3]
+Aynı program bu kez farklı bir mimariye sahip, 300\,MHz'lik saat sıklığı olan işlemcili bir bilgisayarda çalıştırılmak istenmiştir.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Buyruk türü} & \textbf{Kullanım yüzdesi} & \textbf{Gereken Çevrim Sayısı} \\
+\midrule
+K & \%38 & 2 \\
+L & \%15 & 3 \\
+M & \%42 & 8 \\
+N & \%5  & 4 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Çözüm:}
+\[
+\text{Yürütme zamanı} = \frac{38 \times 2 + 15 \times 3 + 42 \times 8 + 5 \times 4}{300 \times 10^6} = \frac{477}{300 \times 10^6} = 1{,}59 \; \mu\text{sn}
+\]
+
+Personel.java programı Örnek~2.2'deki bilgisayarda 1,38\,$\mu$sn'de, bu bilgisayarda ise 1,59\,$\mu$sn'de çalışmıştır. Saat sıklığının artması tek başına değerlendirilerek bilgisayar başarımının artacağı öngörülemez.
+\end{ornek}
+
+
+\subsection{İşlem Hacmi ve Gecikme}
+\label{subsec:verim-gecikme}
+
+Bilgisayar başarımı iki farklı açıdan değerlendirilir:
+
+\begin{itemize}
+    \item \textbf{Gecikme}\index{gecikme} (latency): Tek bir görevin başlangıcından bitişine kadar geçen süre. ``Bu program ne kadar sürede çalışır?'' sorusunun yanıtıdır. Yürütme zamanı gecikmedir.
+    \item \textbf{İşlem hacmi}\index{işlem hacmi} (throughput): Birim zamanda tamamlanan görev sayısı. ``Bu sunucu saniyede kaç isteğe yanıt verir?'' sorusunun yanıtıdır.
+\end{itemize}
+
+\begin{terimnotu}
+\textbf{işlem hacmi} (\emph{throughput})\,: İngilizce \emph{throughput} sözcüğü ``birim zamanda sisteme giren ve çıkan iş miktarı'' anlamına gelir. Türkçe kaynaklarda bu kavram zaman zaman \emph{verim} olarak çevrilse de ``verim'' sözcüğü (\emph{yield}) yonga üretiminde hatasız ürün oranını, günlük dilde ise \emph{verimlilik} (\emph{efficiency}) kavramını çağrıştırdığından karışıklığa yol açabilir. Bu kitapta throughput karşılığı olarak \emph{işlem hacmi} tercih edilmiştir.
+\end{terimnotu}
+
+Bu iki kavram her zaman koşut hareket etmez. Bir boru hattı tasarımı, tek bir buyruğun gecikmesini artırabilir ama birim zamanda tamamlanan buyruk sayısını (işlem hacmini) yükseltir. Benzer şekilde, çok çekirdekli bir işlemci tek bir programı hızlandıramayabilir ama birden fazla programı eş zamanlı çalıştırarak işlem hacmini artırır.
+
+Gecikme ve işlem hacmini somutlaştırmak için bir taşımacılık benzetmesi düşünelim. İstanbul'dan Ankara'ya giden bir otomobil 4~saatte varabilir (düşük gecikme) ama yalnızca 4 yolcu taşır. Bir otobüs 5~saat sürebilir (yüksek gecikme) ama 50~yolcu taşır. Saatlik yolcu işlem hacmi açısından otobüs çok daha üstündür ($50/5 = 10$ yolcu/saat karşısında $4/4 = 1$ yolcu/saat). İşlemci tasarımında da benzer bir ödünleşme yaşanır: bir boru hattı buyruğun toplam geçiş süresini artırabilir ama birim zamanda tamamlanan buyruk sayısını önemli ölçüde yükseltir. Hangi ölçütün önemli olduğu --- gecikme mi, işlem hacmi mi --- kullanım senaryosuna göre değişir.
+
+\begin{terimnotu}
+\textbf{örün} (\emph{web})\,: İngilizce \emph{web} sözcüğü ``ağ, örülmüş yapı'' anlamına gelir. Türkçe karşılığı olan \emph{örün}, \emph{örmek} fiilinden türetilmiştir ve ODTÜ Bilişim Terimleri Sözlüğü'nde yer almaktadır. Tıpkı İngilizcedeki \emph{web} gibi ``birbirine bağlı düğümlerden oluşan örüntü'' kavramını yansıtır. Bu kitapta \emph{web sunucusu} yerine \emph{örün sunucusu}, \emph{web tarayıcısı} yerine \emph{örün tarayıcısı} kullanılmıştır.\index{örün (web)}
+\end{terimnotu}
+
+\begin{ornek}[2.4]
+Bir örün sunucusu her isteği 10\,ms'de yanıtlar (gecikme = 10\,ms). Aynı anda en fazla 8 istek işleyebilir.
+\begin{enumerate}[(a)]
+    \item Sunucunun işlem hacmi nedir?
+    \item Her isteğin gecikmesini 20\,ms'ye çıkaran ama 32 eş zamanlı isteği destekleyen yeni bir sunucu tasarlanırsa işlem hacmi ne olur?
+\end{enumerate}
+
+\textbf{Çözüm:}
+\begin{enumerate}[(a)]
+    \item $\text{İşlem hacmi} = \frac{8}{10\,\text{ms}} = 800$ istek/s
+    \item $\text{İşlem hacmi} = \frac{32}{20\,\text{ms}} = 1600$ istek/s. Gecikme 2 kat kötüleşse de işlem hacmi 2 kat artmıştır.
+\end{enumerate}
+\end{ornek}
+
+
+\subsection{Başarımı Etkileyen Etkenler}
+\label{subsec:basarim-faktorleri}
+
+Başarım denklemini oluşturan üç temel bileşen --- buyruk sayısı, BBÇ ve saat sıklığı --- birbirinden bağımsız değildir ve her biri farklı tasarım katmanlarından etkilenir:
+
+\begin{table}[H]
+\centering
+\caption{Başarım bileşenlerini etkileyen tasarım katmanları}
+\label{tab:basarim-etki}
+\small
+\begin{tabular}{lp{3.2cm}p{3.2cm}p{3.2cm}}
+\toprule
+\textbf{Tasarım katmanı} & \textbf{Buyruk sayısı} & \textbf{BBÇ} & \textbf{Saat sıklığı} \\
+\midrule
+Algoritma      & Doğrudan   & Dolaylı    & ---         \\
+Programlama dili & Dolaylı & Dolaylı    & ---         \\
+Derleyici      & Doğrudan   & Dolaylı    & ---         \\
+Buyruk kümesi mimarisi (BKM) & Doğrudan & Doğrudan & ---         \\
+Mikromimari    & ---        & Doğrudan   & Doğrudan    \\
+Devre tasarımı & ---        & ---        & Doğrudan    \\
+Üretim teknolojisi & ---   & ---        & Doğrudan    \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Bu tablo önemli bir gerçeği vurgular: buyruk sayısını azaltma çabası (örneğin karmaşık buyruklar tanımlama) BBÇ'yi artırabilir; saat sıklığını yükseltme çabası ise boru hattı derinleştirme yoluyla BBÇ'yi artırabilir. Dolayısıyla herhangi bir bileşeni tek başına eniyilemeye çalışmak yerine \emph{toplam yürütme zamanına} odaklanmak gerekir.
+
+Bu etkileşimleri daha somut olarak inceleyelim:
+\begin{itemize}
+    \item \textbf{Algoritma $\rightarrow$ buyruk sayısı:} Kabarcık sıralaması $O(n^2)$ buyruk üretirken hızlı sıralama $O(n \log n)$ buyruk üretir. Doğru algoritma seçimi, donanım eniyilemesinden çok daha büyük bir etki yaratabilir. 10\,000 öğeyi sıralamak için kabarcık sıralaması $\sim$100 milyon karşılaştırma yaparken hızlı sıralama $\sim$130 bin karşılaştırma yapar --- yaklaşık 770 kat fark. Saat sıklığını 770 kat artırmak olanaksızdır; oysa algoritmayı değiştirmek bir satırlık iştir.
+
+    \item \textbf{Derleyici $\rightarrow$ buyruk sayısı ve BBÇ:} Eniyileyici bir derleyici döngü açma (\emph{loop unrolling}) ile buyruk sayısını artırabilir ama dallanma buyruklarını azaltarak BBÇ'yi düşürebilir. Aynı kaynak kodu farklı eniyileme düzeyleriyle derlenmesi (\texttt{-O0} ile \texttt{-O3} gibi) \%30--300 başarım farkı yaratabilir.
+
+    \item \textbf{BKM $\rightarrow$ buyruk sayısı ve BBÇ:} CISC mimariler az sayıda karmaşık buyrukla (düşük buyruk sayısı, yüksek BBÇ), RISC mimariler ise çok sayıda basit buyrukla (yüksek buyruk sayısı, düşük BBÇ) aynı işi yapar. Hangisinin daha hızlı olduğu \emph{toplam çevrim sayısına} bağlıdır.
+
+    \item \textbf{Mikromimari $\rightarrow$ BBÇ ve saat sıklığı:} Sırasız yürütüm\index{sırasız yürütüm} mikromimarisi veri bağımlılıkları olan buyrukları yeniden sıralayarak BBÇ'yi düşürür ama gerektirdiği karmaşık kontrol mantığı kritik yolu uzatabilir ve saat sıklığını sınırlayabilir. Tersine, sıralı (\emph{in-order}) bir tasarım daha yüksek saat sıklığına ulaşabilir ama BBÇ'si daha yüksektir.
+\end{itemize}
+
+Yürütme zamanı denklemi başarımın yazılım ve donanım tasarımı boyutunu özetler. Ancak gerçek dünyada başarımı etkileyen \emph{fiziksel ve çevresel} etkenler de göz ardı edilemez:
+
+\begin{itemize}
+    \item \textbf{Sıcaklık\index{termal kısma}:} İşlemci sıcaklığı yükseldikçe transistörlerin anahtarlama hızı düşer ve sızıntı akımları artar. Çağdaş işlemciler belirli bir sıcaklık eşiğini aştığında saat sıklığını otomatik olarak düşürür (\emph{termal kısma}, \emph{thermal throttling}\index{thermal throttling|see{termal kısma}}); bu mekanizma işlemciyi korur ama doğrudan yürütme zamanını uzatır. Yoğun iş yükünde dizüstü bilgisayarın masaüstüne göre yavaş kalmasının başlıca nedeni budur.
+
+    \item \textbf{Gerilim dalgalanmaları ve geçici hatalar\index{geçici hata}:} Güç kaynağındaki anlık gerilim düşüşleri veya kozmik ışınların neden olduğu bit hataları (\emph{soft error}\index{soft error|see{geçici hata}}) hesaplama sonuçlarını bozabilir. Uzay uygulamalarında radyasyon kaynaklı hatalar özellikle can alıcıdır; bu nedenle uydu ve uzay aracı işlemcileri hata düzeltme kodları\index{hata düzeltme kodu} ve yedekli hesaplama ile donatılır --- genellikle dünya üzerindeki muadillerinden çok daha düşük saat sıklığında çalışsalar da.
+
+    \item \textbf{Güvenilirlik ve dayanıklılık:} Bir sistemin başarımı yalnızca hızıyla değil, ne kadar süre kesintisiz çalışabildiğiyle de ölçülür. Bir sunucu saatte milyarlarca buyruk yürütebilir ama haftada bir çökerse gerçek başarımı sıfıra yakındır. Bölüm~\ref{sec:guvenilirlik}'te tanımlanan MTTF, MTBF ve kullanılabilirlik kavramları, bu etkeni nicel olarak değerlendirmeyi sağlar.
+\end{itemize}
+
+Bu nedenle bir bilgisayar mimarı, her tasarım kararının yürütme zamanı denkleminin üç bileşeni üzerindeki net etkisini değerlendirmenin yanı sıra güç tüketimi, sıcaklık sınırları ve güvenilirlik gereksinimlerini de gözetmelidir.
+
+
+\subsection{MIPS ve MFLOPS}
+\label{subsec:mips-mflops}
+
+Yürütme zamanı güvenilir bir başarım ölçütüdür, ancak hesaplanması buyruk sayısı, BBÇ ve saat sıklığı bilgisini gerektirir. Endüstri tarihinde bu karmaşıklıktan kaçınarak tek bir rakamla başarımı özetleme isteği, zaman zaman yanıltıcı pazarlama uygulamalarına yol açmıştır. Bu basitleştirilmiş ölçütlerin en bilineni MIPS'tir --- öyle ki mühendisler arasında kısaltma zamanla \emph{Meaningless Indicator of Processor Speed}\index{MIPS!alaycı açılım} (``İşlemci Hızının Anlamsız Göstergesi'') şeklinde alaycı bir ters açılıma dönüşmüştür.
+
+Saniye Başına İşlenen Milyon Buyruk\index{MIPS (ölçüm birimi)} (\emph{Million Instructions Per Second} --- MIPS):
+\begin{equation}
+\text{MIPS} = \frac{\text{Buyruk sayısı}}{\text{Yürütme zamanı} \times 10^6}
+\label{eq:mips}
+\end{equation}
+
+\begin{terimnotu}
+\textbf{MIPS: ölçüt mü, işlemci mi?}\quad MIPS kısaltması bilgisayar dünyasında iki farklı anlam taşır. Bu bölümde ele aldığımız \emph{Million Instructions Per Second} (Saniye Başına Milyon Buyruk) bir başarım ölçütüdür. Ancak MIPS aynı zamanda Stanford Üniversitesi'nde John Hennessy'nin\index{John Hennessy} 1981'de tasarladığı RISC işlemci mimarisinin de adıdır: \emph{Microprocessor without Interlocked Pipeline Stages}\index{MIPS (işlemci)} (Kilitlemesiz Boru Hattı Aşamalarına Sahip Mikroişlemci). Hennessy ve ekibinin bu adı seçmesi bir rastlantı değildir: ölçüt olarak MIPS'in ``anlamsız'' olduğu tartışmaları zaten sürmekteydi ve bu isim hem teknik bir özelliği (boru hattı kilitlemelerinin yazılıma bırakılmasını) hem de alaycı bir göndermeyi barındırıyordu. MIPS mimarisi ilerleyen yıllarda gömülü sistemlerde ve oyun konsollarında (PlayStation~1 ve~2 gibi) yaygın biçimde kullanıldı. Bu kitapta bağlamdan anlaşılmadığı durumlarda ölçüt için ``MIPS değeri'', mimari için ``MIPS mimarisi'' ifadesi tercih edilecektir.
+\end{terimnotu}
+
+Bir saniyede işlenen buyruk sayısı ilk bakışta mantıklı bir başarım ölçütü gibi görünür; ancak farklı buyruk kümeleri farklı karmaşıklıkta buyruklar içerdiğinden MIPS değeri yanıltıcı sonuçlar verebilir. Aşağıdaki örnekte bu durum somut olarak gösterilmektedir.
+
+
+\begin{ornek}[2.5]
+Ayşegül ve Demre'nin bilgisayarlarındaki işlemciler aynıdır ve saat sıklıkları 200\,MHz'dir. MIPS değerlerini karşılaştırın.
+
+\begin{center}
+\begin{tabular}{lcclcc}
+\toprule
+\multicolumn{3}{c}{\textbf{Ayşegül'ün bilgisayarı}} & \multicolumn{3}{c}{\textbf{Demre'nin bilgisayarı}} \\
+\cmidrule(lr){1-3} \cmidrule(lr){4-6}
+Buyruk & Sayı (M) & BBÇ & Buyruk & Sayı (M) & BBÇ \\
+\midrule
+K & 8  & 2 & K & 10 & 2 \\
+L & 4  & 3 & L & 8  & 3 \\
+M & 2  & 8 & M & 2  & 8 \\
+N & 4  & 4 & N & 4  & 4 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Çözüm:}\\
+Ayşegül --- toplam buyruk: $8+4+2+4 = 18$\,M; toplam çevrim: $8 \times 2 + 4 \times 3 + 2 \times 8 + 4 \times 4 = 60$\,M çevrim.
+\[
+t_A = \frac{60 \times 10^6}{200 \times 10^6} = 0{,}3 \text{\,s}, \qquad \text{MIPS}_A = \frac{18}{0{,}3} = 60{,}0
+\]
+Demre --- toplam buyruk: $10+8+2+4 = 24$\,M; toplam çevrim: $10 \times 2 + 8 \times 3 + 2 \times 8 + 4 \times 4 = 76$\,M çevrim.
+\[
+t_D = \frac{76 \times 10^6}{200 \times 10^6} = 0{,}38 \text{\,s}, \qquad \text{MIPS}_D = \frac{24}{0{,}38} = 63{,}16
+\]
+Demre'nin yürütme zamanı daha uzundur (0,38\,s $>$ 0,30\,s); dolayısıyla \textbf{başarımı daha düşüktür}. Ancak MIPS değeri daha yüksektir (63,16 $>$ 60,0) çünkü Demre'nin programı daha fazla buyruk içermektedir. Bu örnek, MIPS'in güvenilir bir başarım ölçütü olmadığını gösterir.
+\end{ornek}
+
+\begin{bilginot}[Pazarlama Savaşlarında Başarım Ölçütleri]
+Başarım ölçütlerinin pazarlama aracına dönüşmesinin uzun bir tarihi vardır. DEC\index{DEC}, 1977'de VAX-11/780\index{VAX-11/780} işlemcisini ``1 MIPS makine'' diye tanıttı; oysa gerçekte saniyede yaklaşık 500\,000 buyruk yürütüyordu. Tartışma öyle büyüdü ki DEC sonunda kendi ``VAX MIPS'' birimini tanımlamak zorunda kaldı.
+
+Benzer bir pazarlama savaşı kayan nokta başarımında da yaşandı. Apple\index{Apple}, 1999'da Power Mac G4'ü\index{Power Mac G4} piyasaya sürerken PowerPC G4\index{PowerPC} işlemcisinin 1~gigaflop'u aşmasını öne çıkardı ve bilgisayarı ``kişisel süper bilgisayar'' olarak pazarladı. Steve Jobs, Soğuk Savaş döneminden kalma ABD ihracat yasalarına göre bu eşiği aşan bilgisayarların ``mühimmat'' sayıldığını hatırlattı; bir televizyon reklamında bilgisayarın etrafı tanklarla sarıldı, Intel tabanlı PC'ler ise ``zararsız'' ilan edildi. Gerçekte aynı dönemde Intel işlemciler pek çok iş yükünde benzer ya da daha iyi başarım gösteriyordu --- fark, hangi ölçütün seçildiğindeydi. Nitekim Apple, 2005'te Intel'e geçerek bu başarım yarışını fiilen kaybettiğini kabul etti.
+\end{bilginot}
+
+Saniye başına milyon kayan nokta\index{kayan nokta} işlemi, \emph{MFLOPS}\index{MFLOPS} (Million Floating Point Operations per Second) olarak kısaltılır ve yalnızca kayan nokta (floating point) işlemleri yapan buyrukların sayısını hesaba katar. Değişik bilgisayarlarda kayan nokta işlemleri farklılık gösterdiği için MFLOPS da tutarlı bir başarım ölçütü değildir.
+
+\begin{terimnotu}
+\textbf{kayan nokta mı, kayan virgül mü?}\quad İngilizce \emph{floating point} terimi, ondalık ayırıcının sayı içinde ``kayabildiğini'' ifade eder.  Türkçede ondalık ayırıcı olarak nokta değil \emph{virgül} kullanıldığından ($3{,}14$ gibi), aslında bu terime ``kayan virgül'' demek dilimize daha uygun olurdu. Nitekim bazı Türkçe kaynaklarda \emph{kayan virgüllü sayı} ifadesine rastlanır. Ne var ki \emph{floating point} karşılığı olarak \emph{kayan nokta}\index{kayan nokta} kullanımı hem uluslararası literatürle tutarlılık hem de yaygınlık açısından bir öz ad haline gelmiştir. Bu kitapta biz de \textbf{kayan nokta} ifadesini kullanıyoruz.
+\end{terimnotu}
+
+\subsection{FLOPS ve Türevleri}
+\label{subsec:flops}
+
+Bir önceki alt bölümde MFLOPS'un belirli bir programın başarımını ölçmekte güvenilir olmadığını gördük: farklı mimarilerdeki kayan nokta buyrukları farklı karmaşıklıkta olduğundan, program düzeyinde sayılan ``işlem sayısı'' yanıltıcı oluyordu. Ancak FLOPS kavramı burada farklı bir bağlamda karşımıza çıkar: belirli bir programın kaç kayan nokta işlemi yürüttüğünü ölçmek yerine, \emph{donanımın kuramsal üst kapasitesini} tanımlamak amacıyla kullanılır. Bu ayrım can alıcıdır.
+
+\emph{FLOPS}\index{FLOPS} (Floating Point Operations Per Second --- Saniye Başına Kayan Nokta İşlemi), bir sistemin birim zamanda gerçekleştirebildiği en yüksek kayan nokta aritmetik işlem sayısını ifade eder:
+
+\begin{equation}
+\text{FLOPS} = \text{Çekirdek sayısı} \times \text{Saat sıklığı} \times \text{Çekirdek başına çevrim başına KN işlemi}
+\label{eq:flops}
+\end{equation}
+
+Günümüz sistemlerinin kapasitesi milyonlarca FLOPS'un çok ötesinde olduğu için SI ön ekleriyle ifade edilir:
+
+\begin{center}
+\small
+\begin{tabular}{llll}
+\toprule
+\textbf{Kısaltma} & \textbf{Değer} & \textbf{Büyüklük} & \textbf{Örnek Sistem} \\
+\midrule
+MFLOPS  & $10^{6}$  & Milyon    & 1980'ler süper bilgisayarları \\
+GFLOPS\index{GFLOPS}  & $10^{9}$  & Milyar    & Masaüstü MİB \\
+TFLOPS\index{TFLOPS}  & $10^{12}$ & Trilyon   & Oyun GPU'su (NVIDIA RTX 4090: $\sim$83 TFLOPS FP32) \\
+PFLOPS\index{PFLOPS}  & $10^{15}$ & Katrilyon & Süper bilgisayar (Summit, 2018: $\sim$149 PFLOPS FP64) \\
+EFLOPS\index{EFLOPS}  & $10^{18}$ & Kentilyon & Ekzaölçek süper bilgisayarlar \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Kayan nokta işlemleri farklı duyarlık düzeylerinde gerçekleştirilebilir. \emph{Çift duyarlık}\index{çift duyarlık} (FP64, 64 bit), bilimsel hesaplamada altın standart iken yapay zeka eğitiminde genellikle \emph{tek duyarlık}\index{tek duyarlık} (FP32) veya \emph{yarı duyarlık}\index{yarı duyarlık} (FP16/BF16) kullanılır. Bazı çıkarım iş yükleri INT8 hatta INT4 gibi düşük duyarlıklı tam sayı biçimlerini bile tercih eder. Bu nedenle bir FLOPS değeri karşılaştırılırken hangi duyarlık düzeyinde ölçüldüğü mutlaka belirtilmeli.
+
+\begin{bilginot}[Tepe Başarım ve Gerçek Başarım]
+Bir işlemcinin katalog değeri olarak verilen FLOPS rakamı \emph{tepe başarım}\index{tepe başarım} (peak performance) olup, tüm birimlerin her çevrimde tam kapasiteyle çalıştığı kuram düzeyinde bir üst sınırdır. Gerçek uygulamalarda bellek darboğazları, dal yanlış kestirimleri ve veri bağımlılıkları nedeniyle genellikle tepe başarımın \%10--60'ı arasında bir \emph{sürdürülebilir başarım}\index{sürdürülebilir başarım} (sustained performance) elde edilir. Bir sistemin gerçek kapasitesini anlamak için LINPACK\index{LINPACK} gibi karşılaştırma ölçütlerindeki sürdürülebilir değerlere bakmak gerekir.
+\end{bilginot}
+
+\begin{ornek}[2.6]
+Bir GPU'nun teknik özelliklerinde 5120 CUDA çekirdeği, 1,5\,GHz saat sıklığı ve her çekirdeğin çevrim başına 2 tek duyarlıklı (FP32) kayan nokta işlemi yapabildiği belirtilmiştir. Bu GPU'nun FP32 tepe başarımını TFLOPS cinsinden hesaplayın.
+
+\textbf{Çözüm:}
+\[
+\text{FLOPS}_{\text{FP32}} = 5120 \times 1{,}5 \times 10^9 \times 2 = 15{,}36 \times 10^{12} = 15{,}36 \; \text{TFLOPS}
+\]
+\end{ornek}
+
+\begin{bilginot}[Skynet: 60 Teraflop Yeter mi?]
+2003 yapımı \emph{Terminator 3: Rise of the Machines} filminde insanlığı tehdit eden yapay zekâ Skynet'in işlem gücü 60~TFLOPS olarak belirtilir --- o dönem için korku verici bir rakamdır. Bugünün gözüyle bakıldığında tablo oldukça farklıdır: tek bir NVIDIA H100\index{NVIDIA!H100} GPU, FP8 duyarlığında yaklaşık 4~PFLOPS tepe başarıma ulaşır --- Skynet'in yaklaşık 67 katı. Hatta bir oyun konsolu olan PlayStation~5 bile $\sim$10~TFLOPS FP32 başarımıyla Skynet'in altıda birini tek başına karşılar. Bu karşılaştırma, Moore Yasası'nın 20~yılda hesaplama kapasitesini ne denli ileriye taşıdığının çarpıcı bir göstergesidir.
+\end{bilginot}
+
+\subsection{Yapay Zeka İş Yüklerinde Başarım}
+\label{subsec:yz-basarim}
+
+Yapay zeka ve özellikle derin öğrenme\index{derin öğrenme} iş yükleri, geleneksel MİB uygulamalarından temelden farklı başarım gereksinimleri ortaya koyar. Bir sinir ağının eğitimi sırasında milyarlarca çarpma-toplama işlemi tekrar tekrar gerçekleştirilir; bu işlemler büyük ölçüde koşut ve düzenli veri erişim örüntüsüne sahiptir.
+
+\subsubsection*{Eğitim ve çıkarım başarımı}
+Yapay zeka iş yüklerinde iki ayrı aşama bulunur. \emph{Eğitim}\index{eğitim (yapay zeka)} (training) aşamasında model parametreleri büyük veri kümeleri üzerinde yinelenerek güncellenir; bu aşamada yüksek FLOPS kapasitesi ve geniş bellek bant genişliği gereklidir. \emph{Çıkarım}\index{çıkarım (yapay zeka)} (inference) aşamasında ise eğitilmiş model yeni girdilere yanıt üretir; burada gecikme süresi (latency) ve enerji verimliliği (işlem/watt) öne çıkar.
+
+\subsubsection*{Hesaplama yoğunluğu}
+Yapay zeka modellerinin hesaplama gereksinimi astronomik boyutlara ulaşmıştır. GPT-3 düzeyinde bir büyük dil modelinin eğitimi yaklaşık $3{,}14 \times 10^{23}$ kayan nokta işlemi (FLOP) gerektirir. Bu büyüklük, tek bir GPU'nun bile yıllar boyunca hesaplama yapmasını gerektireceğinden binlerce hızlandırıcıdan oluşan kümeler kullanılır.
+
+\begin{terimnotu}
+\textbf{belirteç} (\emph{token})\,: \emph{Belirtmek} fiilinden \emph{-eç} ekiyle. Yapay zeka ve doğal dil işleme alanlarında bir metnin işlenebilir en küçük parçasına verilen addır. Bir belirteç bir sözcük, sözcüğün bir parçası (alt sözcük) veya bir noktalama işareti olabilir. Büyük dil modelleri girdi metnini belirteçlere ayırarak işler ve çıktıyı yine belirteç belirteç üretir. Modelin kapasitesi ve hızı genellikle \emph{belirteç/saniye} birimiyle ölçülür. İngilizce \emph{token} sözcüğü ``simge, jeton'' anlamlarına gelir; bazı Türkçe kaynaklarda \emph{jeton} çevirisi de kullanılır. Bu kitapta Türkçeye daha uygun olan \textbf{belirteç} tercih edilmiştir.
+\end{terimnotu}
+
+\subsubsection*{Başarım ölçütleri}
+Yapay zeka alanında FLOPS'un yanı sıra şu ölçütler de yaygın biçimde kullanılır:
+\begin{itemize}
+    \item \textbf{Belirteç/saniye}\index{belirteç/saniye} (tokens/second): Büyük dil modellerinin çıkarım hızı.
+    \item \textbf{Görüntü/saniye} (images/second): Görüntü sınıflandırma modellerinin işlem hacmi ölçüsü.
+    \item \textbf{FLOPS/watt}\index{FLOPS/watt}: Enerji verimliliği; veri merkezleri için can alıcı.
+    \item \textbf{MLPerf}\index{MLPerf}: SPEC'in yapay zeka karşılığı olarak geliştirilen standart karşılaştırma ölçütü kümesi.
+\end{itemize}
+
+\begin{bilginot}[MLPerf: Yapay Zekanın SPEC'i]\label{bn:mlperf}
+MLCommons\index{MLCommons} tarafından yönetilen \emph{MLPerf}\index{MLPerf}, yapay zeka donanımlarını standart iş yükleriyle karşılaştırmak amacıyla oluşturulmuştur. Eğitim (Training) ve çıkarım (Inference) olmak üzere iki ayrı sınama kümesi bulunur. Görüntü sınıflandırma (ResNet-50), nesne algılama (RetinaNet), doğal dil işleme (BERT) ve büyük dil modeli (GPT) gibi çeşitli iş yüklerini kapsar. Sonuçlar hem kapalı (closed --- sabit model ve hiperparametre) hem de açık (open --- serbest eniyileme) kategorilerde yayımlanır.
+\end{bilginot}
+
+
+\subsection{Karşılaştırmalı Başarım Ölçümü}
+\label{subsec:karsilastirmali-basarim}
+
+Bir bilgisayarın başarımını ölçmek isteyen kişinin ilk sorusu şudur: \emph{neyi ölçeceğim?} Bu sorunun yanıtı bakış açısına göre değişir.
+
+\textbf{Kullanıcı açısından} en güvenilir ölçüt, kendi gerçek iş yüküdür. Amacınız bir bilgisayar oyunu oynamaksa, SPEC skorlarına ya da MIPS değerlerine bakmak sizi yanıltabilir; tek güvenilir yol, aday bilgisayarlarda o oyunu doğrudan çalıştırıp kare hızını karşılaştırmaktır. Hiçbir sınama programı sizin programınızın yerine geçemez --- çünkü her programın bellek erişim örüntüsü, dal davranışı ve hesaplama yoğunluğu kendine özgüdür.
+
+\textbf{Tasarımcı açısından} ise durum farklıdır. Bir işlemci tasarımcısı hangi kullanıcının hangi programı çalıştıracağını önceden bilemez; yeni bir mikromimari önerisinin geniş bir uygulama yelpazesinde nasıl davranacağını anlaması gerekir. Bu nedenle tasarımcılar çok sayıda temsili programdan oluşan \emph{sınama kümeleri}\index{sınama kümesi} kullanır. Büyük işlemci firmalarında yüzlerce gerçek uygulamadan alınan program kesitleri\index{program kesiti}\index{trace} (\emph{trace}) ile testler yapılır --- yalnızca standart sınama kümeleriyle sınırlı kalınmaz. Yine de farklı uygulamalar birbirinden çok farklı sonuçlar üretir; tek bir programa ya da tek bir ölçüte bakarak ``bu işlemci daha hızlı'' demek yanıltıcıdır.
+
+İster kullanıcı ister tasarımcı olalım, birden fazla programın sonuçlarını tek bir sayıda özetlemek gerektiğinde iki temel yöntem kullanılır: \emph{ağırlıklı aritmetik ortalama}\index{ağırlıklı ortalama} ve \emph{geometrik ortalama}\index{geometrik ortalama}.
+
+\subsubsection*{Ağırlıklı aritmetik ortalama}
+
+$n$ adet sınama programının yürütme zamanları $T_1, T_2, \ldots, T_n$ ve her programın iş yükündeki önem derecesini yansıtan ağırlıkları $a_1, a_2, \ldots, a_n$ olmak üzere ağırlıklı aritmetik ortalama şöyle tanımlanır:
+
+\begin{equation}
+\bar{T}_{\text{aritmetik}} = \frac{\sum_{i=1}^{n} a_i \times T_i}{\sum_{i=1}^{n} a_i}
+\label{eq:agirlikli-ort}
+\end{equation}
+
+Tüm ağırlıklar eşitse ($a_i = 1$) bu formül basit aritmetik ortalamaya dönüşür. Ağırlıklı aritmetik ortalama, yürütme zamanı gibi \emph{mutlak büyüklükleri} özetlemek için uygundur; ancak hızlanma oranlarını özetlerken yanıltıcı sonuçlar verebilir.
+
+\subsubsection*{Geometrik ortalama}
+
+$n$ adet sınama programının hızlanma oranları $H_1, H_2, \ldots, H_n$ olmak üzere geometrik ortalama şöyle hesaplanır:
+
+\begin{equation}
+\bar{H}_{\text{geometrik}} = \left( \prod_{i=1}^{n} H_i \right)^{1/n} = \left( H_1 \times H_2 \times \cdots \times H_n \right)^{1/n}
+\label{eq:geometrik-ort}
+\end{equation}
+
+Geometrik ortalama, \emph{oran} ve \emph{hızlanma} gibi çarpımsal büyüklükleri özetlemek için daha uygundur. En önemli avantajı, aşırı yüksek veya düşük tek bir değerin sonucu baskılamamasıdır. Bu nedenle SPEC gibi endüstri standartları geometrik ortalamayı tercih eder.
+
+\subsubsection*{Aritmetik mi, geometrik mi?}
+
+Aşağıdaki basit örnek iki yöntem arasındaki farkı somutlaştırır.
+
+\begin{ornek}[2.7]
+Bir referans işlemciye göre B işlemcisinin beş sınama programındaki hızlanma oranları aşağıda verilmiştir. İki durum için aritmetik ve geometrik ortalamaları hesaplayın ve karşılaştırın.
+
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\toprule
+ & \textbf{Durum~1} & \textbf{Durum~2} \\
+\textbf{Program} & \textbf{B'nin hızlanması} & \textbf{B'nin hızlanması} \\
+\midrule
+Program~1 & 1$\times$ & 1$\times$ \\
+Program~2 & 1$\times$ & 1$\times$ \\
+Program~3 & 1$\times$ & 1$\times$ \\
+Program~4 & 1$\times$ & 1$\times$ \\
+Program~5 & 10$\times$ & 100$\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Çözüm:}
+
+\emph{Durum~1 ---} Beş programın dördünde hiç hızlanma yok; yalnızca birinde 10$\times$ hızlanma var.
+\[
+\text{Aritmetik} = \frac{1+1+1+1+10}{5} = \frac{14}{5} = 2{,}8\times
+\]
+\[
+\text{Geometrik} = (1 \times 1 \times 1 \times 1 \times 10)^{1/5} = 10^{0{,}2} \approx 1{,}58\times
+\]
+
+\emph{Durum~2 ---} Tek fark, Program~5'teki hızlanmanın 100$\times$'e çıkmasıdır.
+\[
+\text{Aritmetik} = \frac{1+1+1+1+100}{5} = \frac{104}{5} = 20{,}8\times
+\]
+\[
+\text{Geometrik} = (1 \times 1 \times 1 \times 1 \times 100)^{1/5} = 100^{0{,}2} \approx 2{,}51\times
+\]
+
+Tek bir programdaki hızlanma 10$\times$'ten 100$\times$'e çıktığında aritmetik ortalama $2{,}8$'den $20{,}8$'e fırladı --- yaklaşık 7,4 kat artış. Oysa geometrik ortalama yalnızca $1{,}58$'den $2{,}51$'e yükseldi (1,6 kat artış). İşlemci gerçekte beş programın dördünde hiçbir iyileşme sağlamıyor; aritmetik ortalama bu gerçeği gizlerken geometrik ortalama daha dürüst bir tablo sunuyor.
+\end{ornek}
+
+Bu örneğin gösterdiği ilke şudur: aritmetik ortalama, tek bir aşırı değerin genel sonucu baskılamasına izin verir; geometrik ortalama ise tüm programlardaki başarımı daha dengeli biçimde yansıtır. Bu nedenle başarım karşılaştırmalarında --- özellikle hızlanma oranları söz konusu olduğunda --- geometrik ortalama tercih edilir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=0.9, every node/.style={transform shape}]
+    % Eksen — biraz aşağıda bırak
+    \draw[line width=1pt, ->] (0,-0.4) -- (11,-0.4) node[right, font=\normalsize] {Ortalama hızlanma ($\times$)};
+
+    % Durum 1 - Aritmetik (mavi)
+    \fill[sinyalmavi!35] (0,3.4) rectangle (1.4,3.9);
+    \draw[sinyalmavi, line width=0.6pt] (0,3.4) rectangle (1.4,3.9);
+    \node[font=\normalsize, anchor=east] at (-0.1,3.65) {Durum~1 (arit.)};
+    \node[font=\small, anchor=west] at (1.55,3.65) {2,8$\times$};
+
+    % Durum 1 - Geometrik (turuncu)
+    \fill[orange!45] (0,2.5) rectangle (0.79,3.0);
+    \draw[orange!80!black, line width=0.6pt] (0,2.5) rectangle (0.79,3.0);
+    \node[font=\normalsize, anchor=east] at (-0.1,2.75) {Durum~1 (geo.)};
+    \node[font=\small, anchor=west] at (0.94,2.75) {1,58$\times$};
+
+    % Durum 2 - Aritmetik (mavi)
+    \fill[sinyalmavi!35] (0,1.4) rectangle (10.4,1.9);
+    \draw[sinyalmavi, line width=0.6pt] (0,1.4) rectangle (10.4,1.9);
+    \node[font=\normalsize, anchor=east] at (-0.1,1.65) {Durum~2 (arit.)};
+    \node[font=\small, anchor=west, text=sinyalmavi!80!black] at (10.55,1.65) {\textbf{20,8}$\times$};
+
+    % Durum 2 - Geometrik (turuncu)
+    \fill[orange!45] (0,0.3) rectangle (1.255,0.8);
+    \draw[orange!80!black, line width=0.6pt] (0,0.3) rectangle (1.255,0.8);
+    \node[font=\normalsize, anchor=east] at (-0.1,0.55) {Durum~2 (geo.)};
+    \node[font=\small, anchor=west] at (1.4,0.55) {2,51$\times$};
+
+    % Açıklama oku
+    \draw[->, sinyalmavi!80!black, line width=0.8pt] (4.0,2.5) -- (4.0,2.0);
+    \node[font=\small, text=sinyalmavi!80!black, align=center, anchor=south] at (4.0,2.55) {Tek program\\10$\times$ $\to$ 100$\times$};
+
+    \node[font=\small\bfseries, text=sinyalmavi!70!black, align=center] at (8,3.2) {Aritmetik ortalama\\7,4 kat şişti};
+    \node[font=\small\bfseries, text=orange!70!black, align=center] at (8,0.55) {Geometrik ortalama\\yalnızca 1,6 kat arttı};
+\end{tikzpicture}
+\caption[Aritmetik ve geometrik ortalama karşılaştırması]{Aritmetik ve geometrik ortalama karşılaştırması: beş programın yalnızca birindeki uç hızlanma değeri aritmetik ortalamayı orantısız biçimde yükseltirken geometrik ortalama dengeli kalır.}
+\label{fig:arit-geo-karsilastirma}
+\end{figure}
+
+\begin{ornek}[2.8]
+Kasırga~5 işlemcisiyle Kasırga~3 işlemcisinin başarımı 9~yapay sınama programıyla karşılaştırılmıştır. Her programın iki işlemcideki yürütme zamanı aşağıda verilmiştir.
+
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\toprule
+\textbf{Program} & \textbf{Kasırga 5 (sn)} & \textbf{Kasırga 3 (sn)} \\
+\midrule
+perlbench    & 640 & 660  \\
+sjeng        & 120 & 200  \\
+gobmk        & 500 & 508  \\
+gcc          & 90  & 1200 \\
+libquantum   & 48  & 920  \\
+hmmer        & 94  & 1400 \\
+art          & 860 & 320  \\
+milc         & 302 & 230  \\
+facerec      & 164 & 48   \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[label=(\alph*)]
+\item Her program için Kasırga~5'in Kasırga~3'e göre hızlanmasını hesaplayın.
+\item Hızlanma değerlerinin aritmetik ve geometrik ortalamasını bulun.
+\item İki ortalama arasındaki farkın nedenini açıklayın. Kasırga~5 gerçekten daha iyi bir işlemci midir?
+\end{enumerate}
+
+\textbf{Çözüm:}
+
+\textbf{(a)} Her program için hızlanma $= T_{\text{Kasırga\,3}} \mathbin{/} T_{\text{Kasırga\,5}}$:
+
+\begin{center}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Program} & \textbf{Kasırga 5 (sn)} & \textbf{Kasırga 3 (sn)} & \textbf{Hızlanma} \\
+\midrule
+perlbench    & 640 & 660  & $660/640 = 1{,}03$ \\
+sjeng        & 120 & 200  & $200/120 = 1{,}67$ \\
+gobmk        & 500 & 508  & $508/500 = 1{,}02$ \\
+gcc          & 90  & 1200 & $1200/90 = 13{,}33$ \\
+libquantum   & 48  & 920  & $920/48 = 19{,}17$ \\
+hmmer        & 94  & 1400 & $1400/94 = 14{,}89$ \\
+art          & 860 & 320  & $320/860 = 0{,}37$ \\
+milc         & 302 & 230  & $230/302 = 0{,}76$ \\
+facerec      & 164 & 48   & $48/164 = 0{,}29$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Dikkat çekici bir nokta: art, milc ve facerec programlarında hızlanma 1'in altındadır --- bu, Kasırga~5'in bu programlarda Kasırga~3'ten \emph{daha yavaş} olduğu anlamına gelir.
+
+\textbf{(b)} Aritmetik ve geometrik ortalamalar:
+\[
+\bar{H}_{\text{aritmetik}} = \frac{1{,}03 + 1{,}67 + 1{,}02 + 13{,}33 + 19{,}17 + 14{,}89 + 0{,}37 + 0{,}76 + 0{,}29}{9} = \frac{52{,}53}{9} \approx 5{,}84\times
+\]
+\[
+\bar{H}_{\text{geometrik}} = (1{,}03 \times 1{,}67 \times 1{,}02 \times 13{,}33 \times 19{,}17 \times 14{,}89 \times 0{,}37 \times 0{,}76 \times 0{,}29)^{1/9} \approx 2{,}02\times
+\]
+
+\textbf{(c)} Aritmetik ortalama ($5{,}84\times$) iyimser bir tablo çizer çünkü gcc, libquantum ve hmmer'daki uç değerler (13--19$\times$) toplamı yukarı çeker. Geometrik ortalama ($2{,}02\times$) ise hem çok yüksek hem çok düşük değerlerin etkisini dengeler ve daha gerçekçi bir resim sunar.
+
+Kasırga~5 ``kesinlikle daha iyi'' denilebilir mi? Hayır --- üç programda daha yavaştır. Aritmetik ortalamaya bakarak ``6 kat hızlı'' demek yanıltıcıdır. Geometrik ortalamanın gösterdiği 2$\times$ bile tüm iş yüklerinde tutarlı bir üstünlük anlamına gelmez; yalnızca \emph{ortalama eğilimi} yansıtır. İş yüküne bağlı olarak Kasırga~3 daha iyi bir seçim bile olabilir.
+\end{ornek}
+
+
+
+% -----------------------------------------------------------------
+% 2.3 Standart Sınama Programı Kümeleri
+% -----------------------------------------------------------------
+\section{Standart Sınama Programı Kümeleri}
+\label{sec:yapay-sinama}
+
+Bir önceki bölümde gördüğümüz gibi, işlemci tasarımcıları kendi önerilerini geniş bir uygulama yelpazesinde değerlendirmek zorundadır. Ancak 1980'lerin sonuna kadar her üretici kendi seçtiği programlarla başarım ölçümü yapıyor ve sonuçları kendi lehine yorumluyordu. Bir firma ``işlemcimiz rakipten 3 kat hızlı'' derken başka bir firma tam tersi bir iddiada bulunabiliyordu --- çünkü her biri farklı programlar, farklı derleyici ayarları ve farklı ölçütler kullanıyordu. Bu durum hem tüketicilerin adil karşılaştırma yapmasını hem de araştırmacıların sonuçları tekrarlamasını olanaksız kılıyordu.
+
+Bu sorunu çözmek için endüstri ortak bir standart oluşturma yoluna gitti. \emph{Yapay sınama programları}\index{yapay sınama programları}\index{benchmark} (\emph{benchmark}), gerçek dünya uygulamalarını temsil eden ve herkesin aynı koşullarda çalıştırabileceği standart iş yükleridir; farklı işlemcilerin başarımını tekrarlanabilir ve adil koşullar altında karşılaştırmaya olanak tanır. Günümüzde farklı uygulama alanlarına yönelik birçok sınama programı kümesi bulunur; bunların en eskisi ve işlemci başarımı için en yaygın kabul göreni \textbf{SPEC}'tir.
+
+\subsection{SPEC}
+\label{subsec:spec}
+
+\textbf{SPEC} (Standard Performance Evaluation Corporation)\index{SPEC}, 1988 yılında Apollo Computer, Hewlett-Packard, MIPS Computer Systems ve Sun Microsystems tarafından kâr amacı gütmeyen bir konsorsiyum olarak kurulmuştur. Bu dört firma, dönemin önde gelen iş istasyonu üreticileriydi ve özellikle RISC tabanlı sistemlerin başarımını nesnel biçimde ölçmek istiyorlardı. Bugün 120'den fazla donanım ve yazılım firması, üniversite ve araştırma kuruluşunu bünyesinde barındıran SPEC, kuruluşundan bu yana altı nesil işlemci sınama programı kümesi yayımlamıştır (Tablo~\ref{tab:spec-nesiller}).
+
+\begin{table}[H]
+\centering
+\caption{SPEC CPU sınama programı kümelerinin evrimi}
+\label{tab:spec-nesiller}
+\small
+\begin{tabular}{@{}llccp{7.5cm}@{}}
+\toprule
+\textbf{Küme} & \textbf{Yıl} & \textbf{Tamsayı} & \textbf{KN} & \textbf{Öne çıkan yenilik} \\
+\midrule
+SPEC89       & 1989 &  4 &  6 & İlk sürüm; referans makine: VAX~11/780 \\
+SPEC92       & 1992 &  6 & 14 & \emph{SPECrate} ve ``base/peak'' ölçümleri \\
+SPEC95       & 1995 &  8 & 10 & Daha büyük veri kümeleri; L1 önbelleğe sığmayan iş yükleri \\
+SPEC CPU2000 & 2000 & 12 & 14 & Referans skorları 100 olarak belirlendi \\
+SPEC CPU2006 & 2006 & 12 & 17 & Daha kapsamlı ve çeşitli iş yükleri \\
+SPEC CPU 2017 & 2017 & 10 & 13 & OpenMP\index{OpenMP} çoklu iş parçacığı desteği \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Güncel sürüm olan \textbf{SPEC~CPU~2017}\index{SPEC CPU 2017}~\cite{bucek2018}, dört ayrı sınama kümesinden oluşur: \emph{SPECspeed} (tek görev tamamlama süresi) ve \emph{SPECrate} (birim zamanda tamamlanan görev sayısı) ayrımı hem tamsayı hem de kayan nokta için yapılmaktadır. SPEC~2006'ya kıyasla ortalama iş yükü büyüklüğü yaklaşık 10 kat artmış, yapay zeka, video sıkıştırma, 3B görüntüleme ve okyanus modelleme gibi yeni uygulama alanları eklenmiştir.
+
+\begin{table}[H]
+\centering
+\caption{SPECint~2017 Tamsayı Sınama Programları}
+\label{tab:specint2017}
+\small
+\begin{tabular}{llp{6cm}}
+\toprule
+\textbf{Program} & \textbf{Dil} & \textbf{Açıklama} \\
+\midrule
+perlbench\_r   & C       & Perl yorumlayıcısı; metin işleme \\
+gcc\_r         & C       & GNU C derleyicisi \\
+mcf\_r         & C       & Minimum maliyetli ağ akışı; araç rotalama \\
+omnetpp\_r     & C++     & Ayrık olay ağ benzetimi \\
+xalancbmk\_r   & C++     & XML/XSLT dönüşümü \\
+x264\_r        & C       & H.264/AVC video sıkıştırma \\
+deepsjeng\_r   & C++     & Yapay zeka; satranç motoru \\
+leela\_r       & C++     & Yapay zeka; Go oyunu (Monte Carlo ağaç arama) \\
+exchange2\_r   & Fortran & Yapay zeka; Sudoku çözücüsü \\
+xz\_r          & C       & LZMA veri sıkıştırma \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{SPECfp~2017 Kayan Nokta Sınama Programları}
+\label{tab:specfp2017}
+\small
+\begin{tabular}{llp{6cm}}
+\toprule
+\textbf{Program} & \textbf{Dil} & \textbf{Açıklama} \\
+\midrule
+bwaves\_r      & Fortran    & Patlama dalgası benzetimi \\
+cactuBSSN\_r   & C++/C/Fortran & Genel görelilik (Einstein denklemleri) \\
+namd\_r        & C++        & Moleküler dinamik benzetimi \\
+parest\_r      & C++        & Biyomedikal görüntüleme; sonlu elemanlar \\
+povray\_r      & C++/C      & Işın izleme (ray tracing) \\
+lbm\_r         & C          & Kafes Boltzmann akışkanlar dinamiği \\
+wrf\_r         & Fortran/C  & Hava tahmini modeli \\
+blender\_r     & C++/C      & 3B görüntüleme ve canlandırma \\
+cam4\_r        & Fortran/C  & Atmosfer modelleme (iklim) \\
+imagick\_r     & C          & Görüntü işleme (ImageMagick) \\
+nab\_r         & C          & Moleküler dinamik; nükleik asit modelleme \\
+fotonik3d\_r   & Fortran    & Hesaplamalı elektromanyetik (FDTD) \\
+roms\_r        & Fortran    & Bölgesel okyanus modelleme \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{bilginot}[SPEC~2006'dan SPEC~2017'ye Geçiş]
+SPEC~CPU~2017~\cite{bucek2018}, selefine~\cite{henning2006} göre önemli değişiklikler içerir. \emph{SPECspeed} kümesinde iş parçacığı düzeyinde koşutluk (OpenMP) ilk kez desteklenerek çok çekirdekli işlemcilerin avantajı ölçülebilir hale gelmiştir. Bellek gereksinimi ortalama 4--6 kat artmıştır. Yapay zeka ve oyun motoru gibi yeni program türleri eklenmiştir. SPEC~2006 ile SPEC~2017 sonuçları doğrudan karşılaştırılamaz; farklı iş yükleri ve ölçüm yöntemleri kullanıldığından her biri kendi referans çerçevesinde değerlendirilmelidir.
+\end{bilginot}
+
+\subsection{SPEC Puanı Nasıl Hesaplanır?}
+\label{subsec:spec-puan-hesaplama}
+
+Bir SPEC kümesinde 10--23 arasında program bulunur ve her biri farklı bir uygulama alanını temsil eder. Peki bir işlemcinin tüm bu programlardaki başarımını nasıl tek bir sayıda özetleyebiliriz? Çiğ yürütme zamanlarının ortalamasını almak işe yaramaz: programlar arasında devasa süre farkları vardır --- biri 10~saniyede biterken diğeri 3~saat sürebilir. Böyle bir ortalamada en uzun süren program sonucu baskılar ve kısa programlardaki farklılıklar görünmez olur.
+
+SPEC bu sorunu iki adımda çözer. Birincisi, her programın yürütme zamanını bir \emph{referans makine}nin süresine bölerek \emph{normalize} eder. Böylece tüm programlar ``referans makineye göre kaç kat hızlı?'' sorusuna yanıt veren birimsiz oranlara dönüşür ve saniye--saat ölçek farkı ortadan kalkar. İkincisi, bu oranları Bölüm~\ref{subsec:karsilastirmali-basarim}'de tartıştığımız \emph{geometrik ortalama} ile birleştirir; böylece tek bir uç değerin sonucu baskılaması önlenir.
+
+Formülleştirelim: SPEC~CPU~2017'de referans makine (sabit bir eski sistem) her program $i$ için bir referans süre $T_{\text{ref},i}$ tanımlar. Sınanan makinenin aynı program için ölçülen süresi $T_{\text{test},i}$ olsun. Her programın bireysel SPEC oranı:
+
+\begin{equation}
+r_i = \frac{T_{\text{ref},i}}{T_{\text{test},i}}
+\label{eq:spec-oran}
+\end{equation}
+
+\noindent $r_i > 1$ ise sınanan makine referanstan hızlı, $r_i < 1$ ise yavaş demektir. Nihai SPEC puanı, tüm bireysel oranların geometrik ortalamasıdır:
+
+\begin{equation}
+\text{SPEC puanı} = \left(\prod_{i=1}^{n} r_i\right)^{1/n}
+\label{eq:spec-puan}
+\end{equation}
+
+\noindent Geometrik ortalamanın burada tercih edilmesinin bir nedeni daha vardır: iki işlemcinin geometrik ortalamalarının oranı, her zaman bireysel oranların geometrik ortalamasına eşittir. Başka bir deyişle, hangi makine referans seçilirse seçilsin, iki işlemci arasındaki göreceli sıralama değişmez.
+
+\begin{ornek}[2.9]
+Fırtına ve Bora adlı iki işlemci, SPECint~2017 kümesinden seçilmiş beş programla sınanmıştır. Referans makinenin ve iki işlemcinin yürütme zamanları (saniye) aşağıda verilmiştir.
+
+\begin{center}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Program} & \textbf{Referans (sn)} & \textbf{Fırtına (sn)} & \textbf{Bora (sn)} \\
+\midrule
+gcc         & 8200 & 1640 & 2050 \\
+mcf         & 6800 & 1943 & 1360 \\
+deepsjeng   & 7400 & 1480 & 1850 \\
+leela       & 7000 & 2000 & 1167 \\
+xz          & 5600 & 800  & 1120 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[label=(\alph*)]
+\item Her program için iki işlemcinin SPEC oranlarını ($r_i$) hesaplayın.
+\item Her iki işlemcinin SPEC puanını bulun. Hangisi daha yüksek skora sahiptir?
+\item Sonucu yorumlayın: yüksek skorlu işlemci her programda daha mı hızlıdır?
+\end{enumerate}
+
+\textbf{Çözüm:}
+
+\textbf{(a)} Her program için $r_i = T_{\text{ref},i} \mathbin{/} T_{\text{test},i}$:
+
+\begin{center}
+\small
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Program} & \textbf{Referans} & \textbf{Fırtına} & $r_i$ \textbf{(Fırtına)} & \textbf{Bora} & $r_i$ \textbf{(Bora)} \\
+\midrule
+gcc         & 8200 & 1640 & $8200/1640 = 5{,}00$ & 2050 & $8200/2050 = 4{,}00$ \\
+mcf         & 6800 & 1943 & $6800/1943 = 3{,}50$ & 1360 & $6800/1360 = 5{,}00$ \\
+deepsjeng   & 7400 & 1480 & $7400/1480 = 5{,}00$ & 1850 & $7400/1850 = 4{,}00$ \\
+leela       & 7000 & 2000 & $7000/2000 = 3{,}50$ & 1167 & $7000/1167 = 6{,}00$ \\
+xz          & 5600 & 800  & $5600/800\;\: = 7{,}00$ & 1120 & $5600/1120 = 5{,}00$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{(b)} Geometrik ortalamalar:
+\[
+\text{Fırtına} = (5{,}00 \times 3{,}50 \times 5{,}00 \times 3{,}50 \times 7{,}00)^{1/5} = (2143{,}75)^{0{,}2} \approx 4{,}56
+\]
+\[
+\text{Bora} = (4{,}00 \times 5{,}00 \times 4{,}00 \times 6{,}00 \times 5{,}00)^{1/5} = (2400)^{0{,}2} \approx 4{,}73
+\]
+
+Bora'nın SPEC puanı ($4{,}73$) Fırtına'nınkinden ($4{,}56$) yaklaşık \%4 daha yüksektir.
+
+\textbf{(c)} Bora genel SPEC puanında önde olmasına karşın, gcc ve deepsjeng programlarında Fırtına daha hızlıdır; xz'de ise Fırtına belirgin biçimde üstündür ($7{,}00$'e karşı $5{,}00$). SPEC puanı tüm programları eşit ağırlıkla birleştirir; dolayısıyla tek bir sayı, her programdaki davranışı gizler. Kullanıcının iş yükü gcc ve xz ağırlıklıysa Fırtına daha iyi bir seçim olabilir. Bu örnek, SPEC puanının yararlı bir özet olduğunu ama her durumda yeterli olmadığını göstermektedir --- bireysel program oranlarına da bakılmalıdır.
+\end{ornek}
+
+\subsection{Diğer Sınama Programı Kümeleri}
+\label{subsec:diger-sinama}
+
+SPEC, işlemci başarımı için en yaygın kabul görmüş standart olsa da tek sınama programı kümesi değildir. Farklı uygulama alanları, kendine özgü sınama standartları geliştirmiştir:
+
+\begin{itemize}
+    \item \textbf{EEMBC}\index{EEMBC} (Embedded Microprocessor Benchmark Consortium): Gömülü sistemler ve mikrodenetleyiciler için tasarlanmış sınama kümeleri sunar. \emph{CoreMark}\index{CoreMark}~\cite{galon2012} programı bu konsorsiyumun en bilinen ürünüdür ve gömülü işlemci karşılaştırmalarında fiilen standart hâline gelmiştir.
+    \item \textbf{PARSEC}\index{PARSEC}~\cite{bienia2008} ve \textbf{SPLASH-2}\index{SPLASH-2}~\cite{woo1995}: Çok çekirdekli işlemcilerin koşut hesaplama başarımını ölçmek için geliştirilmiş akademik sınama kümeleridir. Görüntü işleme, akışkan dinamiği ve veri madenciliği gibi koşutluğu yüksek iş yükleri içerir.
+    \item \textbf{TPC}\index{TPC} (Transaction Processing Performance Council)~\cite{tpc}: Veri tabanı ve işlem işleme başarımını ölçer. TPC-C (çevrimiçi işlem), TPC-H (karar destek) ve TPC-DS (veri ambarı) gibi farklı senaryolara yönelik sınama kümeleri sunar.
+    \item \textbf{LINPACK}\index{LINPACK}~\cite{dongarra2003}: Yoğun doğrusal cebir hesaplamalarına dayanan bu sınama programı, dünyanın en hızlı 500 süper bilgisayarını sıralayan \emph{Top500}\index{Top500} listesinin temelini oluşturur.
+    \item \textbf{Geekbench}\index{Geekbench}~\cite{geekbench}, \textbf{Cinebench}\index{Cinebench}, \textbf{3DMark}\index{3DMark}: Tüketici odaklı sınama programlarıdır. Özellikle bilgisayar ve akıllı telefon incelemelerinde yaygın biçimde kullanılır; ancak endüstri ve akademi çevrelerinde SPEC kadar ağırlık taşımaz.
+\end{itemize}
+
+Bu çeşitlilik, Bölüm~\ref{subsec:karsilastirmali-basarim}'de vurguladığımız ilkeyi pekiştirir: başarım tek boyutlu bir kavram değildir. Gömülü bir sistem tasarımcısı CoreMark sonuçlarına, süper bilgisayar araştırmacısı LINPACK'e, yapay zeka mühendisi MLPerf'e~\cite{mattson2020} (Bilgi Notu~\ref{bn:mlperf}) bakarken, bir oyuncu yalnızca kendi oyunundaki kare hızına güvenir. Doğru sınama programı, ölçülmek istenen iş yüküne bağlıdır.
+
+% -----------------------------------------------------------------
+% 2.4 Başarım Eğilimleri: Geçmişten Günümüze
+% -----------------------------------------------------------------
+\section{Başarım Eğilimleri: Geçmişten Günümüze}
+\label{sec:basarim-egilimleri}
+
+Bilgisayar başarımının tarihsel gelişimi, mimari kararları derinden şekillendirmiştir. Bu eğilimleri anlamak, bugünün tasarım tercihlerinin nedenini kavramak için önemlidir.
+
+\subsection{Tek Çekirdek Başarımının Altın Çağı (1980--2005)}
+\label{subsec:altin-cag}
+
+1980'lerin başından 2000'lerin ortasına kadar uzanan yaklaşık 25 yıllık dönemde tek çekirdekli işlemci başarımı her yıl ortalama \%40--50 oranında artmıştır. Bu büyümenin üç temel kaynağı vardı:
+
+\begin{enumerate}
+    \item \textbf{Saat sıklığının artması:} Transistörlerin küçülmesi, devrelerin daha hızlı anahtarlamasına olanak tanıdı. 1985'te 16\,MHz olan saat sıklığı 2005'te 3,8\,GHz'e ulaştı --- yaklaşık 240 kat artış.
+
+    \item \textbf{Buyruk düzeyinde koşutluk:} Boru hattı derinleştirme, çoklu yürütme birimi ve sırasız yürütüm (out-of-order execution) gibi mikromimari yenilikler BBÇ değerini düşürdü. Tek çevrimlik işlemcilerden süperskaler işlemcilere geçiş, aynı saat sıklığında bile başarımı birkaç kat artırdı.
+
+    \item \textbf{Önbellek hiyerarşisinin gelişmesi:} Artan transistör bütçesi daha büyük ve çok katmanlı önbelleklere ayrıldı; bu sayede bellek erişim gecikmelerinin etkisi azaltıldı.
+\end{enumerate}
+
+Bu dönemde ortaya çıkan en önemli mimari gelişmelerden biri 1980'lerde başlayan \emph{RISC devrimi}\index{RISC devrimi}'dir. Berkeley ve Stanford üniversitelerinde geliştirilen RISC (Reduced Instruction Set Computer --- İndirgenmiş Buyruk Kümeli Bilgisayar) felsefesi, az sayıda basit buyruğun boru hattında verimli bir şekilde yürütülmesini öneriyordu. MIPS, SPARC ve ARM gibi BKM'ler bu dönemde doğmuş, RISC-V\index{RISC-V} ise 2010'larda bu geleneğin açık kaynak devamı olarak ortaya çıkmıştır. RISC yaklaşımı, saat sıklığı artışı ve buyruk düzeyinde koşutluk yenilikleriyle birleşerek altın çağın itici gücü olmuştur.
+
+Bu 25 yıllık dönemde tek çekirdek başarımı yaklaşık 10\,000 kat artmıştır: 1985'teki bir iş istasyonu yaklaşık 1~MIPS başarıma sahipken, 2005'teki bir masaüstü bilgisayar 10\,000~MIPS'i aşıyordu. Programcılar açısından bu dönem son derece verimli bir çağdı: yazılımı değiştirmeden her 18--24 ayda bir donanımın yenilenmesiyle program kendiliğinden hızlanıyordu. Herb Sutter'ın deyimiyle ``bedava öğle yemeği'' dönemi\index{bedava öğle yemeği} yaşanıyordu. Ne var ki bu dönem 2005'te güç duvarıyla birlikte sona erecekti.
+
+\subsection{Güç Duvarı ve Başarım Duraksaması (2005--günümüz)}
+\label{subsec:guc-duvari-basarim}
+
+2005 civarında Dennard ölçeklemesinin\index{Dennard ölçeklemesi} sona ermesiyle güç duvarı ortaya çıktı. Transistörler küçülmeye devam etse de güç yoğunluğu artık düşmüyordu; aksine sızıntı akımları nedeniyle yükseliyordu. Saat sıklığını artırmak sürdürülemez bir güç tüketimine ve ısınma sorununa yol açtığı için endüstri paradigma değiştirmek zorunda kaldı.
+
+Bu dönüm noktasından sonra tek çekirdek başarımındaki yıllık artış \%3--5 düzeyine geriledi. Başarım artışı için üç yeni strateji öne çıktı:
+
+\begin{itemize}
+    \item \textbf{Çok çekirdekli işlemciler:} Transistör bütçesi tek bir hızlı çekirdeğe değil, birden fazla çekirdeğe harcanmaya başladı. Başarım artışı, yazılımın koşut olarak yazılmasını gerektirdiği için Amdahl Yasası'nın kısıtları devreye girdi.
+
+    \item \textbf{Alana özgü hızlandırıcılar:} GPU, TPU ve NPU gibi özel amaçlı birimlerin işlemci ile aynı yonga üzerine veya aynı sisteme entegre edilmesi. Genel amaçlı esneklikten ödün vererek belirli iş yüklerinde büyük başarım kazanımları sağlar.
+
+    \item \textbf{Gelişmiş bellek hiyerarşisi:} HBM (High Bandwidth Memory)\index{HBM} gibi yüksek bant genişlikli bellek teknolojileri ve 3B yonga istifleme, bellek darboğazını hafifletmek için geliştirildi.
+\end{itemize}
+
+\begin{terimnotu}
+\textbf{koşut} (\emph{parallel})\,: İngilizce \emph{parallel} sözcüğü Latince \emph{parallelus} ``yan yana giden'' kökünden gelir. Türkçe karşılığı olan \emph{koşut}, \emph{koşmak} fiilinden türetilmiştir: yan yana aynı yönde koşan iki şerit gibi, birbirinden bağımsız ama eş zamanlı ilerleyen süreçleri ifade eder. Bu kitapta \emph{koşut hesaplama} (parallel computing), \emph{koşutluk} (parallelism) ve \emph{koşutlaştırma} (parallelization) biçimlerinde kullanılmıştır.\index{koşut hesaplama}\index{koşutluk}
+\end{terimnotu}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, xscale=0.88]
+    % Eksenler
+    \draw[thick, ->] (0,0) -- (15,0) node[below, font=\small\bfseries] {Yıl};
+    \draw[thick, ->] (0,0) -- (0,8) node[above, font=\small\bfseries, align=center] {Göreceli\\Başarım};
+
+    % X ekseni etiketleri
+    \foreach \yr/\xp in {1985/1.5, 1990/3, 1995/4.5, 2000/6, 2005/7.5, 2010/9, 2015/10.5, 2020/12, 2025/13.5} {
+        \draw (\xp, -0.1) -- (\xp, 0.1);
+        \node[below, font=\footnotesize\bfseries] at (\xp, -0.15) {\yr};
+    }
+    \node[below, font=\footnotesize\bfseries] at (0, -0.15) {1980};
+
+    % Y ekseni etiketleri (logaritmik ölçek temsili)
+    \foreach \val/\lbl in {0/1, 1.5/10, 3/100, 4.5/1000, 6/10000, 7.5/100000} {
+        \draw (-0.1, \val) -- (0.1, \val);
+        \node[left, font=\footnotesize\bfseries] at (-0.15, \val) {\lbl$\times$};
+    }
+    \draw[gray!20] (0,0) grid[xstep=1.5, ystep=1.5] (13.5,7.5);
+
+    % Tek çekirdek başarımı (hızlı artış 1980-2005, yavaş artış 2005-2025)
+    \draw[very thick, sinyalmavi] (0,0) -- (1.5,0.8) -- (3,1.8) -- (4.5,2.8) -- (6,3.8) -- (7.5,4.5);
+    \draw[very thick, sinyalmavi, densely dashed] (7.5,4.5) -- (9,4.7) -- (10.5,4.85) -- (12,5.0) -- (13.5,5.1);
+    \node[font=\footnotesize\bfseries, text=sinyalmavi, right] at (13.5,5.1) {Tek çekirdek};
+
+    % Çok çekirdekli toplam başarım
+    \draw[very thick, sinyalyesil] (7.5,4.5) -- (9,5.2) -- (10.5,5.7) -- (12,6.1) -- (13.5,6.4);
+    \node[font=\footnotesize\bfseries, text=sinyalyesil, right] at (13.5,6.4) {Çok çekirdek};
+
+    % Saat sıklığı
+    \draw[thick, sinyalkirmizi, densely dotted] (0,0) -- (1.5,0.6) -- (3,1.4) -- (4.5,2.2) -- (6,3.0) -- (7.5,3.3);
+    \draw[thick, sinyalkirmizi, densely dotted] (7.5,3.3) -- (9,3.35) -- (10.5,3.4) -- (12,3.45) -- (13.5,3.5);
+    \node[font=\footnotesize\bfseries, text=sinyalkirmizi, right] at (13.5,3.5) {Saat sıklığı};
+
+    % Güç duvarı çizgisi
+    \draw[very thick, dashed, gray!60] (7.5,0) -- (7.5,8);
+    \node[font=\small\bfseries, text=gray!60, anchor=south] at (7.5,8) {Güç Duvarı};
+
+    % Dönem etiketleri
+    \node[font=\small\bfseries, text=sinyalmavi!80, align=center] at (4,5.5) {Yılda $\sim$\%50 artış};
+    \draw[->, very thick, sinyalmavi!60] (4,5.15) -- (3.5,3.2);
+    \node[font=\small\bfseries, text=gray!60, align=center] at (11,4.0) {Yılda $\sim$\%3 artış};
+    \draw[->, very thick, gray!50] (11,4.3) -- (11,4.8);
+
+\end{tikzpicture}
+\caption[İşlemci başarım eğilimleri]{İşlemci başarım eğilimleri: tek çekirdek başarımı 2005'ten sonra duraklama dönemine girmiş, çok çekirdekli ve heterojen mimariler büyümeyi devam ettirmektedir.}
+\label{fig:basarim-egilimi}
+\end{figure}
+
+\subsection{Günümüz: Verimlilik ve Uzmanlaşma Çağı}
+\label{subsec:verimlilik-cagi}
+
+Transistör sayısı Moore Yasası doğrultusunda artmaya devam etmektedir; ancak bu transistörler artık saat sıklığını yükseltmek yerine daha fazla çekirdek, daha büyük önbellek veya alana özgü hızlandırıcı birimler olarak kullanılmaktadır.
+
+Yapay zeka iş yüklerindeki patlayıcı büyüme, başarım talebini yeni boyutlara taşımıştır. Tablo~\ref{tab:basarim-kilometre} bazı tarihi dönüm noktalarını özetlemektedir.
+
+\begin{table}[H]
+\centering
+\caption{Hesaplama başarımında kilometre taşları}
+\label{tab:basarim-kilometre}
+\small
+\begin{tabular}{llll}
+\toprule
+\textbf{Yıl} & \textbf{Sistem} & \textbf{Başarım} & \textbf{Dönüm Noktası} \\
+\midrule
+1946 & ENIAC           & $\sim$5\,000 toplama/s & İlk elektronik bilgisayar \\
+1964 & CDC 6600        & 3\,MFLOPS         & İlk süper bilgisayar \\
+1985 & Cray-2          & 1,9\,GFLOPS       & Gigaflops sınırı \\
+1997 & ASCI Red        & 1,07\,TFLOPS      & İlk teraflops sistemi \\
+2008 & IBM Roadrunner  & 1,0\,PFLOPS       & İlk petaflops sistemi \\
+2022 & Frontier        & 1,2\,EFLOPS       & İlk ekzaflops sistemi \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Bu tablo, hesaplama başarımının kabaca her 10--15 yılda 1000 kat arttığını göstermektedir. Ancak bu artış artık tek bir işlemcinin hızlanmasıyla değil, binlerce işlemcinin ve hızlandırıcının koşut çalışmasıyla elde edilmektedir.
+
+Günümüzün en belirgin eğilimlerinden biri \emph{Tek Yongada Sistem}\index{Tek Yongada Sistem}\index{SoC} (System on Chip --- SoC) yaklaşımıdır. MİB çekirdekleri, GPU, sinir ağı motoru, medya işleme birimi ve bellek denetleyicisi gibi farklı bileşenler tek bir yongada tümleştirilir. Apple'ın 2020'de Mac bilgisayarlarını Intel x86 mimarisinden kendi tasarladığı ARM tabanlı M~serisi yongalara geçirmesi bu eğilimin en çarpıcı örneklerinden biridir. Apple M1 yongası, yüksek başarım ve düşük güç tüketimini bir arada sunarak alana özgü hızlandırıcıların potansiyelini somut olarak göstermiştir.
+
+Bir diğer önemli eğilim ise \emph{yongacık mimarisidir}\index{yongacık mimarisi} (chiplet architecture). Tek bir büyük yonga yerine, küçük yonga parçacıklarının (\emph{chiplet}) gelişmiş paketleme teknolojisiyle birbirine bağlanması hem üretim verimini artırır hem de farklı üretim süreçlerinin (örneğin MİB çekirdekleri için 5\,nm, G/Ç birimleri için 14\,nm) bir arada kullanılmasına olanak tanır. AMD'nin Zen mimarisi ve Intel'in Ponte Vecchio gibi tasarımları bu yaklaşımın öncüleridir. Yongacık mimarisi, Moore Yasası'nın yavaşladığı bir dönemde maliyet ve üretim verimliliği açısından yeni bir ölçekleme yolu sunmaktadır.
+
+
+% -----------------------------------------------------------------
+% 2.5 Amdahl Yasası
+% -----------------------------------------------------------------
+\section{Amdahl Yasası}
+\label{sec:amdahl}
+
+1960'lı yıllarda bilgisayar tasarımcılarını meşgul eden temel sorulardan biri şuydu: \emph{Tek bir güçlü işlemci mi yapmak, yoksa birden çok işlemciyi bir arada çalıştırmak mı daha etkilidir?} Dönemin işlemcileri bugünkü ölçütlerle son derece yavaştı ve birçok araştırmacı çok işlemcili sistemlerin bu darboğazı aşacağını umuyordu.
+
+IBM'in System/360\index{IBM System/360} ana bilgisayar ailesinin baş mimarı olan Gene Amdahl\index{Amdahl, Gene} (1922--2015) bu iyimser beklentiyi sorguladı. 1967'de AFIPS Bilgisayar Konferansı'nda sunduğu kısa ama son derece etkili bildirisinde~\cite{amdahl1967}, programların doğası gereği sıralı kalan bölümlerinin, sisteme ne kadar işlemci eklenirse eklensin toplam hızlanmayı sınırlayacağını gösterdi. Bu düşünceyi somutlaştırmak için günlük hayattan bir benzetme yapalım: bir kişi Artvin'e yürüyerek 100 günde gidiyorsa, 100 kişinin yola çıkması bu süreyi 1 güne indirmez; çünkü yürüme işini herkesin kendi adına kendisinin yapması gerekir. Programlarda da durum benzerdir: bir kısmı doğası gereği sıralıdır ve koşutlaştırılamaz.
+
+Amdahl'ın bu gözlemi tek işlemcili mimarilerin önemini yeniden vurgulasa da, daha geniş bir ilke olarak her türlü \emph{kısmi iyileştirmenin} toplam başarıma etkisini nicel olarak açıklar. Bir mühendis işlemcinin kayan nokta birimini 10 kat hızlandırmak için aylarca çalıştığında toplam başarım ne kadar artar? Yanıt, o birimin programın ne kadarını etkilediğine bağlıdır. Bu ilişki \emph{Amdahl Yasası}\index{Amdahl yasası} olarak bilinir.
+
+Amdahl Yasası'nın temel düşüncesi şudur: yapılan bir iyileştirme programın tamamını değil, yalnızca belirli bir bölümünü hızlandırır. Programın geri kalan kısmı bu iyileştirmeden etkilenmez ve eski hızında çalışmaya devam eder. Bu yüzden, iyileştirme ne kadar büyük olursa olsun, etkilenmeden kalan bölüm toplam hızlanmaya bir üst sınır koyar.
+
+Bu ilişkiyi nicel olarak ifade edelim. Önce hızlanmayı tanımlayalım:
+\begin{equation}
+\text{Hızlanma} = \frac{\text{Başarım}_{\text{yeni}}}{\text{Başarım}_{\text{eski}}} = \frac{\text{Yürütme zamanı}_{\text{eski}}}{\text{Yürütme zamanı}_{\text{yeni}}}
+\label{eq:hizlanma}
+\end{equation}
+
+Programın toplam yürütme zamanını iki parçaya ayıralım: iyileştirmeden \emph{etkilenen} bölüm ve \emph{etkilenmeyen} bölüm. Etkilenen bölümün programın toplam yürütme zamanı içindeki oranını $P$ ile gösterelim ($0 \le P \le 1$). Bu durumda etkilenmeyen bölümün oranı $(1-P)$~olur. İyileştirme, etkilenen bölümü $H$ kat hızlandırıyorsa yeni yürütme zamanının her bir parçası şöyle hesaplanır:
+\begin{itemize}
+    \item \textbf{Etkilenmeyen bölüm} --- Bu kısım aynen kalır: \quad $(1-P) \times \text{Yürütme zamanı}_{\text{eski}}$
+    \item \textbf{Etkilenen bölüm} --- $H$ kat hızlandığı için süresi $H$'ye bölünür: \quad $\dfrac{P}{H} \times \text{Yürütme zamanı}_{\text{eski}}$
+\end{itemize}
+
+İki parçayı toplarsak yeni yürütme zamanını elde ederiz:
+\begin{equation}
+\text{Yürütme zamanı}_{\text{yeni}} = (1 - P) \times \text{Yürütme zamanı}_{\text{eski}} \;+\; \frac{P}{H} \times \text{Yürütme zamanı}_{\text{eski}}
+\end{equation}
+
+Eski yürütme zamanını paranteze alırsak:
+\begin{equation}
+\text{Yürütme zamanı}_{\text{yeni}} = \text{Yürütme zamanı}_{\text{eski}} \times \left( (1 - P) + \frac{P}{H} \right)
+\label{eq:amdahl-zaman}
+\end{equation}
+
+Bu ifadeyi Denklem~\ref{eq:hizlanma}'daki hızlanma tanımında yerine koyarsak Amdahl Yasası'nın genel formülünü elde ederiz:
+\begin{equation}
+\text{Hızlanma} = \frac{1}{(1-P) + \dfrac{P}{H}}
+\label{eq:amdahl}
+\end{equation}
+
+Formülün iki uç durumunu inceleyelim. Eğer $P = 0$ ise (iyileştirme programın hiçbir bölümünü etkilemiyorsa) hızlanma~$= 1$ olur; başka bir deyişle program hiç hızlanmaz. Eğer $P = 1$ ise (programın tamamı etkileniyorsa) hızlanma~$= H$ olur ve iyileştirmenin tüm etkisi sisteme yansır. Uygulamada $P$ bu iki uç arasında bir yerdedir ve iyileştirmenin anlamlı bir hızlanma sağlaması için programın yeterince büyük bir bölümünü etkilemesi gerekir. Şekil~\ref{fig:amdahl-gorsel}'te üç farklı etki oranı için aynı hızlandırmanın ($H=5$) toplam başarıma etkisi gösterilmektedir. Şekilde Program~C'de görüldüğü gibi, yapılan iyileştirme 5 kat gibi yüksek bir düzeyde olsa bile programın çok küçük bir bölümünü ($P=0{,}1$) etkiliyorsa genel hızlanma yalnızca $1{,}08\times$ düzeyinde kalır.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth]
+    % Horizontal bar chart
+    % X axis: Yürütme zamanı (s), 0-12
+    % Y axis: Program A (top), Program B (middle), Program C (bottom)
+    % Each program: "Önce" bar on top, "Sonra" bar below it
+    \def\barh{0.35}       % bar height
+    \def\gap{1.9}         % vertical gap between program groups (centre to centre)
+    \def\xs{0.75}         % x scale: 1 s = \xs cm
+    \def\yA{3.8}          % y centre of Program A group (top)
+    \def\yB{1.9}          % y centre of Program B group
+    \def\yC{0.0}          % y centre of Program C group (bottom)
+    \def\lbloff{0.55}     % label x offset from bar end
+
+    % -------------------------------------------------------
+    % X axis (horizontal)
+    \draw[thick, ->] (0, {-\barh-0.45}) -- ({12*\xs+0.4}, {-\barh-0.45})
+        node[right, font=\small\bfseries] {Yürütme zamanı (s)};
+    \foreach \val in {0,2,...,12} {
+        \draw ({\val*\xs}, {-\barh-0.38}) -- ({\val*\xs}, {-\barh-0.52});
+        \node[below, font=\scriptsize] at ({\val*\xs}, {-\barh-0.55}) {\val};
+    }
+    % Vertical grid lines
+    \foreach \val in {2,4,...,12} {
+        \draw[gray!20, thin] ({\val*\xs}, {-\barh-0.45}) -- ({\val*\xs}, {\yA+\barh+0.15});
+    }
+    % Left spine
+    \draw[gray!40, thin] (0, {-\barh-0.45}) -- (0, {\yA+\barh+0.15});
+
+    % -------------------------------------------------------
+    % Program A (P=0.8, H=5)
+    % Önce: 10s = 8s hızlandırılan + 2s kalan  → top bar at yA+barh/2..yA+3*barh/2
+    \fill[sinyalmavi!35] (0, {\yA+0.04}) rectangle ({8*\xs}, {\yA+\barh+0.04});
+    \fill[gray!25]       ({8*\xs}, {\yA+0.04}) rectangle ({10*\xs}, {\yA+\barh+0.04});
+    \draw[gray!50, thin] (0, {\yA+0.04}) rectangle ({10*\xs}, {\yA+\barh+0.04});
+    \node[font=\scriptsize, right] at ({10*\xs+0.07}, {\yA+\barh/2+0.04}) {10};
+    % Sonra: 3.6s = 1.6s hızlandırılan + 2s kalan → bottom bar at yA-barh..yA
+    \fill[orange!45] (0, {\yA-\barh-0.04}) rectangle ({1.6*\xs}, {\yA-0.04});
+    \fill[gray!25]   ({1.6*\xs}, {\yA-\barh-0.04}) rectangle ({3.6*\xs}, {\yA-0.04});
+    \draw[gray!50, thin] (0, {\yA-\barh-0.04}) rectangle ({3.6*\xs}, {\yA-0.04});
+    \node[font=\scriptsize, right] at ({3.6*\xs+0.07}, {\yA-\barh/2-0.04}) {3,6};
+    \node[font=\footnotesize\bfseries, text=orange!80!black, right]
+        at ({3.6*\xs+0.55}, {\yA-\barh/2-0.04}) {$2{,}78\times$};
+    % Y label
+    \node[font=\small\bfseries, left] at (-0.9, {\yA}) {Program A};
+    % Önce / Sonra sub-labels
+    \node[font=\tiny, text=gray!60, left] at (-0.12, {\yA+\barh/2+0.04}) {Önce};
+    \node[font=\tiny, text=gray!60, left] at (-0.12, {\yA-\barh/2-0.04}) {Sonra};
+
+    % -------------------------------------------------------
+    % Program B (P=0.5, H=5)
+    % Önce: 12s = 6s hızlandırılan + 6s kalan
+    \fill[sinyalmavi!35] (0, {\yB+0.04}) rectangle ({6*\xs}, {\yB+\barh+0.04});
+    \fill[gray!25]       ({6*\xs}, {\yB+0.04}) rectangle ({12*\xs}, {\yB+\barh+0.04});
+    \draw[gray!50, thin] (0, {\yB+0.04}) rectangle ({12*\xs}, {\yB+\barh+0.04});
+    \node[font=\scriptsize, right] at ({12*\xs+0.07}, {\yB+\barh/2+0.04}) {12};
+    % Sonra: 7.2s = 1.2s hızlandırılan + 6s kalan
+    \fill[orange!45] (0, {\yB-\barh-0.04}) rectangle ({1.2*\xs}, {\yB-0.04});
+    \fill[gray!25]   ({1.2*\xs}, {\yB-\barh-0.04}) rectangle ({7.2*\xs}, {\yB-0.04});
+    \draw[gray!50, thin] (0, {\yB-\barh-0.04}) rectangle ({7.2*\xs}, {\yB-0.04});
+    \node[font=\scriptsize, right] at ({7.2*\xs+0.07}, {\yB-\barh/2-0.04}) {7,2};
+    \node[font=\footnotesize\bfseries, text=orange!80!black, right]
+        at ({7.2*\xs+0.55}, {\yB-\barh/2-0.04}) {$1{,}67\times$};
+    % Y label
+    \node[font=\small\bfseries, left] at (-0.9, {\yB}) {Program B};
+    \node[font=\tiny, text=gray!60, left] at (-0.12, {\yB+\barh/2+0.04}) {Önce};
+    \node[font=\tiny, text=gray!60, left] at (-0.12, {\yB-\barh/2-0.04}) {Sonra};
+
+    % -------------------------------------------------------
+    % Program C (P=0.1, H=5)
+    % Önce: 8.8s = 0.8s hızlandırılan + 8s kalan
+    \fill[sinyalmavi!35] (0, {\yC+0.04}) rectangle ({0.8*\xs}, {\yC+\barh+0.04});
+    \fill[gray!25]       ({0.8*\xs}, {\yC+0.04}) rectangle ({8.8*\xs}, {\yC+\barh+0.04});
+    \draw[gray!50, thin] (0, {\yC+0.04}) rectangle ({8.8*\xs}, {\yC+\barh+0.04});
+    \node[font=\scriptsize, right] at ({8.8*\xs+0.07}, {\yC+\barh/2+0.04}) {8,8};
+    % Sonra: 8.16s = 0.16s hızlandırılan + 8s kalan
+    \fill[orange!45] (0, {\yC-\barh-0.04}) rectangle ({0.16*\xs}, {\yC-0.04});
+    \fill[gray!25]   ({0.16*\xs}, {\yC-\barh-0.04}) rectangle ({8.16*\xs}, {\yC-0.04});
+    \draw[gray!50, thin] (0, {\yC-\barh-0.04}) rectangle ({8.16*\xs}, {\yC-0.04});
+    \node[font=\scriptsize, right] at ({8.16*\xs+0.07}, {\yC-\barh/2-0.04}) {8,16};
+    \node[font=\footnotesize\bfseries, text=orange!80!black, right]
+        at ({8.16*\xs+0.75}, {\yC-\barh/2-0.04}) {$1{,}08\times$};
+    % Y label
+    \node[font=\small\bfseries, left] at (-0.9, {\yC}) {Program C};
+    \node[font=\tiny, text=gray!60, left] at (-0.12, {\yC+\barh/2+0.04}) {Önce};
+    \node[font=\tiny, text=gray!60, left] at (-0.12, {\yC-\barh/2-0.04}) {Sonra};
+
+    % -------------------------------------------------------
+    % Legend (top-right area)
+    \def\lx{8.5}
+    \def\ly{4.05}
+    \fill[sinyalmavi!35] (\lx, \ly) rectangle ({\lx+0.35}, {\ly+0.25});
+    \node[font=\scriptsize, right] at ({\lx+0.40}, {\ly+0.12}) {Hızlandırılan bölüm};
+    \fill[gray!25] (\lx, {\ly-0.45}) rectangle ({\lx+0.35}, {\ly-0.20});
+    \node[font=\scriptsize, right] at ({\lx+0.40}, {\ly-0.32}) {Etkilenmeyen bölüm};
+    \fill[orange!45] (\lx, {\ly-0.90}) rectangle ({\lx+0.35}, {\ly-0.65});
+    \node[font=\scriptsize, right] at ({\lx+0.40}, {\ly-0.77}) {Hızlandırma sonrası};
+
+    % -------------------------------------------------------
+    % Bottom annotation
+    \node[font=\footnotesize\bfseries, text=gray!70, align=center]
+        at ({6*\xs}, {-\barh-1.25})
+        {Üç programda da aynı bileşen $5\times$ hızlandırılmış; ancak $P$ oranı farklıdır};
+\end{tikzpicture}
+\caption[Amdahl Yasası'nın etkisi]{Amdahl Yasası'nın etkisi: aynı hızlandırma ($H=5$), farklı etki oranları. Program~A'da $P=0{,}8$, B'de $P=0{,}5$, C'de $P=0{,}1$.}
+\label{fig:amdahl-gorsel}
+\end{figure}
+
+\begin{tanim}[Tasarım İlkesi 3: Olağan durumu hızlandır]
+Olağan durumu hızlandırmak\index{olağan durumu hızlandır} bilgisayar mimarisinin en önemli ilkelerinden biridir. Sonuçta getirisi sınırlı olacak, çok büyük emeğin israf edilmesine yol açacak geliştirme çabalarının yerine sistem başarımına en fazla etki edecek bileşenlerin geliştirilmesi gereğini vurgular.
+\end{tanim}
+
+
+\begin{ornek}[2.10]
+Bir görüntü işleme programının toplam yürütme zamanı 10~saniyedir. Programın profil analizi, bu sürenin \%50'sinin kayan nokta (ondalıklı sayı) işlemlerinde harcandığını göstermektedir. Mühendislik ekibi, kayan nokta birimini yeniden tasarlayarak bu işlemleri 5~kat hızlandırmayı planlamaktadır.
+\begin{enumerate}[(a)]
+    \item Bu iyileştirmeden sonra programın yeni yürütme zamanı ve toplam hızlanma ne olur?
+    \item Ekip toplam başarımı 3 katına çıkarmak isteseydi, kayan nokta işlemlerinin program içindeki oranının en az ne kadar olması gerekirdi?
+    \item Kayan nokta birimi sonsuz hıza ulaşsa bile (\,$H \to \infty$\,) elde edilebilecek en yüksek hızlanma nedir?
+\end{enumerate}
+
+\textbf{Çözüm:}
+\begin{enumerate}[(a)]
+    \item $P = 0{,}5$ ve $H = 5$ değerlerini Amdahl Yasası'na (Denklem~\ref{eq:amdahl}) yerleştirelim:
+    \[
+    \text{Hızlanma} = \frac{1}{(1 - 0{,}5) + \dfrac{0{,}5}{5}} = \frac{1}{0{,}5 + 0{,}1} = \frac{1}{0{,}6} \approx 1{,}67
+    \]
+    Yeni yürütme zamanı $= 10 \times 0{,}6 = 6$~saniye olur. Kayan nokta birimi 5~kat hızlansa da programın yarısı bu birimden bağımsız olduğu için toplam hızlanma yalnızca $1{,}67\times$ düzeyinde kalır.
+
+    \item Toplam hızlanmanın 3 olması için $H = 5$ ile gereken $P$ oranını bulalım:
+    \begin{align*}
+    3 &= \frac{1}{(1-P) + \dfrac{P}{5}}
+    \quad \Longrightarrow \quad
+    (1-P) + \frac{P}{5} = \frac{1}{3}\\[6pt]
+    &\Longrightarrow \quad
+    1 - \frac{4P}{5} = \frac{1}{3}
+    \quad \Longrightarrow \quad
+    P = \frac{5}{6} \approx 0{,}833
+    \end{align*}
+    Programın en az \%83,3'ünün kayan nokta işlemlerinden oluşması gerekir. Bu oldukça yüksek bir oran olup, Amdahl Yasası'nın neden ``iyileştirme oranı kadar etki oranı da önemlidir'' dediğini somut olarak gösterir.
+
+    \item $H \to \infty$ durumunda $P/H \to 0$ olur ve formül sadeleşir:
+    \[
+    \text{Hızlanma}_{\max} = \frac{1}{1 - P} = \frac{1}{1 - 0{,}5} = 2
+    \]
+    Kayan nokta birimi ne kadar hızlandırılırsa hızlandırılsın, programın kayan nokta dışında kalan yarısı toplam hızlanmayı en fazla $2\times$ ile sınırlar. Bu sonuç Amdahl Yasası'nın en çarpıcı mesajıdır: \emph{etkilenmeyen kısım, iyileştirmenin üst sınırını belirler.}
+\end{enumerate}
+\end{ornek}
+
+\begin{bilginot}[Amdahl Yasası ve Koşut Hesaplama]
+Amdahl Yasası, bir programın seri kalan kısmının koşut hızlanmayı ciddi biçimde sınırladığını gösterir. Örneğin programın \%10'u seri ise, sonsuz sayıda çekirdek kullansak bile en fazla 10 kat hızlanma elde edebiliriz. Bu durum çok çekirdekli tasarımlarda yazılımın da koşut olarak yazılması gerekliliğini vurgular.
+\end{bilginot}
+
+\subsection{Gustafson Yasası}
+\label{subsec:gustafson}
+
+Amdahl Yasası önemli bir gerçeği ortaya koyar; ancak karamsar bir varsayıma dayanır: \emph{problem büyüklüğü sabittir.} Daha fazla çekirdek eklediğimizde aynı programı, aynı veriyle, sadece daha hızlı çözeceğimizi varsayar. Peki gerçek hayatta kullanıcılar böyle mi davranır?
+
+Bir hava tahmini merkezini düşünelim. Merkez tek işlemcili bir sistemle 10\,km çözünürlükte tahmin yapabiliyorken 64~çekirdekli bir sisteme geçtiğinde genellikle aynı 10\,km tahmini 64~kat hızlı yapmaz --- bunun yerine çözünürlüğü 1\,km'ye çıkararak \emph{daha ayrıntılı} bir tahmin üretir. Benzer şekilde, bir yapay zeka araştırmacısı daha fazla GPU aldığında aynı modeli daha hızlı eğitmek yerine \emph{daha büyük} bir model eğitmeye yönelir. Kısacası, uygulamada hesaplama kapasitesi arttığında insanlar doğal olarak problem büyüklüğünü de artırır.
+
+John Gustafson\index{Gustafson, John} 1988'de tam da bu gözlemi formüle dökmüştür~\cite{gustafson1988}. Gustafson'ın bakış açısı şöyledir: çekirdek sayısı arttıkça programın koşut kısmı büyür (daha fazla veri işlenir, daha ince çözünürlük hesaplanır), ama seri kısım --- başlatma, yapılandırma, sonuçları birleştirme gibi işlemler --- hemen hemen aynı kalır. Dolayısıyla seri kısmın \emph{mutlak süresi} değişmese bile programın geneline oranla \emph{payı} düşer. Amdahl ``elimdeki program sabit, kaç çekirdek gerekir?'' diye sorarken, Gustafson ``elimde $N$~çekirdek var, ne büyüklükte problem çözebilirim?'' diye sorar.
+
+\emph{Gustafson Yasası}\index{Gustafson yasası} ölçeklenmiş hızlanmayı (\emph{scaled speedup}) şöyle tanımlar:
+
+\begin{equation}
+S_{\text{Gustafson}}(N) = N - s \times (N - 1)
+\label{eq:gustafson}
+\end{equation}
+
+\noindent Burada $N$ çekirdek sayısı, $s$ ise $N$~çekirdekli koşut yürütme sırasında ölçülen seri kısmın oranıdır ($0 \le s \le 1$). Formülün iki uç durumuna bakalım: $s = 0$ (tamamen koşut program) ise $S = N$, başka bir deyişle çekirdek sayısıyla doğru orantılı, \emph{doğrusal ölçeklenme} elde edilir. $s = 1$ (tamamen seri program) ise $S = 1$ olup hiç hızlanma yoktur. $s$ küçüldükçe hızlanma $N$'ye yaklaşır; bu da Amdahl'ın koyduğu üst sınırın çok ötesinde bir ölçeklenme vaat eder.
+
+\begin{ornek}[2.11]
+Bir hava tahmini programı 64~çekirdekli bir sistemde 1\,km çözünürlükle çalıştırılıyor. Koşut yürütme sırasında yapılan ölçümde seri kısmın oranı $s = 0{,}04$ (\%4) olarak belirlenmiştir.
+\begin{enumerate}[(a)]
+    \item Gustafson Yasası'na göre ölçeklenmiş hızlanma nedir?
+    \item Amdahl Yasası aynı seri oran için ne söyler?
+\end{enumerate}
+
+\textbf{Çözüm:}
+\begin{enumerate}[(a)]
+    \item Gustafson formülünü uygularsak:
+    \[
+    S = 64 - 0{,}04 \times (64 - 1) = 64 - 2{,}52 = 61{,}48\times
+    \]
+    Problem büyüklüğünün ölçeklenmesiyle birlikte 64~çekirdek neredeyse 61,5~kat hızlanma sağlamaktadır.
+
+    \item Amdahl Yasası aynı seri oran için sabit problem büyüklüğü varsayar:
+    \[
+    S = \frac{1}{0{,}04 + \dfrac{0{,}96}{64}} = \frac{1}{0{,}055} \approx 18{,}2\times
+    \]
+    Aynı \%4 seri oranla Amdahl yalnızca $18{,}2\times$ öngörür. Aradaki fark, Gustafson'ın ``çekirdek sayısı artınca problem de büyür'' varsayımından kaynaklanır.
+\end{enumerate}
+\end{ornek}
+
+\begin{bilginot}[Amdahl ve Gustafson: Hangisi Doğru?]
+Her iki yasa da doğrudur --- farklı senaryoları modellerler. Eğer problem büyüklüğü \emph{sabit} ise (örneğin belirli bir matris çarpımı), Amdahl Yasası geçerlidir ve daha fazla çekirdek eklemek azalan getiri sağlar. Eğer çekirdek sayısı arttıkça problem de büyütülüyorsa (örneğin daha yüksek çözünürlüklü tahmin, daha büyük yapay zeka modeli), Gustafson Yasası daha gerçekçi bir tablo çizer.
+\end{bilginot}
+
+
+% -----------------------------------------------------------------
+% 2.5 Bellek Duvarı
+% -----------------------------------------------------------------
+\section{Bellek Duvarı}
+\label{sec:bellek-duvari}
+
+İşlemci başarımı yılda \%50 artarken DRAM erişim süreleri yılda yalnızca \%7--9 iyileşmiştir. Bu farklı büyüme hızları, işlemci ile bellek arasında giderek genişleyen bir başarım uçurumu yaratmıştır; bu olguya \emph{Bellek Duvarı}\index{bellek duvarı} (Memory Wall) adı verilir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth]
+    % Eksenler
+    \draw[thick, ->] (0,0) -- (14,0) node[right, font=\small\bfseries] {Yıl};
+    \draw[thick, ->] (0,0) -- (0,5.8) node[above, font=\small\bfseries, align=center] {Göreceli\\Başarım};
+
+    % X ekseni (1980=0, 2025=12.6, adım=1.4/5yıl)
+    \foreach \yr/\xp in {1980/0, 1985/1.4, 1990/2.8, 1995/4.2, 2000/5.6, 2005/7.0, 2010/8.4, 2015/9.8, 2020/11.2, 2025/12.6} {
+        \draw (\xp, -0.1) -- (\xp, 0.1);
+        \node[below, font=\scriptsize\bfseries] at (\xp, -0.15) {\yr};
+    }
+    % Y ekseni (log ölçek temsili)
+    \foreach \val/\lbl in {0/1, 1.2/10, 2.4/100, 3.6/1000, 4.8/10000} {
+        \draw (-0.1, \val) -- (0.1, \val);
+        \node[left, font=\scriptsize\bfseries] at (-0.15, \val) {\lbl$\times$};
+    }
+
+    % İşlemci başarımı
+    % 1980–2005: hızlı tek çekirdek artışı; 2005 sonrası: çok çekirdekli, daha yavaş tek iş parçacığı artışı
+    \draw[very thick, sinyalmavi]
+        (0,0) -- (1.4,0.8) -- (2.8,1.7) -- (4.2,2.7) -- (5.6,3.5) -- (7.0,4.1)
+        -- (8.4,4.4) -- (9.8,4.6) -- (11.2,4.85) -- (12.6,5.0);
+    \node[font=\footnotesize\bfseries, text=sinyalmavi, anchor=west] at (12.7,5.0) {İşlemci};
+
+    % Bellek başarımı (yavaş artış)
+    \draw[very thick, sinyalkirmizi]
+        (0,0) -- (1.4,0.2) -- (2.8,0.5) -- (4.2,0.8) -- (5.6,1.05) -- (7.0,1.3)
+        -- (8.4,1.5) -- (9.8,1.65) -- (11.2,1.8) -- (12.6,1.9);
+    \node[font=\footnotesize\bfseries, text=sinyalkirmizi, anchor=west] at (12.7,1.9) {DRAM};
+
+    % Açılan makas oku
+    \draw[<->, thick, gray!60] (11.2,1.9) -- (11.2,4.75);
+    \node[font=\footnotesize\bfseries, text=gray!60, rotate=90, anchor=south] at (10.8,3.3) {Bellek Duvarı};
+
+    % Taralı bölge (uçurum)
+    \fill[sinyalkirmizi!8]
+        (0,0) -- (1.4,0.2) -- (2.8,0.5) -- (4.2,0.8) -- (5.6,1.05) -- (7.0,1.3)
+        -- (8.4,1.5) -- (9.8,1.65) -- (11.2,1.8) -- (12.6,1.9)
+        -- (12.6,5.0) -- (11.2,4.85) -- (9.8,4.6) -- (8.4,4.4) -- (7.0,4.1)
+        -- (5.6,3.5) -- (4.2,2.7) -- (2.8,1.7) -- (1.4,0.8) -- (0,0) -- cycle;
+\end{tikzpicture}
+\caption{İşlemci ve bellek başarım artış hızları arasındaki açılan makas (Bellek Duvarı)}
+\label{fig:bellek-duvari}
+\end{figure}
+
+Bu sorunu hafifletmek için birçok yöntem geliştirilmiştir:
+\begin{itemize}
+    \item \textbf{Çok katmanlı önbellek hiyerarşisi} (L1, L2, L3): Sık erişilen veriler işlemciye yakın, küçük ama hızlı belleklerde tutulur.
+    \item \textbf{Donanımsal önceden getirme} (hardware prefetching)\index{önceden getirme}: İşlemci, yakında ihtiyaç duyulacak veriyi tahmin ederek önceden belleğe yükler.
+    \item \textbf{Sırasız yürütüm} (out-of-order execution)\index{sırasız yürütüm}: Bellek erişimi beklerken diğer bağımsız buyrukları yürütür.
+    \item \textbf{HBM ve yığılmış bellek}\index{HBM}: 3B yonga istifleme ile bant genişliğini artırır.
+\end{itemize}
+
+Bu uçurumun büyüklüğünü somut sayılarla görelim. 1990~yılında tipik bir işlemcinin saat sıklığı 50\,MHz (çevrim süresi 20\,ns), DRAM erişim süresi ise 100\,ns idi; dolayısıyla bir bellek erişimi $100/20 = 5$~çevrim sürerdi. 2020'ye gelindiğinde saat sıklığı 4\,GHz'e (çevrim süresi 0,25\,ns) çıkmış, DRAM erişim süresi ise ancak 50\,ns'ye düşmüştür. Bir bellek erişimi artık $50/0{,}25 = 200$~çevrim bekletmektedir. İşlemci hızı 80~kat artarken bellek bekleme süresi çevrim cinsinden 40~kat artmıştır. İşte önbellek hiyerarşisini zorunlu kılan temel neden budur.
+
+Bellek duvarı sorunu Bölüm~\ref{chap:bellek}'de ayrıntılı olarak incelenecektir. Burada vurgulanması gereken nokta, işlemci hızını artırmanın tek başına yeterli olmadığı; bellek hiyerarşisinin de buna uygun şekilde tasarlanması gerektiğidir.
+
+
+% -----------------------------------------------------------------
+% 2.6 Güç-Başarım Dengesi
+% ----------------------------------------------------------------
+\section{Güç-Başarım Dengesi}
+\label{sec:guc-basarim}
+
+Günümüzde bir bilgisayarın başarımını değerlendirirken yalnızca hızına değil, harcadığı enerjiye de bakmak gerekir. Veri merkezlerinde elektrik maliyeti, dizüstü bilgisayarlarda pil ömrü ve mobil aygıtlarda ısı kısıtları, \emph{güç-başarım oranını}\index{güç-başarım oranı} (performance per watt) önemli bir tasarım ölçütü haline getirmiştir.
+
+Bölüm~\ref{sec:devingen-guc}'te gördüğümüz gibi devingen güç tüketimi $P_{\text{devingen}} = C \times V_{dd}^2 \times f$ formülüyle hesaplanır ve besleme geriliminin \emph{karesiyle} orantılıdır (Denklem~\ref{eq:devingen-guc}). Gerilimin karesiyle doğru orantılı olan bu ilişki önemli bir sonuç doğurur: saat sıklığını ($f$) artırmak devingen gücü doğru orantılı olarak artırırken, bunu desteklemek için gerilimin de yükseltilmesi gerektiğinde güç tüketimi çok daha hızlı yükselir. Buna ek olarak, Bölüm~\ref{sec:duragan-guc}'te ele alınan durağan güç (sızıntı akımları) da transistörler küçüldükçe artmaktadır. İşte bu iki etken, 2005'ten sonra endüstrinin saat sıklığını artırmak yerine çok çekirdekli ve heterojen tasarımlara yönelmesinin temel nedenidir.
+
+Enerji verimliliği artık başarım kadar önemli bir tasarım ölçütüdür:
+
+\begin{equation}
+\text{Enerji verimliliği} = \frac{\text{Başarım}}{\text{Güç tüketimi}} = \frac{\text{İşlem/saniye}}{\text{Watt}}
+\label{eq:enerji-verimlilik}
+\end{equation}
+
+\begin{ornek}[2.12]
+Bir veri merkezi yöneticisi yapay zeka eğitimi için 1000 sunucudan oluşan bir küme kuracaktır. İki aday işlemci vardır:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+& \textbf{İşlemci A} & \textbf{İşlemci B} \\
+\midrule
+Başarım & 100\,GFLOPS & 60\,GFLOPS \\
+Güç tüketimi & 200\,W & 45\,W \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[(a)]
+    \item Her iki işlemcinin enerji verimliliğini hesaplayın.
+    \item 100\,GFLOPS toplam başarıma ulaşmak için her işlemciden kaç tane gerekir ve toplam güç tüketimi ne olur?
+    \item Elektrik birim fiyatı 0,10\,\$/kWh ise her iki seçeneğin yıllık enerji maliyetini karşılaştırın.
+\end{enumerate}
+
+\textbf{Çözüm:}
+\begin{enumerate}[(a)]
+    \item Denklem~\ref{eq:enerji-verimlilik}'i uygularsak:
+
+    $\text{A:}\;\dfrac{100}{200} = 0{,}5$\,GFLOPS/W, \qquad $\text{B:}\;\dfrac{60}{45} \approx 1{,}33$\,GFLOPS/W.
+
+    İşlemci~B, watt başına 2,67 kat daha fazla işlem yapabilmektedir.
+
+    \item İşlemci~A zaten 100\,GFLOPS sağladığından 1 adet yeterlidir: $1 \times 200 = 200$\,W. İşlemci~B ile aynı başarıma ulaşmak için $\lceil 100/60 \rceil = 2$ adet gerekir: $2 \times 45 = 90$\,W.
+
+    Aynı başarım düzeyi için İşlemci~B seçeneği yarıdan az güç tüketir.
+
+    \item 1000 sunucu, yılda $365 \times 24 = 8760$~saat çalışacaktır.
+
+    A ile: $1000 \times 200\,\text{W} = 200\,\text{kW}$ $\;\Rightarrow\; 200 \times 8760 = 1\,752\,000$\,kWh $\;\Rightarrow\; 175\,200$\,\$/yıl.
+
+    B ile (sunucu başına 2 işlemci): $1000 \times 90\,\text{W} = 90$\,kW $\;\Rightarrow\; 90 \times 8760 = 788\,400$\,kWh $\;\Rightarrow\; 78\,840$\,\$/yıl.
+
+    B seçeneği yılda yaklaşık 96\,000\,\$ tasarruf sağlar; buna ek olarak soğutma maliyeti de güç tüketimiyle orantılı düştüğü için gerçek fark daha da büyük olacaktır.
+\end{enumerate}
+
+\noindent\emph{Not:} Bu hesap yalnızca işletme maliyetini kapsar. B seçeneğinde sunucu başına 2 işlemci gerektiğinden ilk yatırım maliyeti daha yüksek olabilir. Gerçek kararda bu iki maliyet birlikte değerlendirilir ve yatırımın kendini ne kadar sürede geri ödediğine (\emph{payback period}) bakılır.
+\end{ornek}
+
+Bu ödünleşme, ARM tabanlı sunucu işlemcilerinin (AWS Graviton, Ampere Altra) ve RISC-V tabanlı tasarımların yükselişinin temel nedenidir. Aynı toplam başarımı daha az enerjiyle elde etmek, hem ekonomi hem çevre açısından önemlidir. Şekil~\ref{fig:guc-basarim-dagilim}'de farklı işlemci türlerinin güç-başarım düzlemi üzerindeki konumu görülmektedir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth]
+    % Eksenler
+    \draw[thick, ->] (0,0) -- (10.5,0) node[right, font=\small\bfseries] {Güç Tüketimi (W)};
+    \draw[thick, ->] (0,0) -- (0,7) node[above, font=\small\bfseries, align=center] {Başarım\\(GFLOPS)};
+
+    % X ekseni etiketleri
+    \foreach \val/\xp in {0/0, 50/1.5, 100/3, 150/4.5, 200/6, 250/7.5, 300/9} {
+        \draw (\xp, -0.1) -- (\xp, 0.1);
+        \node[below, font=\scriptsize\bfseries] at (\xp, -0.15) {\val};
+    }
+    % Y ekseni etiketleri
+    \foreach \val/\yp in {0/0, 200/1.5, 400/3, 600/4.5, 800/6} {
+        \draw (-0.1, \yp) -- (0.1, \yp);
+        \node[left, font=\scriptsize\bfseries] at (-0.15, \yp) {\val};
+    }
+
+    % Eş-verimlilik eğrileri (GFLOPS/W = sabit)
+    \draw[gray!30, thin, dashed] (0,0) -- (9,2.7) node[right, font=\scriptsize, text=gray!50] {1 GFLOPS/W};
+    \draw[gray!30, thin, dashed] (0,0) -- (9,5.4) node[right, font=\scriptsize, text=gray!50] {2 GFLOPS/W};
+
+    % Gömülü / IoT (düşük güç, düşük başarım)
+    \filldraw[sinyalyesil!70!black] (0.3, 0.2) circle (3pt);
+    \node[font=\scriptsize\bfseries, anchor=west, text=orange!70!black] at (0.5, 0.45) {IoT};
+
+    % Mobil (ARM)
+    \filldraw[sinyalyesil] (1.2, 1.8) circle (3pt);
+    \node[font=\scriptsize\bfseries, anchor=south west, text=sinyalyesil] at (1.3, 1.9) {Mobil (ARM)};
+
+    % Dizüstü (Apple M3)
+    \filldraw[sinyalmavi] (2.7, 3.6) circle (3pt);
+    \node[font=\scriptsize\bfseries, anchor=south, text=sinyalmavi] at (2.7, 3.75) {Apple M3};
+
+    % Masaüstü x86 (AMD Ryzen)
+    \filldraw[sinyalkirmizi] (5.1, 4.2) circle (3pt);
+    \node[font=\scriptsize\bfseries, anchor=south west, text=sinyalkirmizi] at (5.2, 4.3) {AMD Ryzen};
+
+    % Masaüstü x86 (Intel i9)
+    \filldraw[sinyalkirmizi] (7.6, 4.8) circle (3pt);
+    \node[font=\scriptsize\bfseries, anchor=south, text=sinyalkirmizi] at (7.6, 4.95) {Intel i9};
+
+    % Sunucu (Ampere Altra)
+    \filldraw[sinyalmavi!70!black] (7.5, 5.7) circle (3pt);
+    \node[font=\scriptsize\bfseries, anchor=south west, text=sinyalmavi!70!black] at (7.6, 5.8) {Ampere Altra};
+
+    % GPU (NVIDIA)
+    \filldraw[orange!80!black] (9, 6.5) circle (3pt);
+    \node[font=\scriptsize\bfseries, anchor=south, text=orange!80!black] at (8.5, 6.55) {GPU (NVIDIA)};
+
+    % Verimlilik yönü oku ve etiket (sağ alt köşeye yatay)
+    \draw[->, thick, sinyalyesil!60!black, dashed] (7.5,1.0) -- (3.5,3.5);
+    \node[font=\scriptsize\bfseries, text=sinyalyesil!60!black, anchor=west] at (7.7,1.0) {$\leftarrow$ Daha verimli};
+\end{tikzpicture}
+\caption[Farklı işlemci türlerinin güç-başarım düzlemindeki konumu]{Farklı işlemci türlerinin güç-başarım düzlemindeki konumu. Sol üst köşeye yakın noktalar daha yüksek enerji verimliliğine sahiptir.}
+\label{fig:guc-basarim-dagilim}
+\end{figure}
+
+\subsubsection*{Yapay zeka ve veri merkezlerinde güç-başarım ilişkisi}
+Güç-başarım dengesi, yapay zeka çağında daha da can alıcı bir hale gelmiştir\index{veri merkezi enerji tüketimi}. Büyük bir dil modelinin (örneğin GPT-4 düzeyinde) eğitimi, binlerce hızlandırıcının haftalarca çalışmasını gerektirir ve tek bir eğitim döngüsü milyonlarca dolar değerinde elektrik tüketebilir. Bir yapay zeka veri merkezinin işletme maliyetinin en büyük kalemi artık donanım satın alma değil, \emph{elektrik faturasıdır}. Yüzlerce megawatt güç çeken bir veri merkezi için yılda yüz milyonlarca dolarlık enerji gideri söz konusudur; buna bir de soğutma sistemlerinin enerji tüketimi eklenir.
+
+Bu gerçek, ``harcanan her bir watt için en yüksek başarımı almak'' ilkesini --- FLOPS/watt ölçütünü --- mimari tasarımın merkezine taşımıştır. Hızlandırıcı üreticileri (NVIDIA, AMD, Google TPU, Intel) yeni nesil ürünlerini tanıtırken artık yalnızca mutlak FLOPS değerini değil, watt başına FLOPS değerini de ön plana çıkarmaktadır. Benzer şekilde bulut servis sağlayıcıları, sunucu donanımı seçerken toplam sahip olma maliyetinde (TCO --- \emph{total cost of ownership}) enerji payını birincil parametre olarak değerlendirmektedir.
+
+\begin{bilginot}[Green500: Süper Bilgisayarların Enerji Verimliliği Sıralaması]
+Top500\index{Top500} listesi en hızlı süper bilgisayarları sıralarken, \emph{Green500}\index{Green500} listesi en enerji verimli süper bilgisayarları sıralar. Ölçüt, LINPACK karşılaştırma sınavındaki GFLOPS/watt değeridir. 2024 yılı itibarıyla en verimli sistemler 60--70 GFLOPS/watt düzeyine ulaşmıştır; bu rakam on yıl öncesinin en hızlı süper bilgisayarının \emph{toplam} başarımından daha yüksek bir değerdir!
+\end{bilginot}
+
+
+% -----------------------------------------------------------------
+% 2.7 Gerçek Dünya: İşlemci Karşılaştırmaları
+% -----------------------------------------------------------------
+\section{Gerçek Dünya: İşlemci Karşılaştırmaları}
+\label{sec:gercek-dunya-basarim}
+
+Bu bölümde öğrendiğimiz kavramları gerçek işlemciler üzerinde uygulayalım. Tablo~\ref{tab:islemci-karsilastirma}, 2023--2024 yıllarında piyasadaki dört farklı işlemciyi başarım parametreleri açısından karşılaştırmaktadır.
+
+\begin{table}[H]
+\centering
+\caption{Güncel işlemci karşılaştırması (2023--2024)}
+\label{tab:islemci-karsilastirma}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Özellik} & \textbf{Intel Core} & \textbf{Apple} & \textbf{AMD Ryzen} & \textbf{Ampere} \\
+                  & \textbf{i9-14900K}  & \textbf{M3 Max} & \textbf{9 7950X} & \textbf{Altra Max} \\
+\midrule
+BKM               & x86-64    & ARMv8     & x86-64    & ARMv8     \\
+Çekirdek sayısı   & 8P+16E   & 12P+4E   & 16        & 128       \\
+Maks. saat sıklığı & 6,0\,GHz & 4,05\,GHz & 5,7\,GHz & 3,0\,GHz \\
+TDP               & 253\,W   & $\sim$92\,W & 170\,W  & 250\,W   \\
+SPECint rate (est.) & $\sim$310 & $\sim$280 & $\sim$290 & $\sim$370 \\
+Kullanım alanı    & Masaüstü & Dizüstü  & Masaüstü  & Sunucu    \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Bu tablodan çarpıcı gözlemler çıkarmak mümkündür:
+
+\begin{itemize}
+    \item \textbf{Saat sıklığı yanıltır:} Intel'in 6\,GHz saat sıklığı Apple'ın 4\,GHz'inden çok daha yüksek olmasına rağmen, tek çekirdek başarımları yakın düzeydedir. Bunun nedeni Apple M3'ün çevrim başına daha fazla iş yapmasıdır (düşük BBÇ).
+
+    \item \textbf{İşlem hacmi için çekirdek sayısı:} Ampere Altra Max 128 çekirdekle en düşük saat sıklığına sahip olmasına rağmen, çok iş parçacıklı iş yüklerinde en yüksek toplam işlem hacmini sağlar.
+
+    \item \textbf{Enerji verimliliği:} Apple M3 Max, 92\,W ile diğerlerinin yarısı kadar güç harcayarak yakın başarım sunar. Bu, ARM mimarisinin enerji verimliliği avantajını somut olarak gösterir.
+
+    \item \textbf{Heterojen tasarım:} Hem Intel hem Apple, büyük (performans) ve küçük (verimlilik) çekirdekleri bir arada kullanarak farklı iş yüklerine uyum sağlar.
+\end{itemize}
+
+
+% -----------------------------------------------------------------
+% 2.8 Yanılgılar ve Tuzaklar
+% -----------------------------------------------------------------
+\section{Yanılgılar ve Tuzaklar}
+\label{sec:yanilgilar-tuzaklar}
+
+Başarım kavramı ilk bakışta basit görünse de sezgiye dayanan yaklaşımlar çoğu zaman yanıltıcı sonuçlara yol açar\index{yanılgılar ve tuzaklar}. Tek bir ölçüte odaklanmak, korelasyonu nedensellikle karıştırmak ya da pazarlama verilerini mühendislik gerçeği gibi kabul etmek --- bunların hepsi hem öğrencilerin hem de deneyimli mühendislerin düşebileceği tuzaklardır. Bu bölümde başarımla ilgili en yaygın yanılgıları ve tasarım hatalarını somut örneklerle ele alacağız.
+
+\subsubsection*{Yanılgı: Saat sıklığı yüksek olan işlemci her zaman daha hızlıdır}
+Örnek~2.2'de gördüğümüz gibi, 300\,MHz'lik işlemci 200\,MHz'lik olandan daha yavaş çalışabilir. Başarım üç bileşenin çarpımına bağlıdır (Denklem~\ref{eq:yurutme-zamani-bbc}); saat sıklığı bunlardan yalnızca biridir. Intel Pentium~4 işlemcisi 3,8\,GHz'e ulaşmıştı ancak aynı dönemdeki 2\,GHz'lik AMD Athlon~64 birçok iş yükünde daha hızlıydı --- çünkü Athlon~64'ün daha kısa boru hattı ve daha verimli mikromimarisi sayesinde BBÇ değeri çok daha düşüktü. Günümüzde de Apple M3 (4\,GHz) ile Intel i9 (6\,GHz) arasında benzer bir tablo mevcuttur: düşük saat sıklığına rağmen Apple çevrimi başına daha fazla iş yaparak yakın tek çekirdek başarımı elde etmektedir.
+
+\subsubsection*{Yanılgı: MIPS güvenilir bir başarım ölçüsüdür}
+MIPS değeri, farklı buyruk kümelerine sahip işlemciler arasında anlamlı bir karşılaştırma yapılmasına izin vermez. Aynı işi yapan iki farklı BKM, biri 100 basit buyrukla diğeri 40 karmaşık buyrukla tamamlayabilir; basit buyruklu olan MIPS'te daha yüksek skor alır ama toplam çevrim sayısı daha fazla olabilir. Hatta aynı işlemci üzerinde bile farklı programlar farklı MIPS değerleri verir. Daha da kötüsü, bazı derleyici eniyilemeleri buyruk sayısını artırarak MIPS'i yükseltebilir ama programı yavaşlatabilir --- Örnek~2.5'te bunu somut olarak gördük. Bu nedenle MIPS, işlemcilerin başarımını karşılaştırmak için tek başına güvenilir bir ölçüt değildir.
+
+\subsubsection*{Tuzak: Tepe başarımı gerçek başarım sanmak}
+Bir GPU'nun 80 TFLOPS tepe başarıma sahip olması, gerçek uygulamalarda bu değere ulaşacağı anlamına gelmez. Tepe başarım, tüm hesaplama birimlerinin her saat çevriminde tam kapasiteyle ve kesintisiz çalıştığı kuram düzeyinde bir üst sınırdır. Ancak gerçek uygulamalarda bellek bant genişliği darboğazları, veri bağımlılıkları ve kontrol akışı düzensizlikleri nedeniyle tepe başarımın genellikle \%10--60'ı arasında bir sürdürülebilir başarımla sonuçlanır. Bir işlemciyi tepe başarımına bakarak seçmek, bir otomobili yalnızca en yüksek hızına bakarak seçmek gibidir: şehir içi trafikte 300\,km/sa yapabilen spor otomobil, 180\,km/sa yapabilen aile otomobilinden daha yavaş kalabilir.
+
+\subsubsection*{Tuzak: Amdahl Yasası'nı göz ardı etmek}
+Bir mühendis, programın yalnızca \%5'ini oluşturan bir birimi 100 kat hızlandırmak için aylarca çalışabilir. Amdahl Yasası'na göre bu çabanın karşılığı en fazla $\frac{1}{0{,}95 + 0{,}05/100} \approx 1{,}05$ kat hızlanma --- yalnızca \%5'lik bir iyileşme. Aynı sürede programın \%60'ını oluşturan bileşeni 2 kat hızlandırmak $\frac{1}{0{,}4 + 0{,}6/2} \approx 1{,}43$ kat hızlanma sağlardı. Bu tuzak uygulamada sıkça karşılaşılır: mühendisler çoğu zaman en ``ilginç'' veya en ``yavaş'' bileşeni eniyileme eğilimindedir, oysa Amdahl Yasası bize bileşenin mutlak yavaşlığının değil \emph{toplam yürütme zamanı içindeki payının} önemli olduğunu söyler.
+
+\subsubsection*{Yanılgı: Transistör sayısı arttıkça başarım aynı oranda artar}
+Moore Yasası transistör sayısını her iki yılda ikiye katlamıştır; ancak 2005'ten sonra eklenen transistörler tek çekirdek başarımına doğrudan katkı sağlamamaktadır. Ek transistörler çekirdek sayısını artırmak, önbellek boyutunu büyütmek veya GPU, sinir ağı motoru gibi özel amaçlı hızlandırıcılar eklemek için kullanılır. Bu birimlerin başarıma dönüşmesi, yazılımın koşutleştirilmesine veya ilgili hızlandırıcıyı kullanacak şekilde yazılmasına bağlıdır. Dolayısıyla ``transistör sayısı iki katına çıktı, bilgisayar iki kat hızlandı'' çıkarımı artık geçerli değildir.
+
+\subsubsection*{Yanılgı: Enerji verimli işlemci her zaman yavaştır}
+Yüksek başarım ile düşük güç tüketiminin bir arada olamayacağı yaygın bir önyargıdır. Oysa Apple M serisi yongalar, ARM tabanlı sunucu işlemcileri (AWS Graviton, Ampere Altra) ve RISC-V tabanlı tasarımlar, daha az güç harcayarak rakipleriyle yarışan veya onları geçen başarım sunmaktadır. Enerji verimliliği, yalnızca pil ömrü için değil, veri merkezlerinin soğutma ve elektrik maliyeti açısından da doğrudan ekonomik bir kazanımdır.
+
+
+% -----------------------------------------------------------------
+% 2.9 Özet
+% -----------------------------------------------------------------
+\section{Özet}
+\label{sec:basarim-ozet}
+
+Bu bölümde bilgisayar başarımını tanımlayan, ölçen ve sınırlayan temel kavramları inceledik. Aşağıdaki tablo bölümün ana hatlarını özetlemektedir:
+
+\begin{center}
+\small
+\begin{tabular}{lp{9cm}}
+\toprule
+\textbf{Kavram} & \textbf{Özet} \\
+\midrule
+Yürütme zamanı & $= \text{Buyruk sayısı} \times \text{BBÇ} \times \text{Çevrim zamanı}$. Üç bileşen birbirine bağlıdır; birini iyileştirmek diğerini kötüleştirebilir. \\
+İşlem hacmi vs.\ gecikme & Gecikme tek görevin süresini, işlem hacmi birim zamandaki görev sayısını ölçer. Sunucu iş yükleri işlem hacmini, etkileşimli uygulamalar gecikmeyi önceliklendirir. \\
+MIPS / MFLOPS & Yanıltıcı olabilir; farklı BKM'ler ve buyruk karışımları karşılaştırmayı anlamsız kılar. \\
+FLOPS & Bilimsel ve YZ hesaplamalarında temel ölçüt. Duyarlık düzeyine dikkat edilmeli; tepe ve sürdürülebilir başarım ayrılmalı. \\
+SPEC / MLPerf & Çeşitli iş yükleri üzerinde tekrarlanabilir, adil karşılaştırma imkânı sunar. \\
+Amdahl Yasası & $\text{Hızlanma} = \frac{1}{(1-P)+P/H}$. Bir iyileştirme programın tamamını değil yalnızca $P$ oranındaki kısmını hızlandırır; geri kalan kısım toplam hızlanmaya üst sınır koyar. ``Olağan durumu hızlandır'' ilkesinin nicel temelidir. \\
+Gustafson Yasası & $S(N) = N - s(N-1)$. Çekirdek sayısı arttıkça problem büyüklüğü de artırılırsa Amdahl'ın karamsar sınırı aşılabilir. \\
+Bellek duvarı & İşlemci ile bellek arasındaki büyüme hızı farkı; önbellek hiyerarşisi ve HBM ile hafifletilir. \\
+Güç-başarım & Gerilimin karesiyle orantılı güç tüketimi (Bölüm~\ref{sec:devingen-guc}), saat sıklığı yerine koşutluğa yönelmenin temel nedeni. Green500 sıralaması başarım/watt ölçütünü kullanır. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Başarım eğilimleri, 2005'e kadar süren yılda \%50'lik tek çekirdek büyümesinin güç duvarıyla birlikte \%3--5'e gerilemesiyle köklü bir dönüşüm geçirmiştir. Günümüzde başarım artışı çok çekirdekli işlemciler, alana özgü hızlandırıcılar ve gelişmiş bellek hiyerarşileriyle sağlanmaktadır. Yaygın yanılgılar --- saat sıklığının tek başına belirleyici olduğu, MIPS'in güvenilir olduğu, tepe başarımın sürdürülebilir olduğu --- hem sınavlarda hem gerçek tasarım kararlarında sıkça karşılaşılan tuzaklardır.
+
+
+% -----------------------------------------------------------------
+% 2.10 Alıştırmalar
+% -----------------------------------------------------------------
+\section*{Alıştırmalar}
+\addcontentsline{toc}{section}{Alıştırmalar}
+\label{sec:basarim-alistirmalar}
+
+\begin{alistirma}[\kolay]
+Aşağıda verilen saat vuruşu sıklığı değerleri için çevrim zamanını pikosaniye ve saniye cinsinden hesaplayın: (a) 1\,MHz, (b) 10\,GHz, (c) 0,5\,Hz.
+\end{alistirma}
+
+\begin{alistirma}[\kolay]
+Bir bilgisayarın başarımı hangi ölçüt (ya da ölçütler) kullanılarak ölçülür?
+\end{alistirma}
+
+\begin{alistirma}[\kolay]
+500\,MHz'lik işlemcisi olan X bilgisayarının üzerinde \texttt{Calculator.java} programı 10\,sn'de çalışıyor. Eğer aynı programın daha hızlı çalışması için alınan Y bilgisayarı programı 5\,sn'de çalıştırıyorsa Y'nin saat sıklığı nedir? (Her iki bilgisayarın aynı buyruk kümesini ve aynı BBÇ değerlerini kullandığını varsayın.)
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Elektrik-elektronik mühendisliği bölümünden bilgisayar mühendisliği bölümüne yan dal yapmaya gelen öğrencilerin temsilcisi Çorumlu Orhan ile ev sahibi bilgisayarcıların temsilcisi Edirneli Orhan koşu yarışı yapacaklardır. Koşulacak mesafe 400 metredir. Çorumlunun her koşu adımı 1,6 metre, Edirnelinin her koşu adımı 1 metredir. Çorumlu dakikada 60, Edirneli ise dakikada 120 adım atıyorsa:
+\begin{enumerate}[(a)]
+    \item Hangi Orhan yarışı kazanır? Kazanan Orhan diğerinden ne kadar daha hızlıdır?
+    \item Eğer yenilen Orhan dakikada \%25 daha fazla adım atmaya başlarsa yarışın sonucu değişir mi?
+    \item Bu sorudaki yarış mesafesi, koşu adımı ve dakikada atılan adım sayısı değişkenlerinin bilgisayar mimarisindeki karşılıkları nelerdir?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Duygu'nun bilgisayarı A buyruk kümesini, Gülşah'ın bilgisayarı ise B buyruk kümesini kullanıyor. 100 buyrukluk programın \%50'si X, \%10'u Y, \%18'i Z, \%22'si W buyruğundan oluşmaktadır. Her iki buyruk kümesinin BBÇ değerleri aşağıdaki tabloda verilmiştir.
+
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\toprule
+\textbf{Buyruk türü} & \textbf{A kümesi BBÇ} & \textbf{B kümesi BBÇ} \\
+\midrule
+X & 1 & 2 \\
+Y & 4 & 3 \\
+Z & 2 & 3 \\
+W & 5 & 4 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[(a)]
+    \item İkisi de aynı programı aynı sürede çalıştırmak istediklerine göre Duygu'nun bilgisayarının saat sıklığı Gülşah'ınkinin kaç katı olmalıdır?
+    \item Her iki bilgisayar da A buyruk kümesini kullansaydı kimin bilgisayarının başarımı yüksek olacaktı?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Amdahl Yasası'na göre, bir programın \%40'ını oluşturan kayan nokta işlemlerinin 8 kat hızlandırılması toplam başarımı kaç kat artırır? Aynı hızlanmayı bütün programa yaymak için kayan nokta oranının ne olması gerekirdi?
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Bir yapay zeka hızlandırıcısı FP16 duyarlığında 312\,TFLOPS tepe başarıma sahip. Ancak bellek bant genişliği 2\,TB/s ile sınırlıdır. Eğer bir matris çarpımı işlemi her 2 baytlık veri okuması için 128 kayan nokta işlemi gerçekleştiriyorsa bu iş yükü hesaplama sınırlı mı yoksa bellek sınırlı mı? Aritmetik yoğunluk kavramını açıklayarak yanıtlayın.
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Bir GPU'nun 10\,240 çekirdeği, 2\,GHz saat sıklığı var ve her çekirdek çevrim başına 2 FP32 işlemi gerçekleştirebiliyor.
+\begin{enumerate}[(a)]
+    \item FP32 tepe başarımını TFLOPS cinsinden hesaplayın.
+    \item Aynı GPU FP16 işlemlerinde çekirdek başına çevrim başına 4 işlem yapabiliyorsa FP16 tepe başarımı nedir?
+    \item LINPACK sınavında sürdürülebilir başarım tepe değerinin \%55'i olarak ölçülmüştür. Sürdürülebilir FP32 başarımı kaç TFLOPS'tur?
+\end{enumerate}
+\end{alistirma}
+
+%% ===================================================================
+%% Aşağıdaki sorular BİL 361 dersinin geçmiş yıllardan sınav
+%% sorularından uyarlanmıştır.
+%% ===================================================================
+
+\begin{alistirma}[\kolay]
+Aşağıdaki cümlelerde boş bırakılan yerleri doldurun ya da doğru/yanlış (D/Y) olarak yanıtlayın.
+\begin{enumerate}[(a)]
+    \item Saat vuruş sıklığı, saatin iki yükselen darbesi arasındaki geçen süreye denir. (D/Y)
+    \item İşlemcilerde saat sıklığını devredeki \rule{3cm}{0.4pt} belirler.
+    \item Tek vuruşluk bir işlemcinin başarımı, boru hattı kullanan bir işlemciden her zaman düşüktür. (D/Y)
+    \item Çevrim zamanı, işlemcideki kritik yol gecikmesi tarafından belirlenir. (D/Y)
+    \item MIPS ölçütü, farklı buyruk kümelerine sahip iki işlemciyi karşılaştırmak için güvenilir bir birimdir. (D/Y)
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\kolay]
+A işlemcisinin saat vuruş sıklığı 4\,GHz ve ortalama buyruk başına çevrimi (BBÇ) 4, B işlemcisinin saat vuruş sıklığı 2\,GHz ve ortalama BBÇ değeri 2 ise aynı programı hangi işlemci daha hızlı çalıştırır? Yürütme zamanlarını hesaplayarak karşılaştırın.
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Aşağıdaki analojide, bir üniversitenin ders programı ile işlemci başarım parametreleri arasındaki benzerlikleri bulun.
+
+ODTÜ'de dönemler 14 hafta sürmekte ve her haftada 5 gün ders yapılmaktadır. TOBB ETÜ'de ise dönemler yaklaşık 12 hafta sürmekte ve her haftada 6 gün ders yapılmaktadır. Aynı müfredatı uygulayan her iki okul da 70 ders gününü tamamlamayı hedefliyorsa, 3 kredilik bir ders ODTÜ'de haftada 3 saat, TOBB ETÜ'de ise ortalama 3,5 saat olmak üzere toplam 42 saatte yapılmaktadır.
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Bilgisayar Mimarisi Kavramı} & \textbf{Sorudaki Benzeri} \\
+\midrule
+Buyruk Kümesi Mimarisi & \rule{3cm}{0.4pt} \\
+Programdaki Buyruk Sayısı & \rule{3cm}{0.4pt} \\
+Programın Yürütme Zamanı & \rule{3cm}{0.4pt} \\
+Çevrim & \rule{3cm}{0.4pt} \\
+Çevrim Zamanı & \rule{3cm}{0.4pt} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+Farklı buyruk türlerinden oluşan bir P programı, 1\,GHz saat sıklığına sahip bir işlemcide çalıştırıldığında yürütme zamanının 17 saniye olduğu ölçülüyor.
+\begin{enumerate}[(a)]
+    \item Program üzerinde eniyileme çalışması yapan bir ekip, her biri 5 çevrim süren A türü buyrukların yerine, her biri 1 çevrim süren B türü 3'er buyruk koyarak yürütme zamanını 16 saniyeye düşürüyor. Kaç adet A türü buyruk, B türü buyruklarla değiştirilmiştir?
+    \item Araştırmalarına devam eden ekip, eniyilenmiş programı aynı saat sıklığına sahip ancak bölme işlemlerini beş kat hızlı yapabilen yeni bir sistemde çalıştırdığında yürütme zamanının 15 saniyeye düştüğünü gözlemliyor. Programda $n$ adet bölme işlemi varsa, yeni sistem bir bölme işlemini kaç çevrimde tamamlamaktadır?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+Yusuf yeni bir bilgisayar almak istiyor. Araştırmasının sonucunda Y, C ve T adında üç bilgisayar buluyor:
+
+\begin{itemize}
+    \item \textbf{Y bilgisayarı:} 5\,MHz saat sıklığı, tek çevrimlik işlemci, fiyatı 20\,000\,TL.
+    \item \textbf{C bilgisayarı:} 25\,MHz saat sıklığı, çok çevrimlik işlemci (çarpma buyruğu 5 çevrim, bellek buyrukları 6 çevrim, diğer buyruklar 4 çevrim), fiyatı 25\,000\,TL.
+    \item \textbf{T bilgisayarı:} 20\,MHz saat sıklığı, 4 aşamalı boru hattı (çarpma 2 çevrim, bellek 3 çevrim, diğerleri 1 çevrim), fiyatı 30\,000\,TL.
+\end{itemize}
+
+\begin{enumerate}[(a)]
+    \item N = 1000 yinelemeli bir döngü çalıştırıldığında her bilgisayarda program kaç saniyede tamamlanır? (Döngüde 2 bellek buyruğu, 1 çarpma buyruğu ve 4 aritmetik buyruk olduğunu varsayın.)
+    \item Yusuf fiyat-başarım oranına göre karar vermek istiyor. ``TL başına başarım'' ölçütü nasıl hesaplanır? Bu ölçüte göre bilgisayarları sıralayın.
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Bir programın yürütme süresinin \%70'i tek çekirdekte, \%30'u ise koşut bölümde harcanmaktadır. Amdahl Yasası'nı kullanarak:
+\begin{enumerate}[(a)]
+    \item 4 çekirdekli bir işlemcideki hızlanmayı hesaplayın.
+    \item 64 çekirdekli bir işlemcideki hızlanmayı hesaplayın.
+    \item Sonsuz sayıda çekirdek kullanılsa bile elde edilebilecek en yüksek hızlanma nedir?
+    \item Gustafson Yasası bu sonucu nasıl farklı yorumlar? Kısaca açıklayın.
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+İki bilgisayarın SPEC~CPU~2017 SPECrate sonuçları şöyledir: A bilgisayarı 320, B bilgisayarı 280. SPECspeed sonuçları ise A~için~85, B~için~110'dur. Hangi bilgisayar ``daha hızlı'' denir? Yanıtınızı SPECrate ve SPECspeed'in ölçtüğü farklı başarım boyutlarıyla açıklayın.
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Bir iklim modelleme programı 128 çekirdekli bir sistemde çalıştırılmaktadır. Koşut yürütme sırasında ölçülen seri kısmın oranı $s = 0{,}02$.
+\begin{enumerate}[(a)]
+    \item Gustafson Yasası'na (Denklem~\ref{eq:gustafson}) göre ölçeklenmiş hızlanmayı hesaplayın.
+    \item Aynı $s$ değerini Amdahl Yasası'na uygularsanız hızlanma ne olur?
+    \item İki sonuç arasındaki farkı açıklayın. Hangi yasa bu senaryo için daha gerçekçidir?
+\end{enumerate}
+\end{alistirma}
+
+%% ===================================================================
+%% Yeni eklenen alıştırmalar (Bellek Duvarı, Güç-Başarım, Gerçek Dünya)
+%% ===================================================================
+
+\begin{alistirma}[\kolay]
+İşlem hacmi ve gecikme kavramlarını bir restoran benzetmesiyle açıklayın. Bir restoran mutfağının yemek başına hazırlık süresi 15 dakikadır (gecikme). Mutfakta 4 aşçı çalışmaktadır.
+\begin{enumerate}[(a)]
+    \item Restoranın saatlik işlem hacmi (tabak/saat) nedir?
+    \item 8 aşçıya çıkılırsa yemek başına gecikme değişir mi? İşlem hacmi ne olur?
+    \item Bu benzetmede ``aşçı sayısı'' bilgisayar mimarisindeki hangi kavrama karşılık gelir?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+1995 yılında bir işlemcinin saat sıklığı 200\,MHz, DRAM erişim süresi 120\,ns idi.
+\begin{enumerate}[(a)]
+    \item İşlemci bir saat çevriminde kaç nanosaniye harcar? Bellek erişimi kaç çevrime karşılık gelir?
+    \item 2025'te saat sıklığı 5\,GHz, DRAM erişim süresi 40\,ns olmuştur. Aynı hesabı tekrarlayın.
+    \item Sonuçları karşılaştırarak ``bellek duvarı'' kavramının zaman içinde nasıl derinleştiğini sayısal olarak açıklayın.
+    \item L1 önbellek erişim süresi 1\,ns ise 2025 için önbellek isabet oranının en az ne kadar olması gerekir ki ortalama bellek erişim süresi 10 çevrimden az olsun?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+Üç sunucu işlemcisi karşılaştırılıyor:
+
+\begin{center}
+\small
+\begin{tabular}{lccc}
+\toprule
+& \textbf{İşlemci P} & \textbf{İşlemci Q} & \textbf{İşlemci R} \\
+\midrule
+Saat sıklığı & 3,5\,GHz & 2,8\,GHz & 3,0\,GHz \\
+Çekirdek sayısı & 8 & 32 & 16 \\
+SPEC rate skoru & 180 & 420 & 310 \\
+TDP (Watt) & 125 & 250 & 150 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[(a)]
+    \item Hangi işlemci tek çekirdek başarımında en iyidir? (İpucu: SPECrate / çekirdek sayısı)
+    \item Hangi işlemci en yüksek enerji verimliliğine (SPECrate/Watt) sahiptir?
+    \item Bir veri merkezi yöneticisi toplam 1000 SPECrate skoru elde etmek istiyor. Her işlemciden kaç tane alması gerekir ve hangi seçenek en az güç harcar?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Bir yazılım ekibi, bir uygulamanın başarımını artırmak için iki farklı eniyileme stratejisi değerlendiriyor:
+\begin{itemize}
+    \item \textbf{Strateji~A:} Programın \%30'unu oluşturan bellek erişim bölümünü önbellekleme ile 4 kat hızlandırmak.
+    \item \textbf{Strateji~B:} Programın \%70'ini oluşturan hesaplama bölümünü algoritmik iyileştirme ile 2 kat hızlandırmak.
+\end{itemize}
+\begin{enumerate}[(a)]
+    \item Her iki strateji için Amdahl Yasası'nı kullanarak hızlanmayı hesaplayın.
+    \item Her iki strateji aynı anda uygulanabilseydi toplam hızlanma ne olurdu?
+    \item ``Olağan durumu hızlandır'' ilkesi açısından hangi strateji daha değerli? Neden?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Dört farklı yapay sınama programındaki hızlanma değerleri şöyledir: 0,8$\times$, 2,5$\times$, 1,1$\times$ ve 12,0$\times$.
+\begin{enumerate}[(a)]
+    \item Aritmetik ortalama hızlanmayı hesaplayın.
+    \item Geometrik ortalama hızlanmayı hesaplayın.
+    \item Hangi ortalama daha anlamlıdır? Neden?
+    \item 0,8$\times$ ``hızlanma'' ne anlama gelir? Bu durumda yeni tasarım eski tasarımdan daha iyi mi?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Aşağıdaki ifadelerin her birinin bir yanılgı mı yoksa doğru bir gözlem mi olduğunu belirleyin ve kısaca açıklayın:
+\begin{enumerate}[(a)]
+    \item ``6\,GHz işlemci, 3\,GHz işlemciden her zaman 2 kat hızlıdır.''
+    \item ``MIPS değeri yüksek olan bilgisayar her iş yükünde daha hızlıdır.''
+    \item ``Tepe başarımı 100 TFLOPS olan GPU, gerçek uygulamada 100 TFLOPS verir.''
+    \item ``Amdahl Yasası'na göre sonsuz çekirdek kullanılsa bile hızlanmanın bir üst sınırı vardır.''
+    \item ``Transistör sayısı iki katına çıkarsa başarım da iki katına çıkar.''
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+Intel Pentium~4 (2004, 3,8\,GHz) ile Intel Core~2 (2006, 2,4\,GHz) işlemcilerini düşünün. Core~2, Pentium~4'ten daha düşük saat sıklığına sahip olmasına rağmen birçok iş yükünde daha hızlıydı.
+\begin{enumerate}[(a)]
+    \item Bu nasıl mümkün olabilir? Başarım denkleminin hangi bileşeni bunu açıklar?
+    \item Pentium~4'ün 31 aşamalı, Core~2'nin 14 aşamalı boru hattı olduğunu biliyorsanız derin boru hattının saat sıklığına ve BBÇ'ye etkisini tartışın.
+    \item Bu örnek, güç tüketimi açısından ne gösterir? (İpucu: Pentium~4 115\,W, Core~2 65\,W harcamaktadır.)
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+Aşağıdaki tabloda C0 ve C1 işlemcilerinin özellikleri listelenmektedir.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Özellik} & \textbf{C0 İşlemcisi} & \textbf{C1 İşlemcisi} \\
+\midrule
+Saat vuruş sıklığı & 2,1\,GHz & 2,8\,GHz \\
+Toplama BBÇ & 2 & 3 \\
+Çarpma BBÇ & 3 & 5 \\
+Dallanma BBÇ & 7 & 6 \\
+Bellek BBÇ & 15 & 10 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[(a)]
+    \item 700 toplama, 200 çarpma, 300 dallanma ve 250 bellek buyruğundan oluşan DOTA-1500 programının C0 ve C1 işlemcilerinde yürütülmesi kaç nanosaniye sürer? Hangisi daha hızlıdır ve ne kadar?
+    \item Uzun bir incelemeden sonra C0 ve C1 işlemcisinde çalışan programların ortalama \%35 toplama, \%20 çarpma, \%15 dallanma ve \%30 bellek buyruklarından oluştuğunu gözlemlediniz. Buna göre aynı programları yürüten C0 işlemcisinin başarımının C1 ile aynı olması için C0'ın dallanma buyruklarını ortalama kaç çevrimde yürütmesi gerekmektedir?
+    \item C0 işlemcisi saat vuruş sıklığını devingen olarak 2,1\,GHz'den 3,0\,GHz'ye artırabilmektedir. Ancak bu işlemi yalnızca bir buyruk türü için gerçekleştirebilmektedir. Eşit sayıda toplama, çarpma, dallanma ve bellek buyruğu içeren bir program için C0 işlemcisi hangi buyruk tipinde bu işlemi uygularsa en yüksek başarım artışı gözlemlenir?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+Aşağıdaki tabloda K0 ve K1 işlemcilerinin özellikleri listelenmektedir.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Özellik} & \textbf{K0 İşlemcisi} & \textbf{K1 İşlemcisi} \\
+\midrule
+Saat vuruş sıklığı & 2\,GHz & 1\,GHz \\
+Toplama BBÇ & 3 & 4 \\
+Bölme BBÇ & 3 & 6 \\
+Bellek BBÇ & X & 15 \\
+Dallanma BBÇ & 8 & 7 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[(a)]
+    \item $X=19$ için; 400 toplama, 700 bölme, 100 dallanma ve 650 bellek buyruğundan oluşan Ka-Fa programının K0 ve K1 işlemcilerinde yürütülmesi kaç nanosaniye sürer? Hangi işlemci diğerinden kaç kat hızlıdır?
+    \item K0 ve K1 işlemcisinde çalışan programların ortalama \%5 toplama, \%60 bölme, \%20 dallanma ve \%15 bellek buyruklarından oluştuğu biliniyor. Buna göre aynı programları yürüten bu işlemcilerden K0 işlemcisinin başarımı K1 ile aynı olabilir mi? Olabiliyorsa K1 ile aynı olması için K0'ın bellek buyruğu başına çevrim sayısı ($X$) kaç olmalıdır?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+Aşağıdaki tabloda Break0 ve Break1 işlemcilerinin özellikleri listelenmektedir. Break1 işlemcisi çarpma işlemi yapamamaktadır.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Özellik} & \textbf{Break0 İşlemcisi} & \textbf{Break1 İşlemcisi} \\
+\midrule
+Saat vuruş sıklığı & 1\,GHz & 200\,MHz \\
+Toplama BBÇ & 5 & 1 \\
+Çarpma BBÇ & 8 & -- \\
+Dallanma BBÇ & 12 & 15 \\
+Bellek BBÇ & 20 & 5 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+PaCMAN programı Break0 işlemcisi için derlendiğinde 100 toplama, 300 çarpma, 400 dallanma ve 50 bellek buyruğundan oluşmaktadır. Break1 işlemcisi çarpma yapamadığından, derleyici çarpma işlemlerini toplama buyrukları ile gerçekleştirmektedir; bu durumda program 900 toplama, 200 dallanma ve 50 bellek buyruğundan oluşmaktadır.
+
+\begin{enumerate}[(a)]
+    \item Break0 ve Break1 işlemcileri PaCMAN programını kaç nanosaniyede yürütür?
+    \item PaCMAN programının iki işlemcide de aynı sürede bitmesi için Break1 işlemcisinin saat vuruş sıklığı kaç MHz olmalıdır?
+\end{enumerate}
+\end{alistirma}
+
+%% Aşağıdaki sorular BİL 361 dersinin 2024--2025 öğretim yılı
+%% sınav sorularından uyarlanmıştır.
+
+\begin{alistirma}[\orta]
+%% Kaynak: Chronus vs PaCRAM -- Güz 2024 Ara Sınav
+Aşağıdaki tabloda Chronus ve PaCRAM işlemcilerinin özellikleri verilmiştir.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Özellik} & \textbf{Chronus} & \textbf{PaCRAM} \\
+\midrule
+Saat vuruş sıklığı & 1\,GHz & 500\,MHz \\
+Aritmetik BBÇ & 10 & 3 \\
+Dallanma BBÇ & 8 & 3 \\
+Bellek BBÇ & 16 & 12 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+OUS programı bu iki işlemcide çalıştırılmak istenmektedir. OUS programı \%45 aritmetik, \%35 dallanma ve \%20 bellek buyruklarından oluşmaktadır.
+
+Bu iki işlemcinin OUS programını eşit sürede çalıştırabilmesi için Chronus işlemcisinin aritmetik işlemlerini yüzde kaç hızlandırmalıyız ya da yavaşlatmalıyız?
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+%% Kaynak: Fiyat--Performans Karşılaştırma -- Bahar 2025 Ara Sınav
+Yusuf yeni bir bilgisayar almak istiyor. Araştırdıktan sonra Y, C ve T adında üç farklı bilgisayar buluyor. Aşağıdaki kod parçacığını bu üç bilgisayarda çalıştırıp sonuçları karşılaştırmak istiyor.
+
+\begin{lstlisting}[style=riscv, style=alistirma-kod]
+addi x1, x0, #N
+addi x2, x0, #0x8000
+addi x4, x0, #1
+addi x5, x0, #0
+dongu:
+  ld   x8, 0(x2)
+  ld   x9, 8(x2)
+  add  x2, x0, x9
+  mul  x4, x4, x8
+  addi x5, x5, #1
+  blt  x5, x1, <dongu>
+  add  x6, x0, x4
+\end{lstlisting}
+
+\textbf{Y bilgisayarı:} 5\,MHz saat sıklığı, tek çevrimlik işlemci, fiyatı 20\,bin\,TL.
+
+\textbf{C bilgisayarı:} 25\,MHz saat sıklığı, çok çevrimlik işlemci (çarpma 5~çevrim, bellek 6~çevrim, diğer buyruklar 4~çevrim), fiyatı 25\,bin\,TL.
+
+\textbf{T bilgisayarı:} 20\,MHz saat sıklığı, boru hattı olan işlemci. Boru hattı Getir~(G), Çöz~(Ç), yÜrüt~(Ü), geri~Yaz~(Y) olmak üzere 4~aşamadan oluşur. Yürüt aşaması buyruk tiplerine göre farklı çevrimlerde gerçekleştirilir: çarpma 2~çevrim, bellek 3~çevrim, diğer buyruklar 1~çevrim. Yürüt aşamasında tek bir buyruk olabilir. Dallanmalar her zaman doğru öngörülür. Veri yönlendirmesi yoktur. Yazmaçlar yazıldığı çevrimde okunabilir. Fiyatı 30\,bin\,TL.
+
+\begin{enumerate}[(a)]
+    \item $N = 1$ için kod parçacığını \texttt{dongu} etiketinden itibaren T~bilgisayarında çalıştırdığınızda oluşan boru hattı şemasını çizin.
+    \item $N = 1000$ için kod parçacığını Y, C ve T~bilgisayarlarında yürüttüğünüzde kaç saniyede tamamlanır? (Yalnızca döngüyü kullanarak hesaplayın.)
+    \item Yusuf fiyat--performans oranını maksimize etmek istiyor. ``TL başına performans'' ölçütünü nasıl hesaplayabileceğinizi gösterin ve bilgisayarları sıralayın.
+    \item Bu kod parçacığı ne yapıyor?
+\end{enumerate}
+\end{alistirma}
+
+%% ===================================================================
+%% Aşağıdaki sorular BİL 361 dersinin geçmiş yıllardan sınav
+%% sorularından aktarılmıştır (ek sorular).
+%% ===================================================================
+
+\begin{alistirma}[\orta]
+Verilen bir programdaki buyruklar ve kullandıkları işlemci zamanı oranları aşağıdaki gibidir:
+
+\begin{center}
+\small
+\begin{tabular}{lc}
+\toprule
+\textbf{Buyruk türü} & \textbf{İşlemci zamanı oranı} \\
+\midrule
+Yükle        & \%20 \\
+Sakla        & \%15 \\
+Dallan, Atla & \%20 \\
+Kayan Nokta  & \%5  \\
+Aritmetik    & \%40 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Eğer programdaki buyruk sayısı ve işlemcinin saat sıklığı değişmez ise:
+\begin{enumerate}[(a)]
+    \item Kayan nokta işlemlerinin hızını 5 katına çıkarmak işlemciyi ne kadar hızlandırır?
+    \item İşlemcinin \%20 daha hızlı çalışması için aritmetik işlemlerinin kaç kat hızlanması gerekir?
+    \item Hızı öncekinin 7 katı olan bir bellek birimi alınırsa program ne kadar daha hızlı çalışır? (Bellek birimi yalnızca bellekle işi olan ``Yükle'' ve ``Sakla'' buyruklarını etkiler.)
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\kolay]
+Eğer bir program bilgisayar üzerinde 100 saniyede çalışıyorsa ve bu zamanın 80 saniyesi çarpma işlemi için harcanıyorsa, tüm programın 4 kat hızlı çalışması için çarpma işleminin ne kadar hızlandırılması gerekir?
+\end{alistirma}
+
+\begin{alistirma}[\kolay]
+``Kasırga'' marka bir işlemcinin saat sıklığı 4\,GHz, ``Fırtına'' marka işlemcinin saat sıklığı 2\,GHz ise ve bu işlemcilerin üzerinde aynı program çalışırsa hangisi daha hızlı çalışır? Verilen saat sıklığı bilgileri bu iki işlemciyi birbiriyle karşılaştırmak için yeterli midir? Eğer yeterli ise Kasırga, Fırtına'dan ne kadar daha hızlıdır? Eğer yeterli değilse Kasırga ile Fırtına'nın aynı hızda çalışması için ne olması gerekir? Yanıtınızı gerekçeleriyle birlikte açıklayın.
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+Hintel firmasının yeni çıkardığı ``Canavar'' model işlemci 10\,GHz hızında çalışıyor ve Cintel firmasının yeni çıkardığı ``Fırtına'' model işlemci 2\,GHz hızında çalışıyor ise:
+\begin{enumerate}[(a)]
+    \item Her iki firmanın işlemcilerinin kullandığı saatlerin iki vuruşu arasında kaç pikosaniye geçer?
+    \item Canavar, Fırtına'dan ne kadar hızlıdır?
+    \item Eğer aynı programı Fırtına'nın Canavar'dan 2 kat hızlı çalıştırması istenirse Cintel firmasının nasıl bir cinlik düşünmüş olması gerekir?
+    \item Eğer Canavar her buyruk türünü aynı sayıda çevrimde tamamlarken Fırtına ``önkayıt'' türündeki buyrukların dışındaki buyrukları Canavar ile aynı sayıda çevrimde tamamlıyorsa ve Fırtına önkayıt buyruklarını Canavar'dan 10 kat daha hızlı çalıştırabiliyorsa, Fırtına'nın verilen bir sınama programını Canavar ile aynı zamanda bitirebilmesi için programın içindeki önkayıt buyruklarının oranı ne olmalıdır?
+    \item Cintel önkayıt buyruklarıyla ilgili hızlandırmayı yaparken hangi tasarım ilkesini kullanmıştır?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+Tasarlanan bir bilgisayarda Aritmetik~(A), Bellek~(B), Canavar~(C) ve Dallanma~(D) olmak üzere 4 tür buyruk çalışmaktadır. Bilgisayarın saat sıklığı 1\,GHz olarak belirlenmiştir. Bilgisayarın üzerinde Tulpar ve Umay derleyicileri ile derlenen kodlar denenecektir. Tulpar \%20~A, \%30~B, \%35~C ve \%15~D türünde buyruklar üretirken Umay \%40~A, \%10~B, \%25~C ve \%25~D türünde buyruk üretmektedir.
+\begin{enumerate}[(a)]
+    \item Bilgisayarda tek vuruşluk bir işlemci kullanılırsa ve derleyiciler tarafından ``Karşı Saldırı'' adlı program derlendiğinde Tulpar 1000, Umay ise 800 buyruk üretiyorsa Tulpar'ın ürettiği kod Umay'ın ürettiği koddan ne kadar daha yavaştır?
+    \item Bilgisayarda çok vuruşluk bir işlemci kullanılırsa ve A, B, C ve D türü buyruklar sırasıyla 4, 5, 3 ve 4 vuruşta tamamlanabilirse ``Karşı Saldırı'' adlı oyunu hangi derleyici daha hızlı çalıştırır? Bu durumda Tulpar, Umay'dan ne kadar daha hızlıdır?
+    \item Bilgisayarda 15 aşamalı boru hattı bulunan bir işlemci kullanılırsa ve D türü (dallanma) buyrukların koşulları 11'inci aşamada çözülüyorsa, ``Karşı Saldırı'' adlı program için hangi derleyicinin ürettiği kod bilgisayarda daha hızlı çalışır? Bu durumda hızlı olan kod yavaş olandan ne kadar daha hızlıdır?
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\kolay]
+Bir bilgisayarın kullandığı saat sıklığı sabitse, ``Karşı Saldırı'' isimli oyunun bu bilgisayarda 5 kat hızlı çalışması için derleyici aşamasında hangi önlemler alınabilir?
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+Aşağıda bir işlemcinin çalıştırabildiği buyruk türleri, bu buyrukların kaç çevrimde çalıştığı ile A ve B derleyicilerinin aynı programı derlediklerinde ortaya çıkan kodlarda bu buyrukların ne oranda bulunduğu gösterilmiştir:
+
+\begin{center}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Buyruk türü} & \textbf{Çevrim sayısı} & \textbf{A (\%)} & \textbf{B (\%)} \\
+\midrule
+Yükle          &  7 & 10 & 15 \\
+Kayan Nokta    & 10 &  5 & 10 \\
+Sakla          &  6 & 10 &  5 \\
+Aritmetik      &  4 & 25 & 35 \\
+Dallan, Atla   &  3 & 20 &  5 \\
+Ninja          & 12 & 10 & 15 \\
+Ulubatlı Hasan & 15 & 20 & 15 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[(a)]
+    \item Eğer B'nin çıkardığı buyruk sayısı A'nın çıkardığından \%20 fazlaysa A'nın kodu B'nin kodundan ne kadar daha hızlı çalışır?
+    \item A derleyicisi ile B derleyicisinin ürettiği kodların işlemcide aynı zamanda çalışması için ürettikleri buyrukların sayısının oranı ne olmalıdır?
+    \item Ulubatlı Hasan ve Ninja buyruklarının çevrim sayısı birbirine eşitlenir ve A ve B derleyicisinin ürettiği kodların aynı zamanda koşması istenirse, birbirine eşit çevrim sayısında çalışan Ulubatlı Hasan ve Ninja kaç çevrim tutmalıdır?
+\end{enumerate}
+\end{alistirma}

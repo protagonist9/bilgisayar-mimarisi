@@ -19,6 +19,7 @@
 
 % --- Sayfa Düzeni ---
 \usepackage[a4paper, margin=2.5cm, top=3cm, bottom=3cm, headheight=25pt]{geometry}
+\raggedbottom  % Sayfaları aynı yüksekliğe zorlamayı kapat (aşırı dikey boşluk önlenir)
 
 % --- Renkler (font/listing/titlesec tanımlarından önce) ---
 \usepackage{xcolor}
@@ -68,6 +69,44 @@
 }
 \AtBeginDocument{\def\checkmark{{\symbolfont ✓}}}
 
+% Emoji desteği (Segoe UI Emoji veya Noto Color Emoji)
+\IfFontExistsTF{Segoe UI Emoji}{%
+  \newfontface\emojifont{Segoe UI Emoji}%
+}{%
+  \IfFontExistsTF{Noto Color Emoji}{%
+    \newfontface\emojifont{Noto Color Emoji}%
+  }{%
+    \newfontface\emojifont{Segoe UI Symbol}%  % son çare: siyah-beyaz
+  }%
+}
+\newcommand{\emoji}[1]{{\emojifont #1}}
+
+% Kızgın Kuş ikonu (satır içi TikZ — orijinal çizim)
+\newcommand{\kizginkus}{%
+  \begin{tikzpicture}[baseline=-0.5ex, scale=0.12]
+    % Gövde (kırmızı daire)
+    \fill[red!85!black] (0,0) circle (1);
+    % Karın (açık krem)
+    \fill[orange!20!white] (0,-0.35) ellipse (0.55 and 0.4);
+    % Sol göz (beyaz)
+    \fill[white] (-0.3,0.2) ellipse (0.25 and 0.28);
+    % Sağ göz (beyaz)
+    \fill[white] (0.3,0.2) ellipse (0.25 and 0.28);
+    % Sol göz bebeği (siyah, içe bakan)
+    \fill[black] (-0.18,0.18) circle (0.1);
+    % Sağ göz bebeği (siyah, içe bakan)
+    \fill[black] (0.18,0.18) circle (0.1);
+    % Sol kızgın kaş
+    \fill[black] (-0.55,0.55) -- (-0.1,0.4) -- (-0.12,0.48) -- cycle;
+    % Sağ kızgın kaş
+    \fill[black] (0.55,0.55) -- (0.1,0.4) -- (0.12,0.48) -- cycle;
+    % Gaga (sarı üçgen)
+    \fill[yellow!90!orange] (0,-0.05) -- (-0.18,-0.2) -- (0.18,-0.2) -- cycle;
+    % Tepedeki tüyler
+    \fill[red!70!black] (-0.05,0.95) -- (0.05,0.95) -- (0.1,1.35) -- (0,1.25) -- (-0.1,1.35) -- cycle;
+  \end{tikzpicture}%
+}
+
 % --- Tablolar ---
 \usepackage{booktabs}
 \usepackage{array}
@@ -77,6 +116,7 @@
 
 % --- Listeler ---
 \usepackage[shortlabels]{enumitem}
+\setlist{itemsep=2pt, parsep=0pt, topsep=4pt}  % Liste maddelerindeki aşırı boşluğu azalt
 
 % --- Şekiller ve Grafikler ---
 \usepackage{graphicx}
@@ -84,7 +124,13 @@
 \usepackage{subcaption}
 \captionsetup{labelfont=bf}                    % "Tablo 1.1:" ve "Şekil 1.1:" kalın
 \captionsetup[table]{textfont=it}              % Tablo açıklama metni yatık
+% Şekil/tablo etrafı boşluk (varsayılan ~20pt, sıkıştırılıyor)
+\setlength{\textfloatsep}{10pt plus 3pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
 \usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usetikzlibrary{shapes, arrows, arrows.meta, positioning, calc, decorations.markings,
     circuits.logic.US, circuits.logic.IEC, fit, patterns, matrix, automata, babel,
     decorations.pathreplacing, decorations.pathmorphing, shadows, backgrounds}
@@ -192,7 +238,6 @@
 \makeindex
 
 % --- Özel Ortamlar (Environments) ---
-\usepackage{multicol}
 \usepackage{tcolorbox}
 \tcbuselibrary{breakable, skins}
 
@@ -220,12 +265,19 @@
     arc=1mm,
 }
 
-% Alıştırma ortamı
+% Alıştırma zorluk dereceleri
+\newcommand{\kolay}{{\normalfont\small\textcolor{green!60!black}{★}}}
+\newcommand{\orta}{{\normalfont\small\textcolor{orange!80!black}{★★}}}
+\newcommand{\zor}{{\normalfont\small\textcolor{red!70!black}{★★★}}}
+
+% Alıştırma ortamı — isteğe bağlı zorluk parametresi: \begin{alistirma}[\kolay]
 \newcounter{alistirma}[chapter]
 \renewcommand{\thealistirma}{\thechapter.\arabic{alistirma}}
-\newenvironment{alistirma}{%
+\newenvironment{alistirma}[1][]{%
     \refstepcounter{alistirma}%
-    \par\medskip\noindent\textbf{Alıştırma \thealistirma.}\space
+    \par\medskip\noindent\textbf{Alıştırma \thealistirma.}%
+    \def\alistirmazorluk{#1}%
+    \ifx\alistirmazorluk\empty\else\hspace{0.5em}#1\fi\space
 }{%
     \par\medskip
 }

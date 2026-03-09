@@ -7,6 +7,18 @@
 
 ---
 
+## PDF İndir
+
+Kitabın güncel PDF sürümünü doğrudan indirmek için:
+
+📥 **[Kitabı İndir (PDF)](https://github.com/prof-oguzergin/bilgisayar-mimarisi/releases/latest/download/bilgisayar-mimarisi.pdf)**
+
+## Video Dersler
+
+Kitaba eşlik eden video ders serisi YouTube'da yayınlanmaktadır:
+
+🎬 **[Bilgisayar Mimarisi — Video Dersler](https://www.youtube.com/playlist?list=PLvNq8wrSYGAU6CF4UleG6HbXa9paQDsLK)**
+
 ## Hakkında
 
 Bu kitap, RISC-V buyruk kümesi mimarisi temelinde yazılmış Türkçe bir bilgisayar mimarisi ders kitabıdır. Lisans düzeyinde bilgisayar mühendisliği ve elektrik-elektronik mühendisliği öğrencilerine yönelik olarak hazırlanmıştır.
@@ -18,7 +30,7 @@ Bu kitap, RISC-V buyruk kümesi mimarisi temelinde yazılmış Türkçe bir bilg
 | Bölüm | Konu | Durum |
 |-------|------|-------|
 | 1 | Giriş | ✅ Yayında |
-| 2 | Başarım | 🔧 Hazırlanıyor |
+| 2 | Başarım | ✅ Yayında |
 | 3 | Buyruk Kümesi Mimarisi | 🔧 Hazırlanıyor |
 | 4 | Aritmetik Birimler | 🔧 Hazırlanıyor |
 | 5 | İşlemci Tasarımı | 🔧 Hazırlanıyor |
