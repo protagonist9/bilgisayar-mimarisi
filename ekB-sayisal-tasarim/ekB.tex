@@ -1,35 +1,19 @@
 \chapter{Sayısal Tasarım Temelleri}
 \label{ch:sayisal-tasarim}
-\bolumfoto{gorseller/ekA-galatakulesi.jpg}{Galata Kulesi -- İstanbul}
+\bolumfoto{gorseller/ekB-galatakulesi.jpg}{Galata Kulesi -- İstanbul}
 
 \section{Giriş}
 
-Mantıksal devre tasarımı (MDT) bilgisayarın ana birimlerden olan veriyolu ve denetiminin tasarımında önemli bir rol oynamaktadır. Bilgisayardaki işlem birimlerinin tasarımı mantıksal devre tasarımı ilkelerine uyularak yapılır. Bölüm~\ref{chap:islemci-tasarimi} ve Bölüm~\ref{chap:boruhatti}'da anlatılan veriyolu tasarımında, birimler ve yazmaçlar birer kutu olarak gösterilmişlerdir. Bu gösterime YAS (Yazmaç Aktarım Seviyesi) denir. YAS'tan bir sonra gelen seviye ise mantıksal tasarım aşamasıdır. Mantıksal tasarım, mantıksal kapıların ve birbirleri ile bağlantılarının ayrıntılı gösterildiği aşamadır. MDT'nin bir alt seviyesi ise elektriksel seviyedir. Bu seviyede tasarımın durumuna göre iyileştirmeler yapacak olan devre elemanlarının tasarımı ve yerleşimi yapılır. Mantık kapıları sayesinde hem karar verme işlemlerinin yapılacağı aşamalar hem de aritmetik işlemler için gereken yapılar kurulabilmektedir. Mantık kapıları tasarlanacak belirli fonksiyonları da yerine getirecek şekilde düzenlenebilmektedir. Bu fonksiyonlardan bazıları çok kullanıldıkları için sabitlenmiş ve çoklayıcı, kodlayıcı, toplayıcı ve yazmaçlar gibi sabit birimler haline getirilmiştir. İkilik düzendeki işlemleri gerçekleştirmek için mantık kapıları kullanılır. Kapılardaki giriş ve çıkış değerleri mantıksal 1 ve 0 sayılarını temsil eden elektriksel değerlerdir. Tasarlanacak birimin verilecek giriş değerlerine göre vereceği sonuçların yazıldığı tabloya doğruluk tablosu denir. Bu bölümde temel mantık kapılarından, doğruluk tabloları ve boole cebrinden, boole fonksiyonlarının sadeleştirilmesinden ve flip-floplardan bahsedilmektedir.
+Bilgisayar, farklı soyutlama düzeylerinde tasarlanır. Bölüm~\ref{chap:islemci-tasarimi} ve Bölüm~\ref{chap:boruhatti}'da kullanılan Yazmaç Aktarım Seviyesi'nde (YAS) birimler birer kutu olarak gösterilir. Bu kutuların içini dolduran düzey ise mantıksal devre tasarımıdır: mantık kapılarının ve aralarındaki bağlantıların belirlendiği aşama. Mantık kapıları, hem karar verme hem de aritmetik işlemler için gereken yapıları oluşturur. Sık kullanılan yapılar --- çoklayıcı, kod çözücü, toplayıcı, yazmaç --- standart birimler hâlinde sabitlenmiştir.
+
+Bu ekte önce temel mantık kapıları ve doğruluk tabloları, ardından Boole cebri ve Karno haritalarıyla fonksiyon sadeleştirme, sonra kod çözücü, çoklayıcı ve toplayıcı devreleri, son olarak flip-floplar, yazmaçlar, sayaçlar ve durum makineleri ele alınmaktadır. İkilik tabandaki sayı gösterimleri ve dönüşümler Ek~\ref{ch:sayi-sistemleri}'te ayrıntılı olarak verilmiştir.
 
 
 \section{Mantıksal Kapılar ve Doğruluk Tabloları}
 
-\subsection{İkilik Sistem}
+\subsection{İkilik Sistem ve Mantık}
 
-Bilgisayarlar ikilik sistemde çalışırlar. İkilik düzendeki sayılar ikiden küçük olan rakamlarla ifade edilir. Her bir basamak ikinin bir kuvvetini temsil eder. Basamakların değerleri sola gidildikçe büyür. İkilik sistemin rakamları olan 1 ve 0 ayrıca mantıktaki doğru ve yanlışı da temsil eder. İkilik sistemdeki bir sayının onluk sisteme çevrilmesinde, onluk tabandaki sayıların çözümlenmesi gibi her rakama karşılık gelen basamağın değeriyle o basamaktaki rakam çarpılır. Çıkan tüm değerler toplanır. Böylece sayının onluk tabandaki değeri elde edilir.
-
-İkilik tabanda yapılan işlemlerden Ek~A'da ayrıntılı olarak bahsedilmektedir.
-
-İkilik sistemde aritmetik işlemler yaparken kullanılan negatif sayılar gösterilirken ikinin tümleyeni yöntemi kullanılır. $R$ tabanında bir $a$ sayının $R$'ye tümleyeni:
-
-\begin{itemize}
-    \item $a$ = sayı
-    \item $n$ = sayıdaki basamak sayısı
-    \item $R$ = sayı tabanı
-\end{itemize}
-
-olarak alındığında $R^n - a$ ile bulunur.
-
-\textbf{Örnek:} $(100101)_2$ nin 2'ye tümleyeni:
-
-\[
-    2^6 - (100101)_2 = (1000000 - 100101)_2 = (011011)_2
-\]
+Bilgisayarlar ikilik sistemde çalışır: her basamak yalnızca 0 veya 1 değerini alır. Bu iki değer aynı zamanda mantıktaki \emph{yanlış} ve \emph{doğru} kavramlarına karşılık gelir ve mantık kapılarının temelini oluşturur. İkilik sayı gösterimleri, taban dönüşümleri, işaretli sayılar ve ikiye tümleyen yöntemi Ek~\ref{ch:sayi-sistemleri}'te ayrıntılı olarak ele alınmaktadır.
 
 
 \subsection{Mantık Kapıları ve Doğruluk Tabloları}
@@ -343,6 +327,21 @@ $x$ & $y$ & $z$ & $F_1 = x y \overline{z}$ & $F_2 = x + \overline{y} + \overline
 \label{fig:B.4}
 \end{figure}
 
+
+\begin{ornek}[B.0]
+Aşağıdaki Boole ifadesini Boole cebri kurallarıyla sadeleştirin: $F = x\overline{y} + xy + \overline{x}y$.
+
+\textbf{Çözüm:}
+
+Dağılma kuralı tersten uygulanarak ortak çarpanlar paranteze alınır:
+\[
+F = x(\overline{y} + y) + \overline{x}y = x \cdot 1 + \overline{x}y = x + \overline{x}y
+\]
+Şimdi $x + \overline{x}y = x + y$ özdeşliği uygulanır (çünkü $x + \overline{x}y = (x + \overline{x})(x + y) = 1 \cdot (x + y)$):
+\[
+F = x + y
+\]
+\end{ornek}
 
 \subsection{Mini Terimler ve Maksi Terimler}
 
@@ -801,6 +800,15 @@ $y$ & $z$ & \textbf{Çıkış} \\
 \end{table}
 
 
+\begin{ornek}[B.1a]
+4:1 çoklayıcı kullanarak $F(x,y) = \Sigma(1,2,3)$ fonksiyonunu gerçekleyin.
+
+\textbf{Çözüm:}
+
+İki değişkenli fonksiyonun dört mini terimi çoklayıcının dört veri girişine doğrudan bağlanır. Doğruluk tablosundan: $F(0,0)=0$, $F(0,1)=1$, $F(1,0)=1$, $F(1,1)=1$. Bu durumda $I_0=0$, $I_1=1$, $I_2=1$, $I_3=1$ olarak atanır; seçim hatları $y$ (sağdaki) ve $x$ (soldaki) değişkenleridir. $x$ ve $y$'nin değerine göre çoklayıcı ilgili girişi çıkışa aktarır.
+\end{ornek}
+
+
 % =====================================================
 \section{Toplayıcılar}
 \label{sec:toplayicilar}
@@ -997,7 +1005,18 @@ Sonuç: $S = 1011$ (11), $C_4 = 0$. Doğrulama: $6 + 5 = 11$. \checkmark
 % =====================================================
 \section{Tasarım Örneği: Tek Vuruşluk Veriyolu Denetim Birimi}
 
-Bölüm~\ref{chap:islemci-tasarimi}'te anlatılan tek vuruşluk veriyolunun denetim birimi, buyrukların gerektirdiği denetim sinyallerini üreten bir birimdir. Bu bölümde bu birimin mantıksal tasarımı yapılmaktadır.
+Bölüm~\ref{chap:islemci-tasarimi}'te anlatılan tek vuruşluk veriyolunun denetim birimi, buyrukların gerektirdiği denetim sinyallerini üreten bir birimdir. Bu bölümde bu birimin mantıksal tasarımı yapılmaktadır. Tablolarda kullanılan kısaltmalar şöyledir:
+
+\begin{itemize}[nosep, leftmargin=2em]
+    \item \textbf{PS0, PS1:} Program sayacı kaynak seçimi
+    \item \textbf{SnçYzmç:} Sonuç yazmaca yazılsın mı
+    \item \textbf{YazDen:} Yazmaç dosyasına yazma denetimi (dallanma koşuluna bağlı)
+    \item \textbf{AMBDen:} ALU'nun ikinci girişine bellek mi gelsin (AMB = ALU/Bellek Denetimi)
+    \item \textbf{BelYaz, BelOku:} Bellek yazma ve okuma izni
+    \item \textbf{SD0, SD1:} Sonuç veri kaynağı seçimi (ALU, bellek veya PC+4)
+    \item \textbf{GenDen:} Genel yazmaç yazma denetimi
+    \item \textbf{AMB0, AMB1:} ALU işlem seçimi
+\end{itemize}
 
 \begin{table}[H]
 \centering
@@ -1074,11 +1093,11 @@ $O_2$ & $O_1$ & $O_0$ & $S$ & \rotatebox{90}{\textbf{PS0}} & \rotatebox{90}{\tex
 \end{tabular}
 \end{table}
 
-Her denetim çıkışı ayrı bir fonksiyon olarak ele alınır ve Karno haritası ile sadeleştirilir. Şekil~\ref{fig:karno-denetim-1} ve~\ref{fig:karno-denetim-2}'de 12 denetim fonksiyonunun Karno haritaları toplu olarak verilmiştir:
+Her denetim çıkışı ayrı bir fonksiyon olarak ele alınır ve Karno haritası ile sadeleştirilir. Şekil~\ref{fig:karno-denetim-1}'de 12 denetim fonksiyonunun Karno haritaları toplu olarak verilmiştir:
 
 % --- TikZ makrosu: Karno haritası (denetim bölümü, 4 değişken) ---
 \newcommand{\denetimkarno}[5]{%%
-\begin{tikzpicture}[scale=0.55]
+\begin{tikzpicture}[scale=0.45]
     \draw (0,0) grid (4,4);
     \node[above] at (0.5, 4) {\tiny 00};
     \node[above] at (1.5, 4) {\tiny 01};
@@ -1094,7 +1113,7 @@ Her denetim çıkışı ayrı bir fonksiyon olarak ele alınır ve Karno haritas
 
 \begin{figure}[H]
 \centering
-% --- Satır 1: PS0, PS1, SnçYzmç ---
+% --- Satır 1: PS0, PS1, SnçYzmç, YazDen ---
 \subcaptionbox{PS0\label{fig:B.12}}{%%
 \denetimkarno%%
   {\node at (0.5,3.5) {1}; \node at (1.5,3.5) {1}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};}%%
@@ -1118,10 +1137,7 @@ Her denetim çıkışı ayrı bir fonksiyon olarak ele alınır ve Karno haritas
   {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
   {\node at (0.5,0.5) {0}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {0};}%%
   {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (-0.05,3.05) rectangle (1.95,3.95);}%%
-}
-
-\bigskip
-% --- Satır 2: YazDen, AMBDen, BelYaz ---
+}\hfill
 \subcaptionbox{YazDen\label{fig:B.15}}{%%
 \denetimkarno%%
   {\node at (0.5,3.5) {0}; \node at (1.5,3.5) {0}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};}%%
@@ -1129,7 +1145,10 @@ Her denetim çıkışı ayrı bir fonksiyon olarak ele alınır ve Karno haritas
   {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
   {\node at (0.5,0.5) {0}; \node at (1.5,0.5) {1}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {0};}%%
   {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (1.05,0.05) rectangle (1.95,0.95);}%%
-}\hfill
+}
+
+\bigskip
+% --- Satır 2: AMBDen, BelYaz, BelOku, SD0 ---
 \subcaptionbox{AMBDen\label{fig:B.16}}{%%
 \denetimkarno%%
   {\node at (0.5,3.5) {0}; \node at (1.5,3.5) {0}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};}%%
@@ -1145,14 +1164,7 @@ Her denetim çıkışı ayrı bir fonksiyon olarak ele alınır ve Karno haritas
   {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
   {\node at (0.5,0.5) {0}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {0};}%%
   {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (2.05,3.05) rectangle (3.95,3.95);}%%
-}
-\caption{Denetim fonksiyonları Karno haritaları -- 1.\ grup}
-\label{fig:karno-denetim-1}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-% --- Satır 1: BelOku, SD0, SD1 ---
+}\hfill
 \subcaptionbox{BelOku\label{fig:B.18}}{%%
 \denetimkarno%%
   {\node at (0.5,3.5) {0}; \node at (1.5,3.5) {0}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};}%%
@@ -1168,7 +1180,10 @@ Her denetim çıkışı ayrı bir fonksiyon olarak ele alınır ve Karno haritas
   {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
   {\node at (0.5,0.5) {1}; \node at (1.5,0.5) {1}; \node at (2.5,0.5) {1}; \node at (3.5,0.5) {1};}%%
   {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (-0.05,0.05) rectangle (3.95,0.95);}%%
-}\hfill
+}
+
+\bigskip
+% --- Satır 3: SD1, GenDen, AMB0, AMB1 ---
 \subcaptionbox{SD1\label{fig:B.20}}{%%
 \denetimkarno%%
   {\node at (0.5,3.5) {0}; \node at (1.5,3.5) {0}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};}%%
@@ -1176,10 +1191,7 @@ Her denetim çıkışı ayrı bir fonksiyon olarak ele alınır ve Karno haritas
   {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
   {\node at (0.5,0.5) {0}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {0};}%%
   {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (2.05,2.05) rectangle (3.95,2.95);}%%
-}
-
-\bigskip
-% --- Satır 2: GenDen, AMB0, AMB1 ---
+}\hfill
 \subcaptionbox{GenDen\label{fig:B.21}}{%%
 \denetimkarno%%
   {\node at (0.5,3.5) {1}; \node at (1.5,3.5) {1}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};}%%
@@ -1204,8 +1216,8 @@ Her denetim çıkışı ayrı bir fonksiyon olarak ele alınır ve Karno haritas
   {\node at (0.5,0.5) {0}; \node at (1.5,0.5) {1}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {0};}%%
   {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (1.05,0.05) rectangle (1.95,0.95);}%%
 }
-\caption{Denetim fonksiyonları Karno haritaları -- 2.\ grup}
-\label{fig:karno-denetim-2}
+\caption{Denetim fonksiyonları Karno haritaları}
+\label{fig:karno-denetim-1}
 \end{figure}
 
 
@@ -1694,205 +1706,86 @@ $x$ & $y$ & $A$ & $B$ & $x(t+1)$ & $y(t+1)$ & $\text{Ç}_2$ & $\text{Ç}_1$ & $\
 
 Her bir çıkış fonksiyonu ve flip-flop girişleri Karno haritası ile sadeleştirilir:
 
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=0.8]
+% --- TikZ makrosu: Karno haritası (sayaç bölümü, 4 değişken) ---
+\newcommand{\sayackarno}[5]{%%
+\begin{tikzpicture}[scale=0.45]
     \draw (0,0) grid (4,4);
-    \node[above] at (0.5, 4) {\footnotesize 00};
-    \node[above] at (1.5, 4) {\footnotesize 01};
-    \node[above] at (2.5, 4) {\footnotesize 11};
-    \node[above] at (3.5, 4) {\footnotesize 10};
-    \node[left] at (0, 3.5) {\footnotesize 00};
-    \node[left] at (0, 2.5) {\footnotesize 01};
-    \node[left] at (0, 1.5) {\footnotesize 11};
-    \node[left] at (0, 0.5) {\footnotesize 10};
-    \node[above left] at (0, 4) {\footnotesize $xy$\textbackslash $AB$};
-    % Row 00: 0,0,0,0
-    \node at (0.5,3.5) {0}; \node at (1.5,3.5) {0}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};
-    % Row 01: 0,0,0,0
-    \node at (0.5,2.5) {0}; \node at (1.5,2.5) {0}; \node at (2.5,2.5) {0}; \node at (3.5,2.5) {0};
-    % Row 11: X,X,X,X
-    \node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};
-    % Row 10: 0,1,0,0
-    \node at (0.5,0.5) {0}; \node at (1.5,0.5) {1}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {0};
-    \draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (1.05,0.05) rectangle (1.95,0.95);
-\end{tikzpicture}
-\caption{$\text{Ç}_2$ çıkışı Karno haritası}
-\label{fig:B.30}
-\end{figure}
+    \node[above] at (0.5, 4) {\tiny 00};
+    \node[above] at (1.5, 4) {\tiny 01};
+    \node[above] at (2.5, 4) {\tiny 11};
+    \node[above] at (3.5, 4) {\tiny 10};
+    \node[left] at (0, 3.5) {\tiny 00};
+    \node[left] at (0, 2.5) {\tiny 01};
+    \node[left] at (0, 1.5) {\tiny 11};
+    \node[left] at (0, 0.5) {\tiny 10};
+    #1 #2 #3 #4 #5
+\end{tikzpicture}%%
+}
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[scale=0.8]
-    \draw (0,0) grid (4,4);
-    \node[above] at (0.5, 4) {\footnotesize 00};
-    \node[above] at (1.5, 4) {\footnotesize 01};
-    \node[above] at (2.5, 4) {\footnotesize 11};
-    \node[above] at (3.5, 4) {\footnotesize 10};
-    \node[left] at (0, 3.5) {\footnotesize 00};
-    \node[left] at (0, 2.5) {\footnotesize 01};
-    \node[left] at (0, 1.5) {\footnotesize 11};
-    \node[left] at (0, 0.5) {\footnotesize 10};
-    \node[above left] at (0, 4) {\footnotesize $xy$\textbackslash $AB$};
-    % Row 00: 0,1,0,1
-    \node at (0.5,3.5) {0}; \node at (1.5,3.5) {1}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {1};
-    % Row 01: 1,0,1,0
-    \node at (0.5,2.5) {1}; \node at (1.5,2.5) {0}; \node at (2.5,2.5) {1}; \node at (3.5,2.5) {0};
-    % Row 11: X,X,X,X
-    \node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};
-    % Row 10: 1,0,1,0
-    \node at (0.5,0.5) {1}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {1}; \node at (3.5,0.5) {0};
-    % Dama tahtası deseni: XOR fonksiyonu (Karno gruplandırması uygulanamaz)
-    % 1 olan hücreler daire ile işaretlenir
-    \foreach \x/\y in {1.5/3.5, 3.5/3.5, 0.5/2.5, 2.5/2.5, 0.5/0.5, 2.5/0.5} {
-        \draw[thick, sinyalkirmizi, opacity=0.6] (\x,\y) circle (0.4);
-    }
-    % X hücreleri de dahil edilebilir
-    \foreach \x/\y in {0.5/1.5, 1.5/1.5, 2.5/1.5, 3.5/1.5} {
-        \draw[thick, sinyalmavi, opacity=0.4] (\x,\y) circle (0.4);
-    }
-\end{tikzpicture}
-\caption{$\text{Ç}_1$ çıkışı Karno haritası}
-\label{fig:B.31}
-\end{figure}
+% --- Satır 1: Ç2, Ç1, Ç0, Jx ---
+\subcaptionbox{$\text{Ç}_2$\label{fig:B.30}}{%%
+\sayackarno%%
+  {\node at (0.5,3.5) {0}; \node at (1.5,3.5) {0}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};}%%
+  {\node at (0.5,2.5) {0}; \node at (1.5,2.5) {0}; \node at (2.5,2.5) {0}; \node at (3.5,2.5) {0};}%%
+  {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
+  {\node at (0.5,0.5) {0}; \node at (1.5,0.5) {1}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {0};}%%
+  {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (1.05,0.05) rectangle (1.95,0.95);}%%
+}\hfill
+\subcaptionbox{$\text{Ç}_1$\label{fig:B.31}}{%%
+\sayackarno%%
+  {\node at (0.5,3.5) {0}; \node at (1.5,3.5) {1}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {1};}%%
+  {\node at (0.5,2.5) {1}; \node at (1.5,2.5) {0}; \node at (2.5,2.5) {1}; \node at (3.5,2.5) {0};}%%
+  {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
+  {\node at (0.5,0.5) {1}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {1}; \node at (3.5,0.5) {0};}%%
+  {\foreach \x/\y in {1.5/3.5, 3.5/3.5, 0.5/2.5, 2.5/2.5, 0.5/0.5, 2.5/0.5} {\draw[thick, sinyalkirmizi, opacity=0.6] (\x,\y) circle (0.4);} \foreach \x/\y in {0.5/1.5, 1.5/1.5, 2.5/1.5, 3.5/1.5} {\draw[thick, sinyalmavi, opacity=0.4] (\x,\y) circle (0.4);}}%%
+}\hfill
+\subcaptionbox{$\text{Ç}_0$\label{fig:B.32}}{%%
+\sayackarno%%
+  {\node at (0.5,3.5) {0}; \node at (1.5,3.5) {1}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};}%%
+  {\node at (0.5,2.5) {0}; \node at (1.5,2.5) {0}; \node at (2.5,2.5) {0}; \node at (3.5,2.5) {1};}%%
+  {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
+  {\node at (0.5,0.5) {1}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {1}; \node at (3.5,0.5) {0};}%%
+  {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (1.05,3.05) rectangle (1.95,3.95); \draw[rounded corners=3pt, thick, sinyalmavi, opacity=0.6] (3.05,2.05) rectangle (3.95,2.95); \draw[rounded corners=3pt, thick, sinyalyesil, opacity=0.6] (-0.05,0.05) rectangle (0.95,0.95); \draw[rounded corners=3pt, thick, orange, opacity=0.6] (2.05,0.05) rectangle (2.95,0.95);}%%
+}\hfill
+\subcaptionbox{$J_x$\label{fig:B.33}}{%%
+\sayackarno%%
+  {\node at (0.5,3.5) {0}; \node at (1.5,3.5) {1}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};}%%
+  {\node at (0.5,2.5) {0}; \node at (1.5,2.5) {0}; \node at (2.5,2.5) {0}; \node at (3.5,2.5) {0};}%%
+  {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
+  {\node at (0.5,0.5) {X}; \node at (1.5,0.5) {X}; \node at (2.5,0.5) {X}; \node at (3.5,0.5) {X};}%%
+  {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (1.05,3.05) rectangle (1.95,3.95);}%%
+}
 
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=0.8]
-    \draw (0,0) grid (4,4);
-    \node[above] at (0.5, 4) {\footnotesize 00};
-    \node[above] at (1.5, 4) {\footnotesize 01};
-    \node[above] at (2.5, 4) {\footnotesize 11};
-    \node[above] at (3.5, 4) {\footnotesize 10};
-    \node[left] at (0, 3.5) {\footnotesize 00};
-    \node[left] at (0, 2.5) {\footnotesize 01};
-    \node[left] at (0, 1.5) {\footnotesize 11};
-    \node[left] at (0, 0.5) {\footnotesize 10};
-    \node[above left] at (0, 4) {\footnotesize $xy$\textbackslash $AB$};
-    % Row 00: 0,1,0,0
-    \node at (0.5,3.5) {0}; \node at (1.5,3.5) {1}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};
-    % Row 01: 0,0,0,1
-    \node at (0.5,2.5) {0}; \node at (1.5,2.5) {0}; \node at (2.5,2.5) {0}; \node at (3.5,2.5) {1};
-    % Row 11: X,X,X,X
-    \node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};
-    % Row 10: 1,0,1,0
-    \node at (0.5,0.5) {1}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {1}; \node at (3.5,0.5) {0};
-    \draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (1.05,3.05) rectangle (1.95,3.95);
-    \draw[rounded corners=3pt, thick, sinyalmavi, opacity=0.6] (3.05,2.05) rectangle (3.95,2.95);
-    \draw[rounded corners=3pt, thick, sinyalyesil, opacity=0.6] (-0.05,0.05) rectangle (0.95,0.95);
-    \draw[rounded corners=3pt, thick, orange, opacity=0.6] (2.05,0.05) rectangle (2.95,0.95);
-\end{tikzpicture}
-\caption{$\text{Ç}_0$ çıkışı Karno haritası}
-\label{fig:B.32}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=0.8]
-    \draw (0,0) grid (4,4);
-    \node[above] at (0.5, 4) {\footnotesize 00};
-    \node[above] at (1.5, 4) {\footnotesize 01};
-    \node[above] at (2.5, 4) {\footnotesize 11};
-    \node[above] at (3.5, 4) {\footnotesize 10};
-    \node[left] at (0, 3.5) {\footnotesize 00};
-    \node[left] at (0, 2.5) {\footnotesize 01};
-    \node[left] at (0, 1.5) {\footnotesize 11};
-    \node[left] at (0, 0.5) {\footnotesize 10};
-    \node[above left] at (0, 4) {\footnotesize $xy$\textbackslash $AB$};
-    % Row 00: 0,1,0,0
-    \node at (0.5,3.5) {0}; \node at (1.5,3.5) {1}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {0};
-    % Row 01: 0,0,0,0
-    \node at (0.5,2.5) {0}; \node at (1.5,2.5) {0}; \node at (2.5,2.5) {0}; \node at (3.5,2.5) {0};
-    % Row 11: X,X,X,X
-    \node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};
-    % Row 10: X,X,X,X
-    \node at (0.5,0.5) {X}; \node at (1.5,0.5) {X}; \node at (2.5,0.5) {X}; \node at (3.5,0.5) {X};
-    \draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (1.05,3.05) rectangle (1.95,3.95);
-\end{tikzpicture}
-\caption{$J_x$ fonksiyonu Karno haritası}
-\label{fig:B.33}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=0.8]
-    \draw (0,0) grid (4,4);
-    \node[above] at (0.5, 4) {\footnotesize 00};
-    \node[above] at (1.5, 4) {\footnotesize 01};
-    \node[above] at (2.5, 4) {\footnotesize 11};
-    \node[above] at (3.5, 4) {\footnotesize 10};
-    \node[left] at (0, 3.5) {\footnotesize 00};
-    \node[left] at (0, 2.5) {\footnotesize 01};
-    \node[left] at (0, 1.5) {\footnotesize 11};
-    \node[left] at (0, 0.5) {\footnotesize 10};
-    \node[above left] at (0, 4) {\footnotesize $xy$\textbackslash $AB$};
-    % Row 00: X,X,X,X
-    \node at (0.5,3.5) {X}; \node at (1.5,3.5) {X}; \node at (2.5,3.5) {X}; \node at (3.5,3.5) {X};
-    % Row 01: X,X,X,X
-    \node at (0.5,2.5) {X}; \node at (1.5,2.5) {X}; \node at (2.5,2.5) {X}; \node at (3.5,2.5) {X};
-    % Row 11: X,X,X,X
-    \node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};
-    % Row 10: 1,0,0,1
-    \node at (0.5,0.5) {1}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {1};
-    \draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (-0.05,0.05) rectangle (0.95,0.95);
-    \draw[rounded corners=3pt, thick, sinyalmavi, opacity=0.6] (3.05,0.05) rectangle (3.95,0.95);
-\end{tikzpicture}
-\caption{$K_x$ fonksiyonu Karno haritası}
-\label{fig:B.34}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=0.8]
-    \draw (0,0) grid (4,4);
-    \node[above] at (0.5, 4) {\footnotesize 00};
-    \node[above] at (1.5, 4) {\footnotesize 01};
-    \node[above] at (2.5, 4) {\footnotesize 11};
-    \node[above] at (3.5, 4) {\footnotesize 10};
-    \node[left] at (0, 3.5) {\footnotesize 00};
-    \node[left] at (0, 2.5) {\footnotesize 01};
-    \node[left] at (0, 1.5) {\footnotesize 11};
-    \node[left] at (0, 0.5) {\footnotesize 10};
-    \node[above left] at (0, 4) {\footnotesize $xy$\textbackslash $AB$};
-    % Row 00: 0,0,0,1
-    \node at (0.5,3.5) {0}; \node at (1.5,3.5) {0}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {1};
-    % Row 01: X,X,X,X
-    \node at (0.5,2.5) {X}; \node at (1.5,2.5) {X}; \node at (2.5,2.5) {X}; \node at (3.5,2.5) {X};
-    % Row 11: X,X,X,X
-    \node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};
-    % Row 10: 0,0,0,0
-    \node at (0.5,0.5) {0}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {0};
-    \draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (3.05,3.05) rectangle (3.95,3.95);
-\end{tikzpicture}
-\caption{$J_y$ fonksiyonu Karno haritası}
-\label{fig:B.35}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[scale=0.8]
-    \draw (0,0) grid (4,4);
-    \node[above] at (0.5, 4) {\footnotesize 00};
-    \node[above] at (1.5, 4) {\footnotesize 01};
-    \node[above] at (2.5, 4) {\footnotesize 11};
-    \node[above] at (3.5, 4) {\footnotesize 10};
-    \node[left] at (0, 3.5) {\footnotesize 00};
-    \node[left] at (0, 2.5) {\footnotesize 01};
-    \node[left] at (0, 1.5) {\footnotesize 11};
-    \node[left] at (0, 0.5) {\footnotesize 10};
-    \node[above left] at (0, 4) {\footnotesize $xy$\textbackslash $AB$};
-    % Row 00: X,X,X,X
-    \node at (0.5,3.5) {X}; \node at (1.5,3.5) {X}; \node at (2.5,3.5) {X}; \node at (3.5,3.5) {X};
-    % Row 01: 1,1,0,0
-    \node at (0.5,2.5) {1}; \node at (1.5,2.5) {1}; \node at (2.5,2.5) {0}; \node at (3.5,2.5) {0};
-    % Row 11: X,X,X,X
-    \node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};
-    % Row 10: X,X,X,X
-    \node at (0.5,0.5) {X}; \node at (1.5,0.5) {X}; \node at (2.5,0.5) {X}; \node at (3.5,0.5) {X};
-    \draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (-0.05,2.05) rectangle (1.95,2.95);
-\end{tikzpicture}
-\caption{$K_y$ fonksiyonu Karno haritası}
-\label{fig:B.36}
+\bigskip
+% --- Satır 2: Kx, Jy, Ky ---
+\subcaptionbox{$K_x$\label{fig:B.34}}{%%
+\sayackarno%%
+  {\node at (0.5,3.5) {X}; \node at (1.5,3.5) {X}; \node at (2.5,3.5) {X}; \node at (3.5,3.5) {X};}%%
+  {\node at (0.5,2.5) {X}; \node at (1.5,2.5) {X}; \node at (2.5,2.5) {X}; \node at (3.5,2.5) {X};}%%
+  {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
+  {\node at (0.5,0.5) {1}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {1};}%%
+  {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (-0.05,0.05) rectangle (0.95,0.95); \draw[rounded corners=3pt, thick, sinyalmavi, opacity=0.6] (3.05,0.05) rectangle (3.95,0.95);}%%
+}\hfill
+\subcaptionbox{$J_y$\label{fig:B.35}}{%%
+\sayackarno%%
+  {\node at (0.5,3.5) {0}; \node at (1.5,3.5) {0}; \node at (2.5,3.5) {0}; \node at (3.5,3.5) {1};}%%
+  {\node at (0.5,2.5) {X}; \node at (1.5,2.5) {X}; \node at (2.5,2.5) {X}; \node at (3.5,2.5) {X};}%%
+  {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
+  {\node at (0.5,0.5) {0}; \node at (1.5,0.5) {0}; \node at (2.5,0.5) {0}; \node at (3.5,0.5) {0};}%%
+  {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (3.05,3.05) rectangle (3.95,3.95);}%%
+}\hfill
+\subcaptionbox{$K_y$\label{fig:B.36}}{%%
+\sayackarno%%
+  {\node at (0.5,3.5) {X}; \node at (1.5,3.5) {X}; \node at (2.5,3.5) {X}; \node at (3.5,3.5) {X};}%%
+  {\node at (0.5,2.5) {1}; \node at (1.5,2.5) {1}; \node at (2.5,2.5) {0}; \node at (3.5,2.5) {0};}%%
+  {\node at (0.5,1.5) {X}; \node at (1.5,1.5) {X}; \node at (2.5,1.5) {X}; \node at (3.5,1.5) {X};}%%
+  {\node at (0.5,0.5) {X}; \node at (1.5,0.5) {X}; \node at (2.5,0.5) {X}; \node at (3.5,0.5) {X};}%%
+  {\draw[rounded corners=3pt, thick, sinyalkirmizi, opacity=0.6] (-0.05,2.05) rectangle (1.95,2.95);}%%
+}
+\caption{Sayaç tasarımı Karno haritaları}
+\label{fig:karno-sayac}
 \end{figure}
 
 Sistemin son hali için mantık kapılarıyla ve gereken giriş çıkışların birbirine bağlanmasıyla elde edilecek devreye A ve B yarışmacılarının soruları doğru ya da yanlış cevaplama bilgileri girilerek sonuç elde edilir.

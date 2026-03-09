@@ -1,0 +1,506 @@
+% =============================================================
+% EK D: RISC-V Uygulama Çalışmaları ve Projeler
+% =============================================================
+\chapter{RISC-V Uygulama Çalışmaları ve Projeler}
+\label{app:pratik-rehber}
+\bolumfoto{gorseller/ekD-sumela.jpg}{Sümela Manastırı -- Trabzon}
+
+Bu ekte, kitap boyunca öğrenilen kavramları uygulamaya dönüştürmek için gerekli araçlar, temel Verilog bilgisi ve üç aşamalı bir proje seti sunulmaktadır. Amaç, öğrencilerin hem yazılım hem de donanım düzeyinde bilgisayar mimarisini deneyimlemesidir.
+
+% =============================================================
+% D.1 RISC-V Araç Zinciri
+% =============================================================
+\section{RISC-V Araç Zinciri}
+\label{sec:ekd-arac-zinciri}
+
+RISC-V\index{RISC-V!araç zinciri} programlarını yazmak, derlemek ve çalıştırmak için çeşitli açık kaynaklı araçlar mevcuttur. Bu bölümde, ders kapsamında kullanılabilecek benzetimlikler ve derleyici araç zinciri tanıtılmaktadır.
+
+% -------------------------------------------------------------
+\subsection{Benzetimlikler}
+\label{sec:ekd-simulatorler}
+
+Gerçek bir RISC-V donanımı olmadan program geliştirmek için benzetimlikler kullanılır. Tablo~\ref{tab:ekd-simulatorler}, yaygın kullanılan benzetimlikleri karşılaştırmaktadır.
+
+\begin{table}[H]
+\centering
+\caption[RISC-V benzetimliklerinin karşılaştırması]{RISC-V benzetimliklerinin karşılaştırması}
+\label{tab:ekd-simulatorler}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Araç} & \textbf{Tür} & \textbf{Arayüz} & \textbf{Uygun Kullanım} \\
+\midrule
+RARS   & Fonksiyonel & Grafiksel (GUI)       & Başlangıç, ders içi gösterim \\
+Venus  & Fonksiyonel & Tarayıcı tabanlı      & Kurulum gerektirmeyen hızlı deneme \\
+Spike  & Fonksiyonel & Komut satırı          & İleri düzey, ayrıcalıklı mod \\
+QEMU   & Sistem      & Komut satırı          & İşletim sistemi çalıştırma \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{RARS}\index{RARS} (RISC-V Assembler and Runtime Simulator), Java tabanlı bir grafiksel benzetimliktir. Yazmaç ve bellek içeriklerini anlık olarak gösterir, adım adım çalıştırma ve kesme noktası (breakpoint) desteği sunar. Başlangıç düzeyindeki öğrenciler için en uygun araçtır. RARS, GitHub üzerinden açık kaynak olarak dağıtılmaktadır; \texttt{.jar} dosyası indirilerek Java yüklü herhangi bir sistemde çalıştırılabilir.
+
+\textbf{Venus}\index{Venus} tarayıcı üzerinde çalışan bir RISC-V benzetimliğidir. Herhangi bir kurulum gerektirmeden doğrudan \texttt{venus.cs61c.org} adresinden kullanılabilir. Öğrencilerin hızlı denemeler yapması için idealdir.
+
+\textbf{Spike}\index{Spike} ise RISC-V International tarafından geliştirilen referans benzetimliğidir. Ayrıcalıklı buyrukları ve sanal bellek mekanizmalarını da destekler; bu nedenle işletim sistemi düzeyinde çalışmalar için tercih edilir. Linux ortamında kaynak koddan derlenerek kurulur.
+
+\begin{bilginot}[Hızlı Başlangıç]
+Kurulum kolaylığı açısından \textbf{RARS} önerilir: Java 8 veya üzeri yüklü bir sistemde \texttt{java -jar rars.jar} komutuyla çalışır. Kurulum gerektirmeyen bir seçenek olarak \textbf{Venus} tarayıcı üzerinden doğrudan kullanılabilir. Her iki araç da RV32I buyruk kümesini tam olarak destekler.
+\end{bilginot}
+
+Aşağıdaki kısa program, RARS veya Venus'te doğrudan çalıştırılabilir. Program, ilk $n$ Fibonacci sayısını hesaplayarak belleğe yazar; yazmaç ve bellek değişimlerini adım adım izleyerek buyruk yürütüm döngüsünü gözlemlemek için uygundur.
+
+\begin{lstlisting}[style=riscv, caption={Fibonacci sayıları (RARS/Venus ile çalıştırılabilir)}, label={lst:ekd-fibonacci}]
+# fibonacci.s -- Ilk 10 Fibonacci sayisini bellek dizisine yazar
+# RARS: java -jar rars.jar fibonacci.s
+# Venus: Kodu yapistirip "Run" tusuna basin
+
+.data
+dizi:   .space 40          # 10 x 4 bayt alan ayir
+
+.text
+.globl main
+main:
+    li   t0, 10            # n = 10 (kac sayi)
+    la   t1, dizi          # dizi baslangic adresi
+    li   t2, 0             # F(0) = 0
+    li   t3, 1             # F(1) = 1
+    sw   t2, 0(t1)         # dizi[0] = 0
+    sw   t3, 4(t1)         # dizi[1] = 1
+    addi t1, t1, 8         # sonraki adres
+    addi t0, t0, -2        # 2 eleman zaten yazildi
+
+dongu:
+    beqz t0, bitti         # kalan 0 ise cik
+    add  t4, t2, t3        # t4 = F(k-2) + F(k-1)
+    sw   t4, 0(t1)         # diziye yaz
+    mv   t2, t3            # F(k-2) = F(k-1)
+    mv   t3, t4            # F(k-1) = F(k)
+    addi t1, t1, 4         # adresi ilerlet
+    addi t0, t0, -1        # sayac azalt
+    j    dongu
+
+bitti:
+    li   a7, 10            # ecall 10 = programi bitir
+    ecall
+\end{lstlisting}
+
+% -------------------------------------------------------------
+\subsection{GNU Araç Zinciri}
+\label{sec:ekd-gnu-arac}
+
+RISC-V GNU araç zinciri\index{GNU araç zinciri}, C/C++ kodunu RISC-V makine koduna derlemek için kullanılan açık kaynaklı derleyici paketidir. Temel bileşenleri Tablo~\ref{tab:ekd-gnu-araclar}'da listelenmiştir.
+
+\begin{table}[H]
+\centering
+\caption[RISC-V GNU araç zinciri bileşenleri]{RISC-V GNU araç zinciri bileşenleri}
+\label{tab:ekd-gnu-araclar}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Araç} & \textbf{Komut} & \textbf{Görevi} \\
+\midrule
+Derleyici       & \texttt{riscv64-unknown-elf-gcc}     & C/C++ $\to$ çevirici dil $\to$ makine kodu \\
+Çevirici        & \texttt{riscv64-unknown-elf-as}       & Çevirici dil $\to$ nesne dosyası \\
+Bağlayıcı       & \texttt{riscv64-unknown-elf-ld}       & Nesne dosyalarını birleştirme \\
+Tersine çevirici & \texttt{riscv64-unknown-elf-objdump} & Makine kodu $\to$ çevirici dil \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% -------------------------------------------------------------
+\subsection{Derleme--Bağlama--Çalıştırma Akışı}
+\label{sec:ekd-derleme-akisi}
+
+Bir C programının RISC-V üzerinde çalışması için izlenen adımlar Şekil~\ref{fig:ekd-derleme-akisi}'nda gösterilmiştir.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    blok/.style={draw, fill=bolumrenk!10, rounded corners=3pt,
+                 minimum width=2.8cm, minimum height=1cm,
+                 font=\small\bfseries, text=bolumrenk, align=center},
+    dosya/.style={draw, fill=acikgri, rounded corners=1pt,
+                  minimum width=2cm, minimum height=0.7cm,
+                  font=\small\ttfamily},
+    ok/.style={->, >=Stealth, thick, bolumrenk},
+    node distance=1.2cm and 1.5cm
+]
+% Dosyalar
+\node[dosya] (kaynak) {toplam.c};
+\node[blok, right=of kaynak] (derle) {Derleyici\\(\texttt{gcc})};
+\node[dosya, right=of derle] (asm) {toplam.s};
+\node[blok, right=of asm] (cevir) {Çevirici\\(\texttt{as})};
+\node[dosya, below=0.8cm of cevir] (obj) {toplam.o};
+\node[blok, left=of obj] (bagla) {Bağlayıcı\\(\texttt{ld})};
+\node[dosya, left=of bagla] (elf) {toplam.elf};
+\node[blok, left=of elf] (calis) {Benzetimlik\\(Spike)};
+
+\draw[ok] (kaynak) -- (derle);
+\draw[ok] (derle)  -- (asm);
+\draw[ok] (asm)    -- (cevir);
+\draw[ok] (cevir)  -- (obj);
+\draw[ok] (obj)    -- (bagla);
+\draw[ok] (bagla)  -- (elf);
+\draw[ok] (elf)    -- (calis);
+\end{tikzpicture}
+\caption[Derleme--bağlama--çalıştırma akışı]{C programının RISC-V üzerinde derleme--bağlama--çalıştırma akışı}
+\label{fig:ekd-derleme-akisi}
+\end{figure}
+
+\begin{bilginot}[Tek Adımda Derleme]
+\texttt{riscv64-unknown-elf-gcc -o toplam toplam.c} komutu, derleme, çevirme ve bağlama adımlarını tek seferde gerçekleştirir. Ara dosyaları görmek için \texttt{-S} (çevirici dil çıktısı) ve \texttt{-c} (nesne dosyası) seçenekleri kullanılır.
+\end{bilginot}
+
+Derlenen bir programın çevirici dil karşılığını görmek için tersine çevirici kullanılır:
+
+\begin{lstlisting}[style=riscv, caption={Tersine çevirici çıktısı örneği}, label={lst:ekd-objdump}]
+# riscv64-unknown-elf-objdump -d toplam.o
+00000000 <toplam>:
+   0:   00b50533   add  a0, a0, a1   # a0 = a0 + a1
+   4:   00008067   ret               # ra'ya don
+\end{lstlisting}
+
+
+% =============================================================
+% D.2 Verilog ile Donanım Tasarımı
+% =============================================================
+\section{Verilog ile Donanım Tasarımı}
+\label{sec:ekd-verilog}
+
+Verilog\index{Verilog}, sayısal devreleri tanımlamak ve benzetmek için kullanılan bir donanım tanımlama dilidir (HDL\index{HDL}). Bu bölümde, RISC-V işlemci projelerinde kullanılacak kadar temel Verilog bilgisi sunulmaktadır. Ayrıntılı Verilog öğrenimi için IEEE~1364 standardına ve Ek~\ref{ch:sayisal-tasarim}'deki mantıksal tasarım temellerine başvurulabilir.
+
+Verilog'un güncel sürümü olan \textbf{SystemVerilog}\index{SystemVerilog} (IEEE~1800), dil yapısını genişleterek \texttt{logic} veri tipi, \texttt{always\_comb}/\texttt{always\_ff} blokları, \texttt{interface} ve doğrulama amaçlı sınıf tabanlı yapılar gibi özellikler sunar. Endüstride SystemVerilog giderek daha yaygın kullanılmakla birlikte, bu ekteki örnekler taşınabilirlik ve basitlik amacıyla klasik Verilog söz dizimiyle verilmiştir.
+
+% -------------------------------------------------------------
+\subsection{Modül Yapısı}
+\label{sec:ekd-modul}
+
+Verilog'da temel tasarım birimi \emph{modül}dür. Her modülün giriş/çıkış portları ve iç mantığı vardır.
+
+\begin{lstlisting}[style=verilog, caption={Verilog modül yapısı: 2 girişli VE kapısı}, label={lst:ekd-ve-kapisi}]
+module ve_kapisi (
+    input  wire a,     // giris 1
+    input  wire b,     // giris 2
+    output wire y      // cikis
+);
+    assign y = a & b;  // surekli atama
+endmodule
+\end{lstlisting}
+
+\texttt{module} ile \texttt{endmodule} arasındaki blok, devrenin tanımını oluşturur. \texttt{input} ve \texttt{output} anahtar sözcükleri port yönünü belirler.
+
+% -------------------------------------------------------------
+\subsection{Veri Tipleri: \texttt{wire} ve \texttt{reg}}
+\label{sec:ekd-wire-reg}
+
+Verilog'da iki temel veri tipi vardır:
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{wire}\index{Verilog!wire}: Bileşimsel (kombinasyonel) mantıkta kullanılır. Fiziksel bir teli temsil eder; \texttt{assign} ile sürekli atama yapılır.
+    \item \texttt{reg}\index{Verilog!reg}: Sıralı (ardışıl) mantıkta ve \texttt{always} bloklarında kullanılır. Adına rağmen her zaman bir yazmaç anlamına gelmez; sentez aracının kullanım bağlamına göre karar verdiği bir depolama elemanıdır.
+\end{itemize}
+
+Çok bitli sinyaller köşeli parantezle tanımlanır: \texttt{wire [31:0] veri} ifadesi 32 bitlik bir sinyal tanımlar.
+
+% -------------------------------------------------------------
+\subsection{Sürekli Atama ve \texttt{always} Blokları}
+\label{sec:ekd-always}
+
+Bileşimsel mantık, \texttt{assign} ile veya duyarlılık listeli \texttt{always} bloğuyla tanımlanır. Sıralı mantık ise saat kenarına duyarlı \texttt{always} bloğu gerektirir.
+
+\begin{lstlisting}[style=verilog, caption={Bileşimsel ve sıralı mantık örnekleri}, label={lst:ekd-always}]
+// Bilesimsel: 2'ye 1 coklayici
+module mux2 (
+    input  wire [31:0] a, b,
+    input  wire        sec,
+    output reg  [31:0] y
+);
+    always @(*) begin
+        if (sec)
+            y = b;
+        else
+            y = a;
+    end
+endmodule
+
+// Siralı: D flip-flop (saat yukselisinde)
+module yazmaç (
+    input  wire        clk, rst,
+    input  wire [31:0] d,
+    output reg  [31:0] q
+);
+    always @(posedge clk) begin
+        if (rst)
+            q <= 32'b0;
+        else
+            q <= d;
+    end
+endmodule
+\end{lstlisting}
+
+\begin{bilginot}[Bloklu ve Bloksuz Atama]
+Bileşimsel \texttt{always} bloklarında \texttt{=} (bloklu atama), sıralı bloklarda \texttt{<=} (bloksuz atama) kullanılır. Bu kural, sentez ve benzetim tutarlılığı için can alıcıdır.
+\end{bilginot}
+
+% -------------------------------------------------------------
+\subsection{Testbench Yazma}
+\label{sec:ekd-testbench}
+
+Testbench\index{Verilog!testbench}, tasarlanan modülü doğrulamak için yazılan benzetim ortamıdır. Testbench modülünün giriş/çıkış portu yoktur; test edilen modülü içsel olarak örnekler (instantiate).
+
+\begin{lstlisting}[style=verilog, caption={2'ye 1 çoklayıcı testbench örneği}, label={lst:ekd-testbench}]
+`timescale 1ns / 1ps
+
+module mux2_tb;
+    reg  [31:0] a, b;
+    reg         sec;
+    wire [31:0] y;
+
+    // Test edilen modul
+    mux2 uut (.a(a), .b(b), .sec(sec), .y(y));
+
+    initial begin
+        a = 32'd10; b = 32'd20; sec = 0;
+        #10;  // 10 ns bekle
+        $display("sec=0 -> y=%0d (beklenen: 10)", y);
+
+        sec = 1;
+        #10;
+        $display("sec=1 -> y=%0d (beklenen: 20)", y);
+
+        $finish;
+    end
+endmodule
+\end{lstlisting}
+
+Benzetim araçları olarak açık kaynaklı Icarus Verilog\index{Icarus Verilog} (\texttt{iverilog}) ve dalga formu görüntüleyici GTKWave\index{GTKWave} kullanılabilir:
+
+\begin{lstlisting}[language=bash, numbers=none, caption={Icarus Verilog ile benzetim}]
+iverilog -o mux2_sim mux2.v mux2_tb.v
+vvp mux2_sim
+gtkwave dalga.vcd
+\end{lstlisting}
+
+\begin{bilginot}[FPGA ile Gerçekleme]
+Bu ekteki Verilog tasarımları, bir FPGA\index{FPGA} geliştirme kartı üzerinde sentezlenerek gerçek donanımda çalıştırılabilir. Eğitim amaçlı yaygın kullanılan kartlar arasında Xilinx (AMD) Basys~3 ve Digilent Nexys serisi, Intel (Altera) DE10-Lite ve Terasic DE0-Nano sayılabilir. Sentez ve yerleştirme için Xilinx Vivado veya Intel Quartus Prime araçları kullanılır. İşlemci tasarımını FPGA üzerinde gerçeklemek, zamanlama kısıtları, kaynak kullanımı ve fiziksel tasarım kavramlarını deneyimleme fırsatı sunar.
+\end{bilginot}
+
+
+% =============================================================
+% D.3 Yazmaç Dosyası Tasarımı
+% =============================================================
+\section{Yazmaç Dosyası Tasarımı}
+\label{sec:ekd-yazmac-dosyasi}
+
+Bölüm~\ref{chap:islemci-tasarimi}'da öğrenilen yazmaç dosyasının\index{yazmaç dosyası} Verilog ile gerçeklenişi, işlemci projeleri için temel bir yapı taşıdır. Aşağıdaki modül, RISC-V'in 32 adet 32 bitlik yazmaç dosyasını tanımlar: iki okuma portu ve bir yazma portu içerir; \texttt{x0} yazmacı her zaman sıfırdır.
+
+\begin{lstlisting}[style=verilog, caption={RISC-V yazmaç dosyası (32$\times$32)}, label={lst:ekd-yazmac}]
+module yazmac_dosyasi (
+    input  wire        clk,
+    input  wire        yaz_etkin,   // yazma izni
+    input  wire [4:0]  oku_adr1,   // rs1 adresi
+    input  wire [4:0]  oku_adr2,   // rs2 adresi
+    input  wire [4:0]  yaz_adr,    // rd adresi
+    input  wire [31:0] yaz_veri,   // yazilacak deger
+    output wire [31:0] oku_veri1,  // rs1 degeri
+    output wire [31:0] oku_veri2   // rs2 degeri
+);
+    reg [31:0] yazmaclar [0:31];
+
+    // Okuma (bilesimsel) -- x0 her zaman 0
+    assign oku_veri1 = (oku_adr1 == 5'b0) ? 32'b0
+                                           : yazmaclar[oku_adr1];
+    assign oku_veri2 = (oku_adr2 == 5'b0) ? 32'b0
+                                           : yazmaclar[oku_adr2];
+
+    // Yazma (saat yukselisinde) -- x0'a yazma engeli
+    always @(posedge clk) begin
+        if (yaz_etkin && yaz_adr != 5'b0)
+            yazmaclar[yaz_adr] <= yaz_veri;
+    end
+endmodule
+\end{lstlisting}
+
+Bu modül, Bölüm~\ref{chap:islemci-tasarimi}'daki tek çevrimli veriyolu şemasının doğrudan Verilog karşılığıdır. Okuma portları bileşimsel (\texttt{assign}), yazma portu ise saat kenarına bağlıdır.
+
+
+% =============================================================
+% D.4 Mini Projeler
+% =============================================================
+\section{Mini Projeler}
+\label{sec:ekd-projeler}
+
+Bu bölümde, kitabın farklı konularını pekiştiren üç proje sunulmaktadır. Projeler artan karmaşıklık düzeyinde tasarlanmıştır; her biri bir dönem ödevi veya laboratuvar çalışması olarak kullanılabilir.
+
+\begin{table}[H]
+\centering
+\caption[Mini proje özet tablosu]{Mini projelerin özeti}
+\label{tab:ekd-projeler}
+\begin{tabular}{@{}clllc@{}}
+\toprule
+ & \textbf{Proje} & \textbf{Düzey} & \textbf{İlgili Bölümler} & \textbf{Süre} \\
+\midrule
+A & RV32I Yorumlayıcı          & Başlangıç & 3, 4, Ek~C     & 2--3 hafta \\
+B & Boru Hattı Benzetimliği     & Orta      & 5, 6           & 3--4 hafta \\
+C & Önbellek ve Dallanma Öngörücüsü & İleri & 6, 7      & 4--5 hafta \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% =============================================================
+% D.4.1 Proje A: RV32I Yorumlayıcı
+% =============================================================
+\subsection{Proje A: RV32I Yorumlayıcı}
+\label{sec:ekd-proje-a}
+
+\textbf{Amaç:} C veya Python ile yazılan bir yazılım yorumlayıcısı\index{yorumlayıcı} aracılığıyla RV32I buyruk kümesinin çalışma mantığını kavramak.\smallskip
+
+\textbf{Gereksinimler:}
+\begin{enumerate}[leftmargin=2em]
+    \item 32 adet 32 bitlik yazmaç ve en az 4~KiB bellek alanı tanımlayın.
+    \item İkilik dosyadan (binary) buyrukları yükleyin.
+    \item Her buyruk için getir--çöz--yürüt döngüsünü gerçekleyin:
+    \begin{enumerate}[label=\alph*)]
+        \item \textbf{Getir:} Buyruk sayacının gösterdiği adresten 4 bayt okuyun.
+        \item \textbf{Çöz:} İşlem kodu, \texttt{funct3}, \texttt{funct7} alanlarını çıkarın; buyruk türünü (R/I/S/B/U/J) belirleyin.
+        \item \textbf{Yürüt:} ALU işlemini, bellek erişimini veya dallanmayı gerçekleştirin.
+    \end{enumerate}
+    \item \texttt{ecall} buyrukunda \texttt{a7} yazmacına göre basit sistem çağrıları destekleyin (örn.\ tam sayı yazdırma, program sonlandırma).
+    \item Program sonunda yazmaç ve bellek dökümünü (dump) yazdırın.
+\end{enumerate}
+
+\textbf{Test stratejisi:} RARS'ta çalıştırılan küçük programlarla (toplama, döngü, özyinelemeli fonksiyon) yazmaç değerlerini karşılaştırın.
+
+\begin{bilginot}[Buyruk Çözme İpucu]
+RV32I buyruk biçimleri sabit genişliktedir (32~bit). Bölüm~\ref{chap:buyruk-kumesi}'deki biçim tablosunu referans alarak bit maskeleme ile alanları çıkarabilirsiniz. Örneğin \texttt{opcode} alanı \texttt{buyruk \& 0x7F} ile elde edilir.
+\end{bilginot}
+
+
+% =============================================================
+% D.4.2 Proje B: Boru Hattı Benzetimliği
+% =============================================================
+\subsection{Proje B: Boru Hattı Benzetimliği}
+\label{sec:ekd-proje-b}
+
+\textbf{Amaç:} Bölüm~\ref{chap:boruhatti}'daki beş aşamalı boru hattını (IF--ID--EX--MEM--WB) yazılımla benzetim yaparak veri ve denetim tehlikelerini gözlemlemek.\smallskip
+
+\textbf{Gereksinimler:}
+\begin{enumerate}[leftmargin=2em]
+    \item Proje~A'daki yorumlayıcıyı beş aşamalı boru hattı modeline dönüştürün.
+    \item Aşamalar arası boru hattı yazmaçlarını (IF/ID, ID/EX, EX/MEM, MEM/WB) modelleyin.
+    \item Aşağıdaki tehlike çözüm tekniklerini gerçekleyin:
+    \begin{itemize}[leftmargin=1.5em]
+        \item \textbf{Veri tehlikesi:} İletme (forwarding) birimi ve gerektiğinde durdurma (stall) mantığı.
+        \item \textbf{Denetim tehlikesi:} Dallanmada basit ``her zaman dallanma yok'' öngörüsü; yanlış öngörüde boru hattını boşaltma (flush).
+    \end{itemize}
+    \item Her çevrimde boru hattı durumunu yazdıran izleme (trace) çıktısı üretin.
+    \item Program sonunda aşağıdaki istatistikleri raporlayın:
+    \begin{itemize}[leftmargin=1.5em]
+        \item Toplam çevrim sayısı ve BBÇ (Buyruk Başına Çevrim)
+        \item İletme sayısı, durdurma sayısı, boşaltma sayısı
+        \item Tehlike türlerine göre dağılım
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Örnek çıktı formatı:}
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize]
+Cevrim  IF         ID         EX         MEM        WB
+  1     add x1..   ---        ---        ---        ---
+  2     sub x2..   add x1..   ---        ---        ---
+  3     and x3..   sub x2..   add x1..   ---        ---
+  4     or  x4..   and x3..   sub x2..   add x1..   ---
+  5     beq x1..   or  x4..   and x3..   sub x2..   add x1..
+  ...
+Sonuc: 38 buyruk, 47 cevrim, BBÇ = 1,24
+       Iletme: 8, Durdurma: 3, Bosaltma: 2
+\end{lstlisting}
+
+\textbf{Ek zorluk (isteğe bağlı):} Boru hattını Verilog ile de gerçekleyin ve FPGA üzerinde sentezleyin.
+
+
+% =============================================================
+% D.4.3 Proje C: Önbellek ve Dallanma Öngörücüsü
+% =============================================================
+\subsection{Proje C: Önbellek ve Dallanma Öngörücüsü}
+\label{sec:ekd-proje-c}
+
+\textbf{Amaç:} Bölüm~\ref{chap:bellek}'deki önbellek yapılarını ve Bölüm~\ref{chap:boruhatti}'daki dallanma öngörü tekniklerini benzetimle inceleyerek tasarım parametrelerinin başarıma etkisini ölçmek.\smallskip
+
+\textbf{Bölüm~1 --- Önbellek Benzetimlikleri:}\index{önbellek benzetimliği}
+\begin{enumerate}[leftmargin=2em]
+    \item Yapılandırılabilir parametreli bir önbellek benzetimliği yazın:
+    \begin{itemize}[leftmargin=1.5em]
+        \item Önbellek boyutu (örn.\ 1~KiB -- 64~KiB)
+        \item Blok boyutu (örn.\ 16 -- 128 bayt)
+        \item İlişkilendirme derecesi (doğrudan eşleme, 2/4/8 yollu, tam ilişkili)
+        \item Çıkarma politikası: LRU, FIFO, rastgele
+    \end{itemize}
+    \item Bellek erişim izi (trace) dosyasını okuyarak isabet/ıskalama oranlarını hesaplayın.
+    \item Parametre taraması yaparak sonuçları tablolaştırın. Örnek:
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\caption[Önbellek parametre taraması örneği]{Önbellek parametre taraması sonuçları (örnek)}
+\label{tab:ekd-onbellek-tarama}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+\textbf{Boyut} & \textbf{İlişkilendirme} & \textbf{Blok} & \textbf{Iskalama (\%)} \\
+\midrule
+4 KiB   & Doğrudan   & 32 B & 12{,}4 \\
+4 KiB   & 4 yollu    & 32 B &  6{,}8 \\
+16 KiB  & Doğrudan   & 32 B &  5{,}1 \\
+16 KiB  & 4 yollu    & 32 B &  2{,}3 \\
+16 KiB  & 4 yollu    & 64 B &  1{,}9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Bölüm~2 --- Dallanma Öngörücüsü:}\index{dallanma öngörücüsü}
+\begin{enumerate}[leftmargin=2em]
+    \item Aşağıdaki dallanma öngörü tekniklerini gerçekleyin:
+    \begin{itemize}[leftmargin=1.5em]
+        \item Durağan öngörü: her zaman ``dallanma yok''
+        \item 1 bitlik öngörücü
+        \item 2 bitlik doymalı sayaç öngörücüsü
+        \item İki düzeyli uyarlanır öngörücü (korelasyonlu)
+    \end{itemize}
+    \item Her öngörücü için dallanma izinden doğruluk oranlarını hesaplayın.
+    \item Sonuçları karşılaştırmalı olarak sunun.
+\end{enumerate}
+
+\textbf{Bölüm~3 --- Tümleşik Analiz (isteğe bağlı):}
+
+Proje~B'deki boru hattı benzetimliğine önbellek ve dallanma öngörücüsü entegre ederek bir programa ait toplam BBÇ'yi ölçün. Farklı yapılandırmaların başarıma etkisini karşılaştırmalı grafiklerle raporlayın.
+
+\begin{bilginot}[İz Dosyası Kaynakları]
+Bellek erişim izleri için \textbf{Valgrind} (\texttt{--tool=lackey}) veya \textbf{Pin}\index{Pin} gibi enstrümantasyon araçları kullanılabilir. Dallanma izleri için \texttt{perf} veya özel izleme kodları ile çıktı üretilebilir.
+\end{bilginot}
+
+
+% =============================================================
+% D.5 Proje Değerlendirme Ölçütleri
+% =============================================================
+\section{Proje Değerlendirme Ölçütleri}
+\label{sec:ekd-degerlendirme}
+
+Projelerin değerlendirilmesinde aşağıdaki ölçütler önerilmektedir:
+
+\begin{table}[H]
+\centering
+\caption[Proje değerlendirme ölçütleri]{Önerilen proje değerlendirme ölçütleri}
+\label{tab:ekd-degerlendirme}
+\begin{tabular}{@{}lc@{}}
+\toprule
+\textbf{Ölçüt} & \textbf{Ağırlık (\%)} \\
+\midrule
+Doğruluk (referans çıktıyla eşleşme)   & 40 \\
+Kod kalitesi ve okunabilirlik            & 15 \\
+Rapor ve çözümleme derinliği                & 20 \\
+Test kapsamı                             & 15 \\
+Ek özellikler / yaratıcılık             & 10 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Her proje için öğrenciden, tasarım kararlarını, karşılaşılan zorlukları ve sonuçların yorumunu içeren kısa bir teknik rapor beklenmektedir.

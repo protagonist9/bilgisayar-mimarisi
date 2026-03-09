@@ -1,0 +1,873 @@
+% =============================================================
+% EK C: RISC-V Referans Kartı
+% =============================================================
+\chapter{RISC-V Referans Kartı}
+\label{app:risc-v-referans}
+\bolumfoto{gorseller/ekC-efes.jpg}{Efes Antik Kenti, Celsus Kütüphanesi -- İzmir}
+
+Bu ekte, kitap boyunca kullanılan RISC-V buyruk kümesi mimarisinin özet referansı sunulmaktadır. Buyrukların ayrıntılı açıklaması Bölüm~\ref{chap:buyruk-kumesi}'te verilmiştir. İşlemci tasarımındaki buyruk biçimi detayları için Bölüm~\ref{chap:islemci-tasarimi}'ye, boru hattı düzeyindeki buyruk yürütme süreci için ise Bölüm~\ref{chap:boruhatti}'na başvurulabilir.
+
+% =============================================================
+% C.1 RISC-V'in Modüler Yapısı
+% =============================================================
+\section{RISC-V'in Modüler Yapısı}
+\label{sec:ekc-moduler-yapi}
+
+RISC-V, tek bir sabit buyruk kümesi yerine \textbf{modüler} bir mimari sunar.\index{RISC-V!modüler yapı} Temel bir taban buyruk kümesi üzerine isteğe bağlı uzantılar eklenerek uygulama gereksinimlerine uygun bir işlemci yapılandırılabilir. Bu yaklaşım, gömülü denetleyicilerden yüksek başarımlı sunuculara kadar geniş bir yelpazede aynı mimarinin kullanılmasını mümkün kılar.
+
+\subsection{Taban Buyruk Kümeleri}
+
+RISC-V iki temel taban buyruk kümesi tanımlar:
+
+\begin{itemize}
+    \item \textbf{RV32I:}\index{RV32I} 32~bitlik tamsayı taban kümesi. 32~adet genel amaçlı yazmaç (her biri 32~bit), 47~buyruk içerir. Gömülü sistemlerden masaüstü uygulamalara kadar geniş bir kullanım alanına sahiptir.
+    \item \textbf{RV64I:}\index{RV64I} 64~bitlik tamsayı taban kümesi. RV32I'nin 64~bite genişletilmiş sürümüdür; yazmaçlar ve adres uzayı 64~bit genişliğindedir. Sunucu ve yüksek başarımlı hesaplama uygulamalarında tercih edilir.
+    \item \textbf{RV32E:}\index{RV32E} RV32I'nin 16 yazmaçlı (x0--x15) alt kümesi. Kaynak kısıtlı mikrodenetleyiciler ve küçük gömülü sistemler için tasarlanmıştır; buyruk kümesi RV32I ile aynıdır, yalnızca yazmaç sayısı yarıya indirilmiştir.
+\end{itemize}
+
+\subsection{Standart Uzantılar}
+
+Taban kümenin üzerine eklenen standart uzantılar, tek harfli kısaltmalarla adlandırılır. Tablo~\ref{tab:ekc-uzantilar}, yaygın uzantıları özetlemektedir.
+
+\begin{table}[H]
+\centering
+\caption{RISC-V standart uzantıları}\label{tab:ekc-uzantilar}
+\begin{tabular}{@{}clp{8cm}@{}}
+\toprule
+\textbf{Uzantı} & \textbf{Ad} & \textbf{Açıklama} \\
+\midrule
+\textbf{M} & Çarpma/Bölme & Tamsayı çarpma ve bölme buyrukları (\texttt{mul}, \texttt{div}, \texttt{rem} vb.) \\
+\textbf{A} & Atomik İşlemler & Çok çekirdekli eşzamanlama için atomik bellek buyrukları (\texttt{lr}, \texttt{sc}, \texttt{amo*}) \\
+\textbf{F} & Tek Duyarlık & IEEE 754 tek duyarlıklı (32~bit) kayan nokta buyrukları ve 32~adet kayan nokta yazmacı \\
+\textbf{D} & Çift Duyarlık & IEEE 754 çift duyarlıklı (64~bit) kayan nokta buyrukları \\
+\textbf{C} & Sıkıştırılmış & 16~bitlik sıkıştırılmış buyruk kodlaması; kod yoğunluğunu artırır \\
+\textbf{V} & Vektör & Veri düzeyinde koşutluk için değişken uzunlukta vektör buyrukları \\
+\textbf{Zicsr} & DSY Erişimi & Denetim ve durum yazmaçlarına (DSY) erişim buyrukları \\
+\textbf{Zifencei} & Buyruk Çiti & Buyruk belleği ile veri belleği arasında tutarlılık çiti \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Yaygın Yapılandırmalar}
+
+Uzantılar birleştirilerek farklı uygulama alanlarına yönelik yapılandırmalar oluşturulur.\index{RISC-V!yapılandırma} \textbf{G} kısaltması ``genel amaçlı'' anlamına gelir ve \mbox{\textbf{IMAFD\_Zicsr\_Zifencei}} birleşimini temsil eder:
+
+\begin{itemize}
+    \item \textbf{RV32I} --- En yalın yapılandırma; küçük gömülü denetleyiciler için yeterlidir.
+    \item \textbf{RV32IMC} --- Gömülü sistemlerde yaygın; çarpma ve sıkıştırılmış buyruk desteği ekler.
+    \item \textbf{RV32GC} --- Genel amaçlı 32~bit; masaüstü ve uygulama işlemcileri için uygundur.
+    \item \textbf{RV64GC} --- Genel amaçlı 64~bit; Linux çalıştıran işlemcilerin ve sunucuların standart yapılandırmasıdır.
+\end{itemize}
+
+\begin{bilginot}[Bu kitapta kullanılan yapılandırma]
+Kitap boyunca \textbf{RV32I} taban buyruk kümesi kullanılmaktadır. RV32I, RISC-V mimarisinin temel kavramlarını --- yazmaç işlemleri, bellek erişimi, dallanma, alt yordam çağrıları --- öğrenmek için yeterli bir altyapı sunar. Çarpma/bölme (M), kayan nokta (F/D) ve atomik işlemler (A) gibi uzantılar ilgili bölümlerde kavramsal düzeyde ele alınmakta, ancak ayrıntılı buyruk tabloları bu ekin kapsamı dışında tutulmaktadır.
+\end{bilginot}
+
+\subsection{Ayrıcalık Düzeyleri}
+\label{subsec:ekc-ayricalik}
+
+RISC-V, yazılım katmanlarını birbirinden yalıtmak için üç ayrıcalık düzeyi tanımlar:\index{ayrıcalık düzeyleri}\index{RISC-V!ayrıcalık düzeyleri}
+
+\begin{table}[H]
+\centering
+\caption{RISC-V ayrıcalık düzeyleri}\label{tab:ekc-ayricalik}
+\begin{tabular}{@{}cllp{7.5cm}@{}}
+\toprule
+\textbf{Düzey} & \textbf{Kodlama} & \textbf{Ad} & \textbf{Açıklama} \\
+\midrule
+0 & \texttt{00} & Kullanıcı (U) & Uygulama programlarının çalıştığı en düşük ayrıcalık düzeyi. \\
+1 & \texttt{01} & Gözetmen (S) & İşletim sistemi çekirdeğinin çalıştığı düzey; sayfa tabloları ve kesme yönetimi burada denetlenir. \\
+3 & \texttt{11} & Makine (M) & En yüksek ayrıcalık düzeyi; donanıma doğrudan erişim sağlar. Tüm RISC-V gerçeklemeleri en az bu düzeyi desteklemelidir. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+En yalın gömülü sistemler yalnızca M modunda çalışabilir. İşletim sistemi gerektiren yapılandırmalarda M~+~U veya M~+~S~+~U birleşimi kullanılır. Ayrıcalık geçişleri \texttt{ecall} (üst düzeye çağrı) ve \texttt{mret}/\texttt{sret} (geri dönüş) buyrukları ile gerçekleştirilir.
+
+% =============================================================
+% C.2 Bir RISC-V Buyruğunun Anatomisi
+% =============================================================
+\section{Bir RISC-V Buyruğunun Anatomisi}
+\label{sec:ekc-buyruk-anatomisi}
+
+RISC-V buyrukları, kitap boyunca çevirici (\emph{assembly}) biçiminde yazılmaktadır. Buyrukları doğru okuyabilmek için temel yazım kurallarını bilmek gerekir.
+
+\subsection{Genel Yazım Kuralı}
+
+Bir RISC-V buyruğunun genel yapısı şöyledir:
+
+\begin{center}
+\texttt{buyruk\quad hedef,\quad kaynak1,\quad kaynak2}
+\end{center}
+
+Burada \texttt{buyruk} yapılacak işlemi, \texttt{hedef} sonucun yazılacağı yazmacı, \texttt{kaynak1} ve \texttt{kaynak2} ise işlenecek değerleri belirtir. Örneğin:
+
+\begin{lstlisting}[style=riscv, style=alistirma-kod]
+add x5, x6, x7    # x5 = x6 + x7
+\end{lstlisting}
+
+Bu buyrukta \texttt{add} toplama işlemini, \texttt{x5} hedef yazmacı, \texttt{x6} ve \texttt{x7} ise kaynak yazmaçları gösterir. RISC-V'te hedef her zaman en soldaki işlenendir.\index{hedef yazmaç}\index{kaynak yazmaç}
+
+\subsection{İşlenen Türleri}
+
+Buyruk işlenenleri (\emph{operand}) üç biçimde olabilir:
+
+\begin{itemize}
+    \item \textbf{Yazmaç işleneni:} Doğrudan bir yazmaca başvurur. Yazmaçlar \texttt{x0}--\texttt{x31} veya takma adlarıyla (\texttt{t0}, \texttt{s0}, \texttt{a0} vb.) belirtilir. Yazmaç haritası Bölüm~\ref{sec:ekc-yazmaclar}'da verilmiştir.
+    \item \textbf{Anlık değer} (\emph{immediate})\textbf{:} Buyruğun içine gömülü sabit bir sayıdır; \texttt{imm} olarak gösterilir. Örneğin \texttt{addi x5, x6, 10} buyruğu \texttt{x6} yazmacına 10 ekleyip sonucu \texttt{x5}'e yazar.
+    \item \textbf{Bellek adresi:} Yükleme ve saklama buyruklarında \texttt{ofset(taban)} biçiminde yazılır. Aşağıda ayrıntılı olarak açıklanmaktadır.
+\end{itemize}
+
+\subsection{Bellek Adresleme: Parantez Gösterimi}
+\index{taban adresleme}\index{ofset}
+
+Yükleme (\texttt{lw}, \texttt{lb}, \texttt{lh} vb.) ve saklama (\texttt{sw}, \texttt{sb}, \texttt{sh} vb.) buyruklarında bellek adresi \textbf{taban yazmaç + ofset} yöntemiyle hesaplanır. Çevirici dilinde bu, \texttt{ofset(taban\_yazmacı)} biçiminde yazılır:
+
+\begin{lstlisting}[style=riscv, style=alistirma-kod]
+lw x2, 100(x0)    # x2 = Bellek[x0 + 100]
+sw x7, 150(x3)    # Bellek[x3 + 150] = x7
+\end{lstlisting}
+
+Burada parantez içindeki yazmaç \textbf{taban adres}i, parantez dışındaki sayı ise \textbf{ofset} değerini verir. Erişilen bellek adresi ikisinin toplamıdır. Örneğin \texttt{100(x0)} ifadesinde \texttt{x0} daima sıfır olduğundan adres doğrudan 100 olur; \texttt{150(x3)} ifadesinde ise adres \texttt{x3 + 150} olarak hesaplanır.
+
+\begin{bilginot}[Yükleme ve saklama buyruklarındaki fark]
+Yükleme buyruklarında (\texttt{lw}) veri bellekten yazmaca \emph{okunur}: hedef bir yazmaçtır. Saklama buyruklarında (\texttt{sw}) ise veri yazmaçtan belleğe \emph{yazılır}: ilk işlenen bellekten değil, belleğe \emph{gönderilecek} olan yazmacı gösterir.
+\end{bilginot}
+
+\subsection{Buyruk Kategorileri}
+
+RISC-V buyruklarını beş ana kategoride toplamak mümkündür (ayrıntılı açıklama Bölüm~\ref{chap:buyruk-kumesi}'te verilmektedir):
+
+\begin{table}[H]
+\centering
+\caption{RISC-V buyruk kategorileri ve yazım örnekleri}
+\label{tab:ekc-buyruk-kategorileri}
+\begin{tabular}{lll}
+\toprule
+\textbf{Kategori} & \textbf{Örnek} & \textbf{Anlamı} \\
+\midrule
+Aritmetik/Mantık & \texttt{add x5, x6, x7} & \texttt{x5 = x6 + x7} \\
+Anlık aritmetik  & \texttt{addi x5, x6, 10} & \texttt{x5 = x6 + 10} \\
+Yükleme          & \texttt{lw x2, 0(x3)} & \texttt{x2 = Bellek[x3 + 0]} \\
+Saklama          & \texttt{sw x7, 40(x3)} & \texttt{Bellek[x3 + 40] = x7} \\
+Dallanma         & \texttt{beq x5, x6, etiket} & \texttt{x5 == x6} ise \texttt{etiket}'e dallan \\
+Atlama           & \texttt{jal x1, etiket} & \texttt{etiket}'e atla, dönüş adresini \texttt{x1}'e yaz \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Her buyruk kategorisi farklı bir ikili kodlama biçimi kullanır. Bu biçimler (R, I, S, B, U, J türleri) Bölüm~\ref{sec:ekc-formatlar}'da ayrıntılı olarak sunulmaktadır.
+
+% =============================================================
+% C.3 RV32I Temel Buyruk Kümesi
+% =============================================================
+\section{RV32I Temel Buyruk Kümesi}
+\label{sec:ekc-rv32i}
+
+Tablo~\ref{tab:ekc-rv32i}, RV32I temel buyruk kümesindeki tüm buyrukları işlem kodlarıyla birlikte listelemektedir.\index{RV32I}\index{buyruk kümesi}
+
+{\small
+\begin{longtable}{@{}l@{\;}l@{\;}c@{\;}c@{\;}c@{\;}l@{}}
+\caption{RV32I temel buyruk kümesi}\label{tab:ekc-rv32i}\\
+\toprule
+\textbf{Buyruk} & \textbf{Tür} & \textbf{İşlem Kodu} & \textbf{f3} & \textbf{f7} & \textbf{Açıklama} \\
+\midrule
+\endfirsthead
+
+\caption[]{RV32I temel buyruk kümesi (devamı)}\\
+\toprule
+\textbf{Buyruk} & \textbf{Tür} & \textbf{İşlem Kodu} & \textbf{f3} & \textbf{f7} & \textbf{Açıklama} \\
+\midrule
+\endhead
+
+\midrule
+\multicolumn{6}{r}{\footnotesize\textit{Sonraki sayfada devam ediyor}} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+
+% --- Aritmetik Buyruklar ---
+\multicolumn{6}{l}{\textbf{Aritmetik Buyruklar}}\index{aritmetik buyruklar} \\
+\midrule
+\texttt{add rd, rs1, rs2}   & R & \texttt{0110011} & \texttt{000} & \texttt{0000000} & Toplama: rd = rs1 + rs2 \\
+\texttt{sub rd, rs1, rs2}   & R & \texttt{0110011} & \texttt{000} & \texttt{0100000} & Çıkarma: rd = rs1 -- rs2 \\
+\texttt{addi rd, rs1, imm}  & I & \texttt{0010011} & \texttt{000} & ---          & Anlık toplama: rd = rs1 + imm \\
+\midrule
+
+% --- Mantık Buyrukları ---
+\multicolumn{6}{l}{\textbf{Mantık Buyrukları}}\index{mantık buyrukları} \\
+\midrule
+\texttt{and rd, rs1, rs2}   & R & \texttt{0110011} & \texttt{111} & \texttt{0000000} & Bit düzeyi VE: rd = rs1 \& rs2 \\
+\texttt{or rd, rs1, rs2}    & R & \texttt{0110011} & \texttt{110} & \texttt{0000000} & Bit düzeyi VEYA: rd = rs1 | rs2 \\
+\texttt{xor rd, rs1, rs2}   & R & \texttt{0110011} & \texttt{100} & \texttt{0000000} & Bit düzeyi ÖZEL VEYA \\
+\texttt{andi rd, rs1, imm}  & I & \texttt{0010011} & \texttt{111} & ---          & Anlık VE: rd = rs1 \& imm \\
+\texttt{ori rd, rs1, imm}   & I & \texttt{0010011} & \texttt{110} & ---          & Anlık VEYA: rd = rs1 | imm \\
+\texttt{xori rd, rs1, imm}  & I & \texttt{0010011} & \texttt{100} & ---          & Anlık ÖZEL VEYA \\
+\midrule
+
+% --- Kaydırma Buyrukları ---
+\multicolumn{6}{l}{\textbf{Kaydırma Buyrukları}}\index{kaydırma buyrukları} \\
+\midrule
+\texttt{sll rd, rs1, rs2}   & R & \texttt{0110011} & \texttt{001} & \texttt{0000000} & Sola mantıksal kaydırma \\
+\texttt{srl rd, rs1, rs2}   & R & \texttt{0110011} & \texttt{101} & \texttt{0000000} & Sağa mantıksal kaydırma \\
+\texttt{sra rd, rs1, rs2}   & R & \texttt{0110011} & \texttt{101} & \texttt{0100000} & Sağa aritmetik kaydırma \\
+\texttt{slli rd, rs1, shamt} & I & \texttt{0010011} & \texttt{001} & \texttt{0000000} & Anlık sola mantıksal kaydırma \\
+\texttt{srli rd, rs1, shamt} & I & \texttt{0010011} & \texttt{101} & \texttt{0000000} & Anlık sağa mantıksal kaydırma \\
+\texttt{srai rd, rs1, shamt} & I & \texttt{0010011} & \texttt{101} & \texttt{0100000} & Anlık sağa aritmetik kaydırma \\
+\midrule
+
+% --- Karşılaştırma Buyrukları ---
+\multicolumn{6}{l}{\textbf{Karşılaştırma Buyrukları}}\index{karşılaştırma buyrukları} \\
+\midrule
+\texttt{slt rd, rs1, rs2}   & R & \texttt{0110011} & \texttt{010} & \texttt{0000000} & İşaretli küçükse ata \\
+\texttt{sltu rd, rs1, rs2}  & R & \texttt{0110011} & \texttt{011} & \texttt{0000000} & İşaretsiz küçükse ata \\
+\texttt{slti rd, rs1, imm}  & I & \texttt{0010011} & \texttt{010} & ---          & Anlık işaretli küçükse ata \\
+\texttt{sltiu rd, rs1, imm} & I & \texttt{0010011} & \texttt{011} & ---          & Anlık işaretsiz küçükse ata \\
+\midrule
+
+% --- Veri Aktarma Buyrukları ---
+\multicolumn{6}{l}{\textbf{Veri Aktarma Buyrukları}}\index{veri aktarma buyrukları}\index{yükleme buyrukları}\index{saklama buyrukları} \\
+\midrule
+\texttt{lw rd, imm(rs1)}    & I & \texttt{0000011} & \texttt{010} & ---          & Sözcük yükle (32 bit) \\
+\texttt{lh rd, imm(rs1)}    & I & \texttt{0000011} & \texttt{001} & ---          & Yarı sözcük yükle (16 bit, işaretli) \\
+\texttt{lhu rd, imm(rs1)}   & I & \texttt{0000011} & \texttt{101} & ---          & Yarı sözcük yükle (16 bit, işaretsiz) \\
+\texttt{lb rd, imm(rs1)}    & I & \texttt{0000011} & \texttt{000} & ---          & Bayt yükle (8 bit, işaretli) \\
+\texttt{lbu rd, imm(rs1)}   & I & \texttt{0000011} & \texttt{100} & ---          & Bayt yükle (8 bit, işaretsiz) \\
+\texttt{sw rs2, imm(rs1)}   & S & \texttt{0100011} & \texttt{010} & ---          & Sözcük sakla (32 bit) \\
+\texttt{sh rs2, imm(rs1)}   & S & \texttt{0100011} & \texttt{001} & ---          & Yarı sözcük sakla (16 bit) \\
+\texttt{sb rs2, imm(rs1)}   & S & \texttt{0100011} & \texttt{000} & ---          & Bayt sakla (8 bit) \\
+\midrule
+
+% --- Dallanma Buyrukları ---
+\multicolumn{6}{l}{\textbf{Dallanma Buyrukları}}\index{dallanma buyrukları} \\
+\midrule
+\texttt{beq rs1, rs2, eklenti}  & B & \texttt{1100011} & \texttt{000} & ---        & Eşitse dallan \\
+\texttt{bne rs1, rs2, eklenti}  & B & \texttt{1100011} & \texttt{001} & ---        & Eşit değilse dallan \\
+\texttt{blt rs1, rs2, eklenti}  & B & \texttt{1100011} & \texttt{100} & ---        & Küçükse dallan (işaretli) \\
+\texttt{bge rs1, rs2, eklenti}  & B & \texttt{1100011} & \texttt{101} & ---        & Büyük eşitse dallan (işaretli) \\
+\texttt{bltu rs1, rs2, eklenti} & B & \texttt{1100011} & \texttt{110} & ---        & Küçükse dallan (işaretsiz) \\
+\texttt{bgeu rs1, rs2, eklenti} & B & \texttt{1100011} & \texttt{111} & ---        & Büyük eşitse dallan (işaretsiz) \\
+\midrule
+
+% --- Atlama Buyrukları ---
+\multicolumn{6}{l}{\textbf{Atlama Buyrukları}}\index{atlama buyrukları} \\
+\midrule
+\texttt{jal rd, eklenti}       & J & \texttt{1101111} & ---          & ---          & Atla ve bağla \\
+\texttt{jalr rd, rs1, imm}   & I & \texttt{1100111} & \texttt{000} & ---          & Yazmaçla atla ve bağla \\
+\midrule
+
+% --- Üst Anlık Buyruklar ---
+\multicolumn{6}{l}{\textbf{Üst Anlık Buyruklar}}\index{üst anlık buyruklar} \\
+\midrule
+\texttt{lui rd, imm}         & U & \texttt{0110111} & ---          & ---          & Üst anlık değer yükle \\
+\texttt{auipc rd, imm}       & U & \texttt{0010111} & ---          & ---          & Üst anlık değeri PC'ye ekle \\
+\midrule
+
+% --- Bellek Sıralama Buyrukları ---
+\multicolumn{6}{l}{\textbf{Bellek Sıralama Buyrukları}}\index{fence}\index{bellek sıralama} \\
+\midrule
+\texttt{fence pred, succ}      & I & \texttt{0001111} & \texttt{000} & ---          & Bellek sıralama çiti \\
+\midrule
+
+% --- Sistem Buyrukları ---
+\multicolumn{6}{l}{\textbf{Sistem Buyrukları}}\index{sistem buyrukları} \\
+\midrule
+\texttt{ecall}               & I & \texttt{1110011} & \texttt{000} & \texttt{0000000} & Ortam çağrısı \\
+\texttt{ebreak}              & I & \texttt{1110011} & \texttt{000} & \texttt{0000001} & Hata ayıklama kesme noktası \\
+\midrule
+
+% --- Zicsr Buyrukları ---
+\multicolumn{6}{l}{\textbf{DSY Erişim Buyrukları (Zicsr Uzantısı)}}\index{Zicsr}\index{CSR buyrukları} \\
+\midrule
+\texttt{csrrw rd, csr, rs1}  & I & \texttt{1110011} & \texttt{001} & ---          & DSY oku ve yaz \\
+\texttt{csrrs rd, csr, rs1}  & I & \texttt{1110011} & \texttt{010} & ---          & DSY oku ve bitleri kur \\
+\texttt{csrrc rd, csr, rs1}  & I & \texttt{1110011} & \texttt{011} & ---          & DSY oku ve bitleri sıfırla \\
+\texttt{csrrwi rd, csr, uimm} & I & \texttt{1110011} & \texttt{101} & ---         & Anlık DSY yaz \\
+\texttt{csrrsi rd, csr, uimm} & I & \texttt{1110011} & \texttt{110} & ---         & Anlık DSY bitleri kur \\
+\texttt{csrrci rd, csr, uimm} & I & \texttt{1110011} & \texttt{111} & ---         & Anlık DSY bitleri sıfırla \\
+\midrule
+
+% --- Zifencei Buyruğu ---
+\multicolumn{6}{l}{\textbf{Buyruk Çiti (Zifencei Uzantısı)}}\index{Zifencei}\index{fence.i} \\
+\midrule
+\texttt{fence.i}             & I & \texttt{0001111} & \texttt{001} & ---          & Buyruk belleği tutarlılık çiti \\
+
+\end{longtable}
+}% end \small
+
+\noindent
+\textbf{Not:} ``---'' işaretleri, ilgili alanın o buyruk türünde kullanılmadığını göstermektedir. I türündeki kaydırma buyruklarında (\texttt{slli}, \texttt{srli}, \texttt{srai}) funct7 alanı, anlık değerin üst 7 bitini oluşturur ve kaydırma yönünü belirler.
+
+\subsection{Buyruk Kodlama Örneği}
+\label{subsec:ekc-kodlama-ornegi}
+
+Bir buyruğun ikili kodlamasını somut bir örnek üzerinden inceleyelim. \texttt{add x5, x6, x7} buyruğu R türündedir ve aşağıdaki gibi kodlanır:
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85, every node/.style={font=\footnotesize}]
+  % funct7
+  \draw[thick, fill=blokgri] (0,0) rectangle (2.45,0.9);
+  \node at (1.225,0.45) {\texttt{0000000}};
+  \node[font=\tiny, above] at (1.225,1.0) {funct7};
+  % rs2 = x7 = 00111
+  \draw[thick, fill=blokmavi] (2.45,0) rectangle (4.2,0.9);
+  \node at (3.325,0.45) {\texttt{00111}};
+  \node[font=\tiny, above] at (3.325,1.0) {rs2 (x7)};
+  % rs1 = x6 = 00110
+  \draw[thick, fill=blokmavi] (4.2,0) rectangle (5.95,0.9);
+  \node at (5.075,0.45) {\texttt{00110}};
+  \node[font=\tiny, above] at (5.075,1.0) {rs1 (x6)};
+  % funct3 = 000
+  \draw[thick, fill=blokgri] (5.95,0) rectangle (7.0,0.9);
+  \node at (6.475,0.45) {\texttt{000}};
+  \node[font=\tiny, above] at (6.475,1.0) {f3};
+  % rd = x5 = 00101
+  \draw[thick, fill=blokmavi] (7.0,0) rectangle (8.75,0.9);
+  \node at (7.875,0.45) {\texttt{00101}};
+  \node[font=\tiny, above] at (7.875,1.0) {rd (x5)};
+  % opcode = 0110011
+  \draw[thick, fill=blokyesil] (8.75,0) rectangle (11.2,0.9);
+  \node at (9.975,0.45) {\texttt{0110011}};
+  \node[font=\tiny, above] at (9.975,1.0) {opcode};
+\end{tikzpicture}
+\end{center}
+
+Alanlar soldan sağa: \texttt{funct7} = \texttt{0000000} (toplama), \texttt{rs2} = \texttt{00111} (x7), \texttt{rs1} = \texttt{00110} (x6), \texttt{funct3} = \texttt{000}, \texttt{rd} = \texttt{00101} (x5), \texttt{opcode} = \texttt{0110011} (R türü aritmetik). Tüm alanlar birleştirildiğinde 32~bitlik buyruk sözcüğü elde edilir:
+
+\begin{center}
+\texttt{0000000\,00111\,00110\,000\,00101\,0110011}$_2$ = \texttt{0x00730\allowbreak 2B3}
+\end{center}
+
+Bu kodlama düzeni Bölüm~\ref{chap:buyruk-kumesi}'te ayrıntılı olarak ele alınmaktadır.
+
+% =============================================================
+% C.4 Yazmaç Tablosu
+% =============================================================
+\section{Yazmaç Tablosu}
+\label{sec:ekc-yazmaclar}
+
+RISC-V mimarisinde 32 adet genel amaçlı yazmaç bulunur.\index{yazmaç} Her yazmaç 32 bit genişliğindedir (RV32I'de). Tablo~\ref{tab:ekc-yazmaclar}, tüm yazmaçları ABI (Uygulama İkili Arayüzü)\index{ABI} adlarıyla birlikte listelemektedir.
+
+\begin{table}[H]
+\centering
+\caption{RISC-V RV32I yazmaç tablosu}\label{tab:ekc-yazmaclar}
+{\small
+\begin{tabular}{@{}clll@{}}
+\toprule
+\textbf{Yazmaç No} & \textbf{ABI Adı} & \textbf{Açıklama} & \textbf{Çağrıda Korunur mu?} \\
+\midrule
+\texttt{x0}  & \texttt{zero}   & Sabit sıfır\index{zero yazmacı}              & --- \\
+\texttt{x1}  & \texttt{ra}     & Dönüş adresi\index{dönüş adresi}             & Hayır \\
+\texttt{x2}  & \texttt{sp}     & Yığıt göstergesi\index{yığıt göstergesi}     & Evet \\
+\texttt{x3}  & \texttt{gp}     & Genel gösterge\index{genel gösterge}          & --- \\
+\texttt{x4}  & \texttt{tp}     & İş parçacığı göstergesi                      & --- \\
+\midrule
+\texttt{x5}  & \texttt{t0}     & Geçici yazmaç\index{geçici yazmaç}           & Hayır \\
+\texttt{x6}  & \texttt{t1}     & Geçici yazmaç                                & Hayır \\
+\texttt{x7}  & \texttt{t2}     & Geçici yazmaç                                & Hayır \\
+\midrule
+\texttt{x8}  & \texttt{s0/fp}  & Kaydedilen yazmaç / Çerçeve göstergesi\index{çerçeve göstergesi} & Evet \\
+\texttt{x9}  & \texttt{s1}     & Kaydedilen yazmaç\index{kaydedilen yazmaç}   & Evet \\
+\midrule
+\texttt{x10} & \texttt{a0}     & İşlev argümanı / dönüş değeri                & Hayır \\
+\texttt{x11} & \texttt{a1}     & İşlev argümanı / dönüş değeri                & Hayır \\
+\texttt{x12} & \texttt{a2}     & İşlev argümanı                               & Hayır \\
+\texttt{x13} & \texttt{a3}     & İşlev argümanı                               & Hayır \\
+\texttt{x14} & \texttt{a4}     & İşlev argümanı                               & Hayır \\
+\texttt{x15} & \texttt{a5}     & İşlev argümanı                               & Hayır \\
+\texttt{x16} & \texttt{a6}     & İşlev argümanı                               & Hayır \\
+\texttt{x17} & \texttt{a7}     & İşlev argümanı                               & Hayır \\
+\midrule
+\texttt{x18} & \texttt{s2}     & Kaydedilen yazmaç                             & Evet \\
+\texttt{x19} & \texttt{s3}     & Kaydedilen yazmaç                             & Evet \\
+\texttt{x20} & \texttt{s4}     & Kaydedilen yazmaç                             & Evet \\
+\texttt{x21} & \texttt{s5}     & Kaydedilen yazmaç                             & Evet \\
+\texttt{x22} & \texttt{s6}     & Kaydedilen yazmaç                             & Evet \\
+\texttt{x23} & \texttt{s7}     & Kaydedilen yazmaç                             & Evet \\
+\texttt{x24} & \texttt{s8}     & Kaydedilen yazmaç                             & Evet \\
+\texttt{x25} & \texttt{s9}     & Kaydedilen yazmaç                             & Evet \\
+\texttt{x26} & \texttt{s10}    & Kaydedilen yazmaç                             & Evet \\
+\texttt{x27} & \texttt{s11}    & Kaydedilen yazmaç                             & Evet \\
+\midrule
+\texttt{x28} & \texttt{t3}     & Geçici yazmaç                                & Hayır \\
+\texttt{x29} & \texttt{t4}     & Geçici yazmaç                                & Hayır \\
+\texttt{x30} & \texttt{t5}     & Geçici yazmaç                                & Hayır \\
+\texttt{x31} & \texttt{t6}     & Geçici yazmaç                                & Hayır \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\noindent
+\textbf{Not:} ``Çağrıda Korunur mu?'' sütunu, bir alt yordam çağrısında yazmacın değerinin korunup korunmadığını belirtir.\index{çağrı kuralları} ``Evet'' olarak işaretlenen yazmaçlar, çağrılan işlev tarafından korunmalıdır (\emph{callee-saved}). ``Hayır'' olarak işaretlenenler, çağıranın sorumluluğundadır (\emph{caller-saved}). ``---'' işareti, yazmacın özel amaçlı olduğunu ve standart çağrı kurallarının dışında kaldığını gösterir. \texttt{x0} yazmacı her zaman sıfır değerini döndürür ve yazma işlemleri göz ardı edilir.
+
+\subsection{Çağrı Kuralları ve Yığıt Çerçevesi}
+\label{subsec:ekc-cagri-kurallari}
+
+RISC-V çağrı kuralları\index{çağrı kuralları}, alt yordamlar arasında yazmaçların ve yığıtın nasıl kullanılacağını belirler. Bir alt yordam çağrısında aşağıdaki adımlar izlenir:
+
+\begin{enumerate}
+    \item Çağıran (\emph{caller}), \texttt{a0}--\texttt{a7} yazmaçlarına argümanları yerleştirir (sekizden fazla argüman yığıt üzerinden aktarılır).
+    \item \texttt{jal ra, hedef} buyruğu ile çağrı yapılır; dönüş adresi \texttt{ra}'ya kaydedilir.
+    \item Çağrılan (\emph{callee}), kullanacağı kaydedilen yazmaçları (\texttt{s0}--\texttt{s11}) ve \texttt{ra}'yı yığıta saklar.
+    \item İşlev gövdesi yürütülür; dönüş değeri \texttt{a0} (ve gerekiyorsa \texttt{a1}) yazmacına yazılır.
+    \item Saklanan yazmaçlar yığıttan geri yüklenir, \texttt{ret} ile çağırana dönülür.
+\end{enumerate}
+
+Aşağıdaki şekil, bir alt yordam çağrısı sırasında yığıt çerçevesinin yapısını göstermektedir:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    blok/.style={draw, thick, minimum width=5cm, minimum height=0.7cm, font=\footnotesize},
+    etiket/.style={font=\footnotesize, anchor=east}
+]
+% Yığıt çerçevesi (aşağı doğru büyür)
+\node[blok, fill=blokgri!30] (arg) at (0, 0) {Ek argümanlar (varsa)};
+\node[blok, fill=blokmavi!20] (ra) at (0,-0.7) {Saklanan \texttt{ra}};
+\node[blok, fill=blokmavi!20] (fp) at (0,-1.4) {Saklanan \texttt{s0/fp}};
+\node[blok, fill=blokmavi!20] (s1) at (0,-2.1) {Saklanan \texttt{s1}--\texttt{s11} (kullanılanlar)};
+\node[blok, fill=bloksari!30] (yerel) at (0,-2.8) {Yerel değişkenler};
+
+% Göstergeler
+\draw[thick, ->, >=stealth] (3.2, 0) -- (2.5, 0);
+\node[font=\footnotesize, anchor=west] at (3.4, 0) {Çağıranın \texttt{sp}'si};
+
+\draw[thick, ->, >=stealth] (3.2, -2.8) -- (2.5, -2.8);
+\node[font=\footnotesize, anchor=west] at (3.4, -2.8) {Geçerli \texttt{sp}};
+
+% Büyüme yönü
+\draw[thick, ->, >=stealth] (-3.5, 0) -- (-3.5, -3.2);
+\node[font=\footnotesize, rotate=90, anchor=south] at (-3.8, -1.6) {Yığıt büyüme yönü};
+\end{tikzpicture}
+\caption{RISC-V alt yordam yığıt çerçevesinin yapısı\index{yığıt çerçevesi}}
+\label{fig:ekc-yigit-cerceve}
+\end{figure}
+
+% =============================================================
+% C.5 Buyruk Biçimleri
+% =============================================================
+\section{Buyruk Biçimleri}
+\label{sec:ekc-formatlar}
+
+RISC-V, altı temel buyruk biçimi tanımlar.\index{buyruk biçimi} Her biçim 32 bit genişliğindedir ve farklı alan düzenleri içerir. Bu bölümde her biçim görsel olarak sunulmaktadır.
+
+% --- R Türü ---
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.85, every node/.style={font=\footnotesize}]
+  % funct7: bitler 31-25 (7 bit)
+  \draw[thick, fill=blokgri] (0,0) rectangle (2.45,0.9);
+  \node at (1.225,0.45) {funct7};
+  \node[font=\tiny, above] at (0,0.9) {31};
+  \node[font=\tiny, above] at (2.45,0.9) {25};
+  % rs2: bitler 24-20 (5 bit)
+  \draw[thick, fill=blokmavi] (2.45,0) rectangle (4.2,0.9);
+  \node at (3.325,0.45) {rs2};
+  \node[font=\tiny, above] at (4.2,0.9) {20};
+  % rs1: bitler 19-15 (5 bit)
+  \draw[thick, fill=blokmavi] (4.2,0) rectangle (5.95,0.9);
+  \node at (5.075,0.45) {rs1};
+  \node[font=\tiny, above] at (5.95,0.9) {15};
+  % funct3: bitler 14-12 (3 bit)
+  \draw[thick, fill=blokgri] (5.95,0) rectangle (7.0,0.9);
+  \node at (6.475,0.45) {f3};
+  \node[font=\tiny, above] at (7.0,0.9) {12};
+  % rd: bitler 11-7 (5 bit)
+  \draw[thick, fill=blokmavi] (7.0,0) rectangle (8.75,0.9);
+  \node at (7.875,0.45) {rd};
+  \node[font=\tiny, above] at (8.75,0.9) {7};
+  % opcode: bitler 6-0 (7 bit)
+  \draw[thick, fill=blokyesil] (8.75,0) rectangle (11.2,0.9);
+  \node at (9.975,0.45) {opcode};
+  \node[font=\tiny, above] at (11.2,0.9) {0};
+\end{tikzpicture}
+\caption{R türü buyruk biçimi\index{R türü}}
+\label{fig:ekc-r-tipi}
+\end{figure}
+
+% --- I Türü ---
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.85, every node/.style={font=\footnotesize}]
+  % imm[11:0]: bitler 31-20 (12 bit)
+  \draw[thick, fill=bloksari] (0,0) rectangle (4.2,0.9);
+  \node at (2.1,0.45) {imm[11:0]};
+  \node[font=\tiny, above] at (0,0.9) {31};
+  \node[font=\tiny, above] at (4.2,0.9) {20};
+  % rs1: bitler 19-15 (5 bit)
+  \draw[thick, fill=blokmavi] (4.2,0) rectangle (5.95,0.9);
+  \node at (5.075,0.45) {rs1};
+  \node[font=\tiny, above] at (5.95,0.9) {15};
+  % funct3: bitler 14-12 (3 bit)
+  \draw[thick, fill=blokgri] (5.95,0) rectangle (7.0,0.9);
+  \node at (6.475,0.45) {f3};
+  \node[font=\tiny, above] at (7.0,0.9) {12};
+  % rd: bitler 11-7 (5 bit)
+  \draw[thick, fill=blokmavi] (7.0,0) rectangle (8.75,0.9);
+  \node at (7.875,0.45) {rd};
+  \node[font=\tiny, above] at (8.75,0.9) {7};
+  % opcode: bitler 6-0 (7 bit)
+  \draw[thick, fill=blokyesil] (8.75,0) rectangle (11.2,0.9);
+  \node at (9.975,0.45) {opcode};
+  \node[font=\tiny, above] at (11.2,0.9) {0};
+\end{tikzpicture}
+\caption{I türü buyruk biçimi\index{I türü}}
+\label{fig:ekc-i-tipi}
+\end{figure}
+
+% --- S Türü ---
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.85, every node/.style={font=\footnotesize}]
+  % imm[11:5]: bitler 31-25 (7 bit)
+  \draw[thick, fill=bloksari] (0,0) rectangle (2.45,0.9);
+  \node at (1.225,0.45) {imm[11:5]};
+  \node[font=\tiny, above] at (0,0.9) {31};
+  \node[font=\tiny, above] at (2.45,0.9) {25};
+  % rs2: bitler 24-20 (5 bit)
+  \draw[thick, fill=blokmavi] (2.45,0) rectangle (4.2,0.9);
+  \node at (3.325,0.45) {rs2};
+  \node[font=\tiny, above] at (4.2,0.9) {20};
+  % rs1: bitler 19-15 (5 bit)
+  \draw[thick, fill=blokmavi] (4.2,0) rectangle (5.95,0.9);
+  \node at (5.075,0.45) {rs1};
+  \node[font=\tiny, above] at (5.95,0.9) {15};
+  % funct3: bitler 14-12 (3 bit)
+  \draw[thick, fill=blokgri] (5.95,0) rectangle (7.0,0.9);
+  \node at (6.475,0.45) {f3};
+  \node[font=\tiny, above] at (7.0,0.9) {12};
+  % imm[4:0]: bitler 11-7 (5 bit)
+  \draw[thick, fill=bloksari] (7.0,0) rectangle (8.75,0.9);
+  \node at (7.875,0.45) {imm[4:0]};
+  \node[font=\tiny, above] at (8.75,0.9) {7};
+  % opcode: bitler 6-0 (7 bit)
+  \draw[thick, fill=blokyesil] (8.75,0) rectangle (11.2,0.9);
+  \node at (9.975,0.45) {opcode};
+  \node[font=\tiny, above] at (11.2,0.9) {0};
+\end{tikzpicture}
+\caption{S türü buyruk biçimi\index{S türü}}
+\label{fig:ekc-s-tipi}
+\end{figure}
+
+% --- B Türü ---
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.85, every node/.style={font=\footnotesize}]
+  % imm[12|10:5]: bitler 31-25 (7 bit)
+  \draw[thick, fill=bloksari] (0,0) rectangle (2.45,0.9);
+  \node at (1.225,0.45) {\tiny imm[12|10:5]};
+  \node[font=\tiny, above] at (0,0.9) {31};
+  \node[font=\tiny, above] at (2.45,0.9) {25};
+  % rs2: bitler 24-20 (5 bit)
+  \draw[thick, fill=blokmavi] (2.45,0) rectangle (4.2,0.9);
+  \node at (3.325,0.45) {rs2};
+  \node[font=\tiny, above] at (4.2,0.9) {20};
+  % rs1: bitler 19-15 (5 bit)
+  \draw[thick, fill=blokmavi] (4.2,0) rectangle (5.95,0.9);
+  \node at (5.075,0.45) {rs1};
+  \node[font=\tiny, above] at (5.95,0.9) {15};
+  % funct3: bitler 14-12 (3 bit)
+  \draw[thick, fill=blokgri] (5.95,0) rectangle (7.0,0.9);
+  \node at (6.475,0.45) {f3};
+  \node[font=\tiny, above] at (7.0,0.9) {12};
+  % imm[4:1|11]: bitler 11-7 (5 bit)
+  \draw[thick, fill=bloksari] (7.0,0) rectangle (8.75,0.9);
+  \node at (7.875,0.45) {\tiny imm[4:1|11]};
+  \node[font=\tiny, above] at (8.75,0.9) {7};
+  % opcode: bitler 6-0 (7 bit)
+  \draw[thick, fill=blokyesil] (8.75,0) rectangle (11.2,0.9);
+  \node at (9.975,0.45) {opcode};
+  \node[font=\tiny, above] at (11.2,0.9) {0};
+\end{tikzpicture}
+\caption{B türü buyruk biçimi\index{B türü}}
+\label{fig:ekc-b-tipi}
+\end{figure}
+
+% --- U Türü ---
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.85, every node/.style={font=\footnotesize}]
+  % imm[31:12]: bitler 31-12 (20 bit)
+  \draw[thick, fill=bloksari] (0,0) rectangle (7.0,0.9);
+  \node at (3.5,0.45) {imm[31:12]};
+  \node[font=\tiny, above] at (0,0.9) {31};
+  \node[font=\tiny, above] at (7.0,0.9) {12};
+  % rd: bitler 11-7 (5 bit)
+  \draw[thick, fill=blokmavi] (7.0,0) rectangle (8.75,0.9);
+  \node at (7.875,0.45) {rd};
+  \node[font=\tiny, above] at (8.75,0.9) {7};
+  % opcode: bitler 6-0 (7 bit)
+  \draw[thick, fill=blokyesil] (8.75,0) rectangle (11.2,0.9);
+  \node at (9.975,0.45) {opcode};
+  \node[font=\tiny, above] at (11.2,0.9) {0};
+\end{tikzpicture}
+\caption{U türü buyruk biçimi\index{U türü}}
+\label{fig:ekc-u-tipi}
+\end{figure}
+
+% --- J Türü ---
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.85, every node/.style={font=\footnotesize}]
+  % imm[20|10:1|11|19:12]: bitler 31-12 (20 bit)
+  \draw[thick, fill=bloksari] (0,0) rectangle (7.0,0.9);
+  \node at (3.5,0.45) {imm[20|10:1|11|19:12]};
+  \node[font=\tiny, above] at (0,0.9) {31};
+  \node[font=\tiny, above] at (7.0,0.9) {12};
+  % rd: bitler 11-7 (5 bit)
+  \draw[thick, fill=blokmavi] (7.0,0) rectangle (8.75,0.9);
+  \node at (7.875,0.45) {rd};
+  \node[font=\tiny, above] at (8.75,0.9) {7};
+  % opcode: bitler 6-0 (7 bit)
+  \draw[thick, fill=blokyesil] (8.75,0) rectangle (11.2,0.9);
+  \node at (9.975,0.45) {opcode};
+  \node[font=\tiny, above] at (11.2,0.9) {0};
+\end{tikzpicture}
+\caption{J türü buyruk biçimi\index{J türü}}
+\label{fig:ekc-j-tipi}
+\end{figure}
+
+\vspace{0.5em}
+\noindent
+Şekillerde kullanılan renk kodları:\\[3pt]
+\colorbox{blokgri}{\small\strut işlev kodu alanları}\quad
+\colorbox{blokmavi}{\small\strut yazmaç alanları}\quad
+\colorbox{blokyesil}{\small\strut işlem kodu}\quad
+\colorbox{bloksari}{\small\strut anlık değer alanları}
+
+\vspace{1em}
+Tablo~\ref{tab:ekc-format-ozet}, her buyruk biçiminin hangi buyruk kategorilerinde kullanıldığını özetlemektedir.
+
+\begin{table}[H]
+\centering
+\caption{Buyruk biçimleri ve kullanım alanları}\label{tab:ekc-format-ozet}
+\begin{tabular}{llp{7cm}}
+\toprule
+\textbf{Biçim} & \textbf{İşlem Kodu} & \textbf{Kullanan Buyruklar} \\
+\midrule
+R türü & \texttt{0110011} & Aritmetik ve mantık buyrukları (add, sub, and, or, xor, sll, srl, sra, slt, sltu) \\
+I türü & \texttt{0010011} & Anlık aritmetik ve mantık (addi, andi, ori, xori, slti, sltiu, slli, srli, srai) \\
+I türü & \texttt{0000011} & Yükleme buyrukları (lw, lh, lhu, lb, lbu) \\
+I türü & \texttt{1100111} & Yazmaçla atlama (jalr) \\
+I türü & \texttt{1110011} & Sistem buyrukları (ecall, ebreak) \\
+S türü & \texttt{0100011} & Saklama buyrukları (sw, sh, sb) \\
+B türü & \texttt{1100011} & Dallanma buyrukları (beq, bne, blt, bge, bltu, bgeu) \\
+U türü & \texttt{0110111} & Üst anlık yükleme (lui) \\
+U türü & \texttt{0010111} & Üst anlık PC ekleme (auipc) \\
+J türü & \texttt{1101111} & Koşulsuz atlama (jal) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% =============================================================
+% C.6 Sözde Buyruklar (Pseudoinstructions)
+% =============================================================
+\section{Sözde Buyruklar}
+\label{sec:ekc-sozde-buyruklar}
+
+RISC-V çeviricisi (\emph{assembler}), programcıların işini kolaylaştırmak için birçok \emph{sözde buyruk}\index{sözde buyruk} tanımlar. Bu buyruklar doğrudan donanım tarafından desteklenmez; bunun yerine çevirici tarafından bir veya daha fazla gerçek buyruğa dönüştürülür. Tablo~\ref{tab:ekc-sozde-buyruklar}, yaygın kullanılan sözde buyrukları listelemektedir.
+
+{\small
+\begin{longtable}{@{}l@{\quad}l@{\quad}l@{}}
+\caption{RISC-V sözde buyrukları}\label{tab:ekc-sozde-buyruklar}\\
+\toprule
+\textbf{Sözde Buyruk} & \textbf{Açılımı} & \textbf{Açıklama} \\
+\midrule
+\endfirsthead
+
+\caption[]{RISC-V sözde buyrukları (devamı)}\\
+\toprule
+\textbf{Sözde Buyruk} & \textbf{Açılımı} & \textbf{Açıklama} \\
+\midrule
+\endhead
+
+\midrule
+\multicolumn{3}{r}{\footnotesize\textit{Sonraki sayfada devam ediyor}} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+
+% --- Temel Sözde Buyruklar ---
+\multicolumn{3}{l}{\textbf{Temel Sözde Buyruklar}} \\
+\midrule
+\texttt{nop} &
+\texttt{addi zero, zero, 0} &
+İşlem yok\index{nop} \\[3pt]
+
+\texttt{li rd, imm} &
+\texttt{lui + addi dizisi} &
+Anlık değer yükleme\index{li} \\[3pt]
+
+\texttt{la rd, sembol} &
+\texttt{auipc rd, sembol[31:12]} &
+Adres yükleme\index{la} \\
+ &
+\texttt{~~+ addi rd, rd, sembol[11:0]} &
+ \\[3pt]
+
+\texttt{mv rd, rs} &
+\texttt{addi rd, rs, 0} &
+Yazmaç kopyalama\index{mv} \\[3pt]
+
+\texttt{not rd, rs} &
+\texttt{xori rd, rs, -1} &
+Bit tersleme\index{not} \\[3pt]
+
+\texttt{neg rd, rs} &
+\texttt{sub rd, zero, rs} &
+İşaret değiştirme\index{neg} \\[3pt]
+
+\midrule
+% --- Atlama Sözde Buyrukları ---
+\multicolumn{3}{l}{\textbf{Atlama ve Dönüş Sözde Buyrukları}} \\
+\midrule
+\texttt{j eklenti} &
+\texttt{jal zero, eklenti} &
+Koşulsuz atlama\index{j} \\[3pt]
+
+\texttt{jr rs} &
+\texttt{jalr zero, rs, 0} &
+Yazmaçla atlama\index{jr} \\[3pt]
+
+\texttt{ret} &
+\texttt{jalr zero, ra, 0} &
+Alt yordamdan dönüş\index{ret} \\[3pt]
+
+\texttt{call eklenti} &
+\texttt{auipc ra, eklenti[31:12]} &
+Alt yordam çağrısı\index{call} \\
+ &
+\texttt{~~+ jalr ra, ra, eklenti[11:0]} &
+ \\[3pt]
+
+\texttt{tail eklenti} &
+\texttt{auipc t1, eklenti[31:12]} &
+Kuyruk çağrısı\index{tail} \\
+ &
+\texttt{~~+ jalr zero, t1, eklenti[11:0]} &
+ \\[3pt]
+
+\midrule
+% --- Dallanma Sözde Buyrukları ---
+\multicolumn{3}{l}{\textbf{Dallanma Sözde Buyrukları}} \\
+\midrule
+\texttt{beqz rs, eklenti} &
+\texttt{beq rs, zero, eklenti} &
+Sıfıra eşitse dallan\index{beqz} \\[3pt]
+
+\texttt{bnez rs, eklenti} &
+\texttt{bne rs, zero, eklenti} &
+Sıfıra eşit değilse dallan\index{bnez} \\[3pt]
+
+\texttt{bgt rs, rt, eklenti} &
+\texttt{blt rt, rs, eklenti} &
+Büyükse dallan\index{bgt} \\[3pt]
+
+\texttt{ble rs, rt, eklenti} &
+\texttt{bge rt, rs, eklenti} &
+Küçük eşitse dallan\index{ble} \\[3pt]
+
+\texttt{bgtu rs, rt, eklenti} &
+\texttt{bltu rt, rs, eklenti} &
+İşaretsiz büyükse dallan\index{bgtu} \\[3pt]
+
+\texttt{bleu rs, rt, eklenti} &
+\texttt{bgeu rt, rs, eklenti} &
+İşaretsiz küçük eşitse dallan\index{bleu} \\[3pt]
+
+\end{longtable}
+}% end \small
+
+\noindent
+\textbf{Not:} \texttt{li}\index{li} buyruğunun açılımı, anlık değerin büyüklüğüne bağlı olarak değişir. Değer 12 bitlik işaretli aralığa sığıyorsa yalnızca \texttt{addi} kullanılır. Aksi hâlde önce \texttt{lui} ile üst 20 bit yüklenir, ardından \texttt{addi} ile alt 12 bit eklenir. Benzer şekilde \texttt{la}, \texttt{call} ve \texttt{tail} buyrukları da iki buyruktan oluşur: birincisi üst kısımları \texttt{auipc} ile hesaplar, ikincisi alt kısımları ekler.
+
+
+% =============================================================
+% Özet
+% =============================================================
+\section*{Özet}
+\addcontentsline{toc}{section}{Özet}
+
+Bu ekte RISC-V buyruk kümesi mimarisinin referans bilgileri sunuldu. Temel kavramlar şöyle özetlenebilir:
+
+\begin{itemize}
+\item RISC-V modüler bir mimaridir: RV32I/RV64I taban kümeleri üzerine M, A, F, D, C, V gibi uzantılar eklenerek farklı uygulama alanlarına uygun yapılandırmalar oluşturulur. Bu kitap RV32I taban kümesini kullanmaktadır.
+
+\item RISC-V üç ayrıcalık düzeyi tanımlar: Makine (M), Gözetmen (S) ve Kullanıcı (U). Tüm gerçeklemeler en az M modunu destekler.
+
+\item Buyruklar \texttt{buyruk hedef, kaynak1, kaynak2} biçiminde yazılır; hedef her zaman en soldaki işlenendir. Bellek erişiminde \texttt{ofset(taban)} gösterimi kullanılır.
+
+\item RV32I, 47 buyruktan oluşur: aritmetik/mantık, veri aktarma, dallanma, atlama, üst anlık, bellek sıralama ve sistem buyrukları. Zicsr ve Zifencei uzantıları DSY erişimi ve buyruk çiti desteği ekler.
+
+\item 32 genel amaçlı yazmaç bulunur (\texttt{x0}--\texttt{x31}); \texttt{x0} daima sıfırdır. Çağrı kurallarına göre yazmaçlar caller-saved ve callee-saved olarak ikiye ayrılır.
+
+\item Altı buyruk biçimi (R, I, S, B, U, J) tüm buyrukları 32~bitlik sabit genişlikte kodlar. Sözde buyruklar ise çevirici tarafından gerçek buyruklara dönüştürülerek programcının işini kolaylaştırır.
+\end{itemize}
+
+
+% =============================================================
+% Alıştırmalar
+% =============================================================
+\section*{Alıştırmalar}
+\addcontentsline{toc}{section}{Alıştırmalar}
+\label{sec:ekC-alistirmalar}
+
+\begin{alistirma}[\kolay]
+Aşağıdaki RISC-V buyruk dizisinin yürütülmesinden sonra \texttt{x5}, \texttt{x6} ve \texttt{x7} yazmaçlarının değerlerini bulun. Başlangıçta tüm yazmaçlar sıfırdır.
+\begin{lstlisting}[style=riscv, style=alistirma-kod]
+addi x5, x0, 15
+addi x6, x0, 10
+add  x7, x5, x6
+sub  x5, x7, x6
+\end{lstlisting}
+\end{alistirma}
+
+\begin{alistirma}[\kolay]
+\texttt{slli x5, x6, 3} buyruğu ne işlem yapar? \texttt{x6} = 5 ise \texttt{x5}'in değeri ne olur? Aynı işlemi aritmetik olarak ifade edin.
+\end{alistirma}
+
+\begin{alistirma}[\kolay]
+Aşağıdaki sözde buyrukların gerçek RISC-V buyruklarına açılımını yazın:
+\begin{enumerate}[(a)]
+    \item \texttt{mv x5, x6}
+    \item \texttt{li x7, 42}
+    \item \texttt{bnez x5, etiket}
+    \item \texttt{ret}
+\end{enumerate}
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+\texttt{add x5, x6, x7} buyruğunun 32~bitlik R türü kodlamasını ikilik ve onaltılık tabanda yazın. Her alanı (funct7, rs2, rs1, funct3, rd, opcode) ayrı ayrı belirtin.
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+\texttt{lw x10, 8(x2)} buyruğu I türündedir. Bu buyruğun 32~bitlik kodlamasını oluşturun. Ofset değeri olan 8'in 12~bitlik işaretli anlık değer olarak nasıl kodlandığını gösterin.
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+Aşağıdaki program parçası bir döngü gerçeklemektedir. Döngü kaç kez çalışır ve sonuçta \texttt{x6}'nın değeri ne olur?
+\begin{lstlisting}[style=riscv, style=alistirma-kod]
+    addi x5, x0, 5     # x5 = 5 (sayac)
+    addi x6, x0, 0     # x6 = 0 (toplam)
+don:
+    add  x6, x6, x5    # toplam += sayac
+    addi x5, x5, -1    # sayac--
+    bne  x5, x0, don   # sayac != 0 ise tekrarla
+\end{lstlisting}
+\end{alistirma}
+
+\begin{alistirma}[\orta]
+RISC-V çağrı kurallarına göre bir alt yordam çağrısında hangi yazmaçlar çağıran tarafından, hangileri çağrılan tarafından korunur? \texttt{a0}--\texttt{a7} ve \texttt{s0}--\texttt{s11} yazmaçlarını bu açıdan sınıflandırın.
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+\texttt{beq x5, x6, -16} buyruğunun 32~bitlik B türü kodlamasını oluşturun. Eklenti değeri $-16$'nın B türü anlık değer alanlarına (imm[12|10:5] ve imm[4:1|11]) nasıl dağıtıldığını adım adım gösterin.
+\end{alistirma}
+
+\begin{alistirma}[\zor]
+RV32I'de 32~bitlik bir sabiti bir yazmaca yüklemek neden iki buyruk gerektirir? \texttt{lui} ve \texttt{addi} buyrukları kullanarak \texttt{0xDEADBEEF} sabitini \texttt{x10} yazmacına yükleyen buyruk dizisini yazın. İşaret genişletmesi nedeniyle alt 12~bitte düzeltme gerekip gerekmediğini tartışın.
+\end{alistirma}

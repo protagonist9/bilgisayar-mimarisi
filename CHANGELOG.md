@@ -4,6 +4,45 @@ Bu dosya, kitabın sürümler arasındaki önemli değişikliklerini takip eder.
 
 ---
 
+## [0.2.1] — 2026-03-10
+
+### Yeni ekler
+- **Ek C — RISC-V Referans Kartı** eklendi
+  - RV32I taban buyruk kümesi tablosu (R/I/S/B/U/J türleri)
+  - Sözde buyruklar tablosu
+  - Yazmaç adlandırma ve çağrı kuralları tablosu
+  - Yığıt çerçevesi diyagramı (Şekil C.1)
+  - CSR buyrukları ve bellek sıralama buyrukları
+  - M, A, F, D uzantıları özet tabloları
+  - Alıştırmalar (buyruk kodlama/çözme)
+
+- **Ek D — Uygulamalı Çalışma Rehberi** eklendi
+  - RARS ve Venus simülatörleri kurulum ve kullanım
+  - Fibonacci örnek programı (doğrudan çalıştırılabilir)
+  - Icarus Verilog / GTKWave kurulum rehberi
+  - Verilog ile sayısal tasarım temelleri
+  - SystemVerilog tanıtımı
+  - Testbench yazımı ve dalga formu görüntüleme
+  - FPGA ile gerçekleme bilgi notu
+  - Mini projeler (ALU, yazmaç dosyası, bellek, basit işlemci)
+
+### Ek güncellemeleri
+- **Ek A — Sayı Sistemleri ve Kodlama** kapsamlı güncelleme
+  - Göbekli Tepe bölüm fotoğrafı eklendi
+  - İçerik genişletildi ve yeniden yapılandırıldı
+- **Ek B — Sayısal Tasarım Temelleri** güncellemeleri
+  - Galata Kulesi bölüm fotoğrafı eklendi
+  - Giriş, kısaltmalar listesi ve örnekler iyileştirildi
+
+### Terminoloji
+- Ek C: Dallanma/atlama buyruklarında "ofset" → "eklenti" düzeltmesi (bellek adresleme "ofset" korundu)
+- Terimler sözlüğüne "benzetim/benzetimlik" (simulation/simulator) eklendi
+
+### Kapak
+- "Sürüm 0.2.0" → "Sürüm 0.2.1"
+
+---
+
 ## [0.2.0] — 2026-03-09
 
 ### Yeni bölüm
