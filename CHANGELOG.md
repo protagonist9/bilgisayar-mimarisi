@@ -30,10 +30,6 @@ Bu dosya, kitabın sürümler arasındaki önemli değişikliklerini takip eder.
 - **Ek A — Sayı Sistemleri ve Kodlama** kapsamlı güncelleme
   - Göbekli Tepe bölüm fotoğrafı eklendi
   - İçerik genişletildi ve yeniden yapılandırıldı
-- **Ek B — Sayısal Tasarım Temelleri** güncellemeleri
-  - Galata Kulesi bölüm fotoğrafı eklendi
-  - Giriş, kısaltmalar listesi ve örnekler iyileştirildi
-
 ### Terminoloji
 - Ek C: Dallanma/atlama buyruklarında "ofset" → "eklenti" düzeltmesi (bellek adresleme "ofset" korundu)
 - Terimler sözlüğüne "benzetim/benzetimlik" (simulation/simulator) eklendi
