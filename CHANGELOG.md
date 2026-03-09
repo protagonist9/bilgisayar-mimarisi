@@ -26,10 +26,10 @@ Bu dosya, kitabın sürümler arasındaki önemli değişikliklerini takip eder.
   - FPGA ile gerçekleme bilgi notu
   - Mini projeler (ALU, yazmaç dosyası, bellek, basit işlemci)
 
-### Ek güncellemeleri
-- **Ek A — Sayı Sistemleri ve Kodlama** kapsamlı güncelleme
-  - Göbekli Tepe bölüm fotoğrafı eklendi
-  - İçerik genişletildi ve yeniden yapılandırıldı
+- **Ek A — Sayı Sistemleri ve Kodlama** eklendi
+  - Göbekli Tepe bölüm fotoğrafı
+  - Taban dönüşümleri, işaretli sayı gösterimleri, karakter kodlama
+
 ### Terminoloji
 - Ek C: Dallanma/atlama buyruklarında "ofset" → "eklenti" düzeltmesi (bellek adresleme "ofset" korundu)
 - Terimler sözlüğüne "benzetim/benzetimlik" (simulation/simulator) eklendi
