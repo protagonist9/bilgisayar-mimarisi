@@ -15,8 +15,13 @@
             --text: #2d3748;
             --text-light: #718096;
             --success: #38a169;
+            --success-bg: #f0fff4;
+            --success-border: #68d391;
             --warning: #d69e2e;
+            --warning-bg: #fffff0;
+            --warning-border: #f6e05e;
             --border: #e2e8f0;
+            --accordion-expanded-bg: #ebf8ff;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -148,34 +153,6 @@
             color: var(--text);
         }
 
-        /* Table */
-        .toc-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 0.5rem;
-        }
-        .toc-table th {
-            background: var(--primary);
-            color: white;
-            padding: 0.6rem 1rem;
-            text-align: left;
-            font-size: 0.9rem;
-        }
-        .toc-table td {
-            padding: 0.5rem 1rem;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.9rem;
-        }
-        .toc-table tr:hover { background: #edf2f7; }
-        .status-ready {
-            color: var(--success);
-            font-weight: 600;
-        }
-        .status-wip {
-            color: var(--warning);
-            font-weight: 600;
-        }
-
         /* Info cards */
         .info-grid {
             display: grid;
@@ -230,6 +207,165 @@
         }
         footer a { color: var(--accent); text-decoration: none; }
         footer a:hover { text-decoration: underline; }
+
+        /* ── Accordion ── */
+        .accordion {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .accordion-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            border-left-width: 4px;
+        }
+        .accordion-item.status-ready {
+            border-left-color: var(--success);
+        }
+        .accordion-item.status-wip {
+            border-left-color: var(--warning);
+        }
+
+        .accordion-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 1rem;
+            cursor: pointer;
+            user-select: none;
+            gap: 0.75rem;
+            background: var(--card-bg);
+            transition: background 0.15s;
+        }
+        .accordion-header:hover {
+            background: #f0f4f8;
+        }
+        .accordion-item.open .accordion-header {
+            background: #dbeafe;
+        }
+
+        .accordion-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .acc-number {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-light);
+            white-space: nowrap;
+            min-width: 3.5rem;
+        }
+
+        .acc-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .accordion-right {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-shrink: 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .status-badge.ready {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid var(--success-border);
+        }
+        .status-badge.wip {
+            background: var(--warning-bg);
+            color: var(--warning);
+            border: 1px solid var(--warning-border);
+        }
+
+        .chevron {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            transition: transform 0.25s ease;
+            display: inline-block;
+        }
+        .accordion-item.open .chevron {
+            transform: rotate(90deg);
+        }
+
+        /* Accordion body with smooth slide */
+        .accordion-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .accordion-item.open .accordion-body {
+            max-height: 1000px;
+        }
+
+        .accordion-content {
+            padding: 1rem 1rem 1.25rem 1rem;
+            background: var(--accordion-expanded-bg);
+            border-top: 1px solid #bee3f8;
+        }
+
+        /* 3-column grid inside accordion */
+        .acc-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        @media (min-width: 640px) {
+            .acc-detail-grid { grid-template-columns: 1fr 1fr 1fr; }
+        }
+
+        .acc-col-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .acc-col ul {
+            list-style: none;
+            padding: 0;
+        }
+        .acc-col ul li {
+            font-size: 0.82rem;
+            color: var(--text);
+            padding: 0.15rem 0;
+            border-bottom: 1px solid #d1e9f7;
+        }
+        .acc-col ul li:last-child {
+            border-bottom: none;
+        }
+
+        .acc-stat {
+            font-size: 0.85rem;
+            color: var(--text);
+            padding: 0.25rem 0;
+        }
+
+        .acc-wip-msg {
+            font-size: 0.88rem;
+            color: var(--text-light);
+            font-style: italic;
+            padding: 0.25rem 0;
+        }
     </style>
 </head>
 <body>
@@ -280,38 +416,473 @@
         </p>
     </section>
 
-    <!-- İçerik Tablosu -->
+    <!-- İçindekiler -->
     <section>
         <h2>İçindekiler</h2>
-        <table class="toc-table">
-            <thead>
-                <tr>
-                    <th>Bölüm</th>
-                    <th>Konu</th>
-                    <th>Durum</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td>1</td><td>Giriş</td><td class="status-ready">&#x2705; Yayında</td></tr>
-                <tr><td>2</td><td>Başarım</td><td class="status-ready">&#x2705; Yayında</td></tr>
-                <tr><td>3</td><td>Buyruk Kümesi Mimarisi</td><td class="status-wip">&#x1F527; Hazırlanıyor</td></tr>
-                <tr><td>4</td><td>Aritmetik Birimler</td><td class="status-wip">&#x1F527; Hazırlanıyor</td></tr>
-                <tr><td>5</td><td>İşlemci Tasarımı</td><td class="status-wip">&#x1F527; Hazırlanıyor</td></tr>
-                <tr><td>6</td><td>Boru Hattı</td><td class="status-wip">&#x1F527; Hazırlanıyor</td></tr>
-                <tr><td>7</td><td>Bellek Hiyerarşisi</td><td class="status-wip">&#x1F527; Hazırlanıyor</td></tr>
-                <tr><td>8</td><td>Giriş/Çıkış</td><td class="status-wip">&#x1F527; Hazırlanıyor</td></tr>
-                <tr><td>9</td><td>Çok Çekirdekli İşlemciler</td><td class="status-wip">&#x1F527; Hazırlanıyor</td></tr>
-                <tr><td>10</td><td>GPU ve Hızlandırıcılar</td><td class="status-wip">&#x1F527; Hazırlanıyor</td></tr>
-                <tr><td>11</td><td>Güncel Mimariler</td><td class="status-wip">&#x1F527; Hazırlanıyor</td></tr>
-                <tr><td>Ek A</td><td>Sayı Sistemleri ve Kodlama</td><td class="status-ready">&#x2705; Yayında</td></tr>
-                <tr><td>Ek B</td><td>Sayısal Tasarım Temelleri</td><td class="status-wip">&#x1F527; Hazırlanıyor</td></tr>
-                <tr><td>Ek C</td><td>RISC-V Referans Kartı</td><td class="status-ready">&#x2705; Yayında</td></tr>
-                <tr><td>Ek D</td><td>Uygulamalı Çalışma Rehberi</td><td class="status-ready">&#x2705; Yayında</td></tr>
-            </tbody>
-        </table>
+
+        <div class="accordion" id="toc-accordion">
+
+            <!-- Bölüm 1 -->
+            <div class="accordion-item status-ready" data-index="0">
+                <div class="accordion-header" onclick="toggleAccordion(0)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 1</span>
+                        <span class="acc-title">Bilgisayar Mimarisine Giriş</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge ready">Yayında</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <div class="acc-detail-grid">
+                            <div class="acc-col">
+                                <div class="acc-col-label">Alt Bölümler</div>
+                                <ul>
+                                    <li>1.1 Giriş</li>
+                                    <li>1.2 Bilgisayarların Gelişimi</li>
+                                    <li>1.3 Bilgisayar Nedir?</li>
+                                    <li>1.4 İşlemci ve Yonga Üretimi</li>
+                                    <li>1.5 Programların Çalıştırılması</li>
+                                    <li>1.6 Bilgisayar Mimarisini Şekillendiren Etkenler</li>
+                                    <li>1.7 Güç Tüketimi Eğilimleri</li>
+                                    <li>1.8 Güvenilirlik</li>
+                                    <li>1.9 Neden RISC-V?</li>
+                                    <li>1.10 Bilgisayar Mimarisinin Yeni Ufku: Yapay Zekâ</li>
+                                    <li>1.11 Yanılgılar ve Tuzaklar</li>
+                                    <li>1.12 Özet</li>
+                                </ul>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Şekiller</div>
+                                <p class="acc-stat">23 şekil</p>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Bilgi Kutuları</div>
+                                <p class="acc-stat">1 terimnotu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bölüm 2 -->
+            <div class="accordion-item status-ready" data-index="1">
+                <div class="accordion-header" onclick="toggleAccordion(1)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 2</span>
+                        <span class="acc-title">Bilgisayar Başarımı</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge ready">Yayında</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <div class="acc-detail-grid">
+                            <div class="acc-col">
+                                <div class="acc-col-label">Alt Bölümler</div>
+                                <ul>
+                                    <li>2.1 Gereksinim Belirleme</li>
+                                    <li>2.2 Başarım Ölçütleri</li>
+                                    <li>2.3 Standart Sınama Programı Kümeleri</li>
+                                    <li>2.4 Başarım Eğilimleri: Geçmişten Günümüze</li>
+                                    <li>2.5 Amdahl Yasası</li>
+                                    <li>2.6 Bellek Duvarı</li>
+                                    <li>2.7 Güç-Başarım Dengesi</li>
+                                    <li>2.8 Gerçek Dünya: İşlemci Karşılaştırmaları</li>
+                                    <li>2.9 Yanılgılar ve Tuzaklar</li>
+                                    <li>2.10 Özet</li>
+                                </ul>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Şekiller</div>
+                                <p class="acc-stat">16 şekil</p>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Bilgi Kutuları</div>
+                                <p class="acc-stat">9 terimnotu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bölüm 3 -->
+            <div class="accordion-item status-wip" data-index="2">
+                <div class="accordion-header" onclick="toggleAccordion(2)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 3</span>
+                        <span class="acc-title">Buyruk Kümesi Mimarisi</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge wip">Hazırlanıyor</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <div class="acc-detail-grid">
+                            <div class="acc-col">
+                                <div class="acc-col-label">Alt Bölümler</div>
+                                <ul>
+                                    <li>3.1 Giriş</li>
+                                    <li>3.2 RISC-V'te Verilerin Saklanması</li>
+                                    <li>3.3 Buyruk Kümesi Tasarımı</li>
+                                    <li>3.4 RISC-V İşlemcisi ve Buyruk Kümesi</li>
+                                    <li>3.5 Bellek Düzeni</li>
+                                    <li>3.6 Yazmaçlar</li>
+                                    <li>3.7 Buyruklar</li>
+                                    <li>3.8 Veri Aktarma Buyrukları</li>
+                                    <li>3.9 Aritmetik İşlem Buyrukları</li>
+                                    <li>3.10 Mantık Buyrukları</li>
+                                    <li>3.11 Bit Düzeyinde Kaydırma Buyrukları</li>
+                                    <li>3.12 Dallanma ve Atlama Buyrukları</li>
+                                    <li>3.13 Adresleme Kipleri</li>
+                                    <li>3.14 Altyordam ve Yığıtlar</li>
+                                    <li>3.15 Programın Yürütülmesi</li>
+                                    <li>3.16 Diğer BKM'lerde Buyruk Kümeleri</li>
+                                    <li>3.17 Diğer Bazı Buyruk Kümesi Mimarileri</li>
+                                    <li>3.18 Gerçek Dünya: Buyruk Kümesi Tasarım Kararları</li>
+                                    <li>3.19 Yanılgılar ve Tuzaklar</li>
+                                    <li>3.20 Özet</li>
+                                </ul>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Şekiller</div>
+                                <p class="acc-stat">26 şekil</p>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Bilgi Kutuları</div>
+                                <p class="acc-stat">14 karşılaştırma</p>
+                                <p class="acc-stat">1 terimnotu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bölüm 4 -->
+            <div class="accordion-item status-wip" data-index="3">
+                <div class="accordion-header" onclick="toggleAccordion(3)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 4</span>
+                        <span class="acc-title">Aritmetik Birimler</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge wip">Hazırlanıyor</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bölüm 5 -->
+            <div class="accordion-item status-wip" data-index="4">
+                <div class="accordion-header" onclick="toggleAccordion(4)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 5</span>
+                        <span class="acc-title">İşlemci Tasarımı</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge wip">Hazırlanıyor</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bölüm 6 -->
+            <div class="accordion-item status-wip" data-index="5">
+                <div class="accordion-header" onclick="toggleAccordion(5)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 6</span>
+                        <span class="acc-title">Boru Hattı</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge wip">Hazırlanıyor</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bölüm 7 -->
+            <div class="accordion-item status-wip" data-index="6">
+                <div class="accordion-header" onclick="toggleAccordion(6)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 7</span>
+                        <span class="acc-title">Bellek Hiyerarşisi</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge wip">Hazırlanıyor</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bölüm 8 -->
+            <div class="accordion-item status-wip" data-index="7">
+                <div class="accordion-header" onclick="toggleAccordion(7)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 8</span>
+                        <span class="acc-title">Giriş/Çıkış</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge wip">Hazırlanıyor</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bölüm 9 -->
+            <div class="accordion-item status-wip" data-index="8">
+                <div class="accordion-header" onclick="toggleAccordion(8)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 9</span>
+                        <span class="acc-title">Çok Çekirdekli İşlemciler</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge wip">Hazırlanıyor</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bölüm 10 -->
+            <div class="accordion-item status-wip" data-index="9">
+                <div class="accordion-header" onclick="toggleAccordion(9)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 10</span>
+                        <span class="acc-title">GPU ve Hızlandırıcılar</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge wip">Hazırlanıyor</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bölüm 11 -->
+            <div class="accordion-item status-wip" data-index="10">
+                <div class="accordion-header" onclick="toggleAccordion(10)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Bölüm 11</span>
+                        <span class="acc-title">Güncel Mimariler</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge wip">Hazırlanıyor</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ek A -->
+            <div class="accordion-item status-ready" data-index="11">
+                <div class="accordion-header" onclick="toggleAccordion(11)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Ek A</span>
+                        <span class="acc-title">Sayı Sistemleri ve Kodlama</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge ready">Yayında</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <div class="acc-detail-grid">
+                            <div class="acc-col">
+                                <div class="acc-col-label">Alt Bölümler</div>
+                                <ul>
+                                    <li>A.1 İkilik Tabanda İşlemler</li>
+                                    <li>A.2 İşaretli Sayılar</li>
+                                    <li>A.3 Gray Kodu</li>
+                                    <li>A.4 İkiye Kodlanmış Onluk Taban Gösterimi (BCD)</li>
+                                    <li>A.5 Karakter Kodlaması</li>
+                                    <li>A.6 IEEE 754 Kayan Nokta Gösterimi</li>
+                                    <li>A.7 Özet</li>
+                                </ul>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Şekiller</div>
+                                <p class="acc-stat">6 şekil</p>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Bilgi Kutuları</div>
+                                <p class="acc-stat">&mdash;</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ek B -->
+            <div class="accordion-item status-wip" data-index="12">
+                <div class="accordion-header" onclick="toggleAccordion(12)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Ek B</span>
+                        <span class="acc-title">Sayısal Tasarım Temelleri</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge wip">Hazırlanıyor</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <div class="acc-detail-grid">
+                            <div class="acc-col">
+                                <div class="acc-col-label">Alt Bölümler</div>
+                                <ul>
+                                    <li>B.1 Giriş</li>
+                                    <li>B.2 Mantıksal Kapılar ve Doğruluk Tabloları</li>
+                                    <li>B.3 Boole Cebri</li>
+                                    <li>B.4 Boole Fonksiyonlarının Sadeleştirilmesi</li>
+                                    <li>B.5 Kod Çözücü ve Çoklayıcı</li>
+                                    <li>B.6 Toplayıcılar</li>
+                                    <li>B.7 Tasarım Örneği: Tek Vuruşluk Veriyolu Denetim Birimi</li>
+                                    <li>B.8 Flip-Floplar</li>
+                                    <li>B.9 Yazmaçlar</li>
+                                    <li>B.10 Sayaçlar</li>
+                                    <li>B.11 Durum Tablosu ile Tasarım Örneği</li>
+                                    <li>B.12 Özet</li>
+                                </ul>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Şekiller</div>
+                                <p class="acc-stat">40+ şekil</p>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Bilgi Kutuları</div>
+                                <p class="acc-stat">&mdash;</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ek C -->
+            <div class="accordion-item status-ready" data-index="13">
+                <div class="accordion-header" onclick="toggleAccordion(13)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Ek C</span>
+                        <span class="acc-title">RISC-V Referans Kartı</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge ready">Yayında</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <div class="acc-detail-grid">
+                            <div class="acc-col">
+                                <div class="acc-col-label">Alt Bölümler</div>
+                                <ul>
+                                    <li>C.1 RISC-V'in Modüler Yapısı</li>
+                                    <li>C.2 Bir RISC-V Buyruğunun Anatomisi</li>
+                                    <li>C.3 RV32I Temel Buyruk Kümesi</li>
+                                    <li>C.4 Yazmaç Tablosu</li>
+                                    <li>C.5 Buyruk Biçimleri</li>
+                                    <li>C.6 Sözde Buyruklar</li>
+                                    <li>C.7 Özet</li>
+                                </ul>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Şekiller</div>
+                                <p class="acc-stat">5 şekil</p>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Bilgi Kutuları</div>
+                                <p class="acc-stat">&mdash;</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ek D -->
+            <div class="accordion-item status-ready" data-index="14">
+                <div class="accordion-header" onclick="toggleAccordion(14)">
+                    <div class="accordion-left">
+                        <span class="acc-number">Ek D</span>
+                        <span class="acc-title">RISC-V Uygulama Çalışmaları ve Projeler</span>
+                    </div>
+                    <div class="accordion-right">
+                        <span class="status-badge ready">Yayında</span>
+                        <span class="chevron">&#9658;</span>
+                    </div>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <div class="acc-detail-grid">
+                            <div class="acc-col">
+                                <div class="acc-col-label">Alt Bölümler</div>
+                                <ul>
+                                    <li>D.1 RISC-V Araç Zinciri</li>
+                                    <li>D.2 Verilog ile Donanım Tasarımı</li>
+                                    <li>D.3 Yazmaç Dosyası Tasarımı</li>
+                                    <li>D.4 Mini Projeler</li>
+                                    <li>D.5 Proje Değerlendirme Ölçütleri</li>
+                                </ul>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Şekiller</div>
+                                <p class="acc-stat">8 şekil</p>
+                            </div>
+                            <div class="acc-col">
+                                <div class="acc-col-label">Bilgi Kutuları</div>
+                                <p class="acc-stat">&mdash;</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /.accordion -->
     </section>
 
-    <!-- Bilgi Kartları -->
+    <!-- Kaynaklar -->
     <section>
         <h2>Kaynaklar</h2>
         <div class="info-grid">
@@ -382,6 +953,24 @@
     <a href="https://oguzergin.net">oguzergin.net</a> &mdash;
     <a href="https://doi.org/10.5281/zenodo.18903609">DOI: 10.5281/zenodo.18903609</a>
 </footer>
+
+<script>
+    function toggleAccordion(index) {
+        var items = document.querySelectorAll('.accordion-item');
+        var item = items[index];
+        var isOpen = item.classList.contains('open');
+
+        // Close all
+        items.forEach(function(el) {
+            el.classList.remove('open');
+        });
+
+        // Toggle current
+        if (!isOpen) {
+            item.classList.add('open');
+        }
+    }
+</script>
 
 </body>
 </html>
