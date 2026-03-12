@@ -312,7 +312,7 @@
             transition: max-height 0.3s ease;
         }
         .accordion-item.open .accordion-body {
-            max-height: 2000px;
+            max-height: 1000px;
         }
 
         .accordion-content {
@@ -367,26 +367,16 @@
             padding: 0.25rem 0;
         }
 
-        /* Chapter banner image */
-        .acc-banner {
-            width: 100%;
-            height: 140px;
+        /* Chapter thumbnail image in header */
+        .acc-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
             object-fit: cover;
-            object-position: center;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-        }
-        .acc-banner-caption {
-            font-size: 0.72rem;
-            color: var(--text-light);
-            text-align: right;
-            margin-top: -0.75rem;
-            margin-bottom: 0.75rem;
-            font-style: italic;
-        }
-        @media (min-width: 768px) {
-            .acc-banner { height: 180px; }
+            object-position: center 30%;
+            flex-shrink: 0;
+            border: 2px solid rgba(255,255,255,0.8);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
         }
     </style>
 </head>
@@ -448,6 +438,7 @@
             <div class="accordion-item status-ready" data-index="0">
                 <div class="accordion-header" onclick="toggleAccordion(0)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum01-ayasofya.jpg" alt="Bölüm 1" class="acc-thumb">
                         <span class="acc-number">Bölüm 1</span>
                         <span class="acc-title">Bilgisayar Mimarisine Giriş</span>
                     </div>
@@ -458,8 +449,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum01-ayasofya.jpg" alt="Ayasofya — İstanbul" class="acc-banner">
-                        <div class="acc-banner-caption">Ayasofya — İstanbul</div>
                         <div class="acc-detail-grid">
                             <div class="acc-col">
                                 <div class="acc-col-label">Alt Bölümler</div>
@@ -530,6 +519,7 @@
             <div class="accordion-item status-ready" data-index="1">
                 <div class="accordion-header" onclick="toggleAccordion(1)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum02-dolmabahce.jpg" alt="Bölüm 2" class="acc-thumb">
                         <span class="acc-number">Bölüm 2</span>
                         <span class="acc-title">Bilgisayar Başarımı</span>
                     </div>
@@ -540,8 +530,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum02-dolmabahce.jpg" alt="Dolmabahçe Sarayı Saat Kulesi — İstanbul" class="acc-banner">
-                        <div class="acc-banner-caption">Dolmabahçe Sarayı Saat Kulesi — İstanbul</div>
                         <div class="acc-detail-grid">
                             <div class="acc-col">
                                 <div class="acc-col-label">Alt Bölümler</div>
@@ -604,6 +592,7 @@
             <div class="accordion-item status-wip" data-index="2">
                 <div class="accordion-header" onclick="toggleAccordion(2)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum03-suleymaniye.jpg" alt="Bölüm 3" class="acc-thumb">
                         <span class="acc-number">Bölüm 3</span>
                         <span class="acc-title">Buyruk Kümesi Mimarisi</span>
                     </div>
@@ -614,8 +603,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum03-suleymaniye.jpg" alt="Süleymaniye Camisi — İstanbul" class="acc-banner">
-                        <div class="acc-banner-caption">Süleymaniye Camisi — İstanbul</div>
                         <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
                     </div>
                 </div>
@@ -625,6 +612,7 @@
             <div class="accordion-item status-wip" data-index="3">
                 <div class="accordion-header" onclick="toggleAccordion(3)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum04-divrigi.jpg" alt="Bölüm 4" class="acc-thumb">
                         <span class="acc-number">Bölüm 4</span>
                         <span class="acc-title">Aritmetik Birimler</span>
                     </div>
@@ -635,8 +623,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum04-divrigi.jpg" alt="Divriği Ulu Camisi ve Darüşşifası — Sivas" class="acc-banner">
-                        <div class="acc-banner-caption">Divriği Ulu Camisi ve Darüşşifası — Sivas</div>
                         <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
                     </div>
                 </div>
@@ -646,6 +632,7 @@
             <div class="accordion-item status-wip" data-index="4">
                 <div class="accordion-header" onclick="toggleAccordion(4)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum05-selimiye.jpg" alt="Bölüm 5" class="acc-thumb">
                         <span class="acc-number">Bölüm 5</span>
                         <span class="acc-title">İşlemci Tasarımı</span>
                     </div>
@@ -656,8 +643,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum05-selimiye.jpg" alt="Selimiye Camisi — Edirne" class="acc-banner">
-                        <div class="acc-banner-caption">Selimiye Camisi — Edirne</div>
                         <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
                     </div>
                 </div>
@@ -667,6 +652,7 @@
             <div class="accordion-item status-wip" data-index="5">
                 <div class="accordion-header" onclick="toggleAccordion(5)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum06-valens.jpg" alt="Bölüm 6" class="acc-thumb">
                         <span class="acc-number">Bölüm 6</span>
                         <span class="acc-title">Boru Hattı</span>
                     </div>
@@ -677,8 +663,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum06-valens.jpg" alt="Valens Su Kemeri — İstanbul" class="acc-banner">
-                        <div class="acc-banner-caption">Valens Su Kemeri — İstanbul</div>
                         <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
                     </div>
                 </div>
@@ -688,6 +672,7 @@
             <div class="accordion-item status-wip" data-index="6">
                 <div class="accordion-header" onclick="toggleAccordion(6)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum07-topkapi.jpg" alt="Bölüm 7" class="acc-thumb">
                         <span class="acc-number">Bölüm 7</span>
                         <span class="acc-title">Bellek Hiyerarşisi</span>
                     </div>
@@ -698,8 +683,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum07-topkapi.jpg" alt="Topkapı Sarayı — İstanbul" class="acc-banner">
-                        <div class="acc-banner-caption">Topkapı Sarayı — İstanbul</div>
                         <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
                     </div>
                 </div>
@@ -709,6 +692,7 @@
             <div class="accordion-item status-wip" data-index="7">
                 <div class="accordion-header" onclick="toggleAccordion(7)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum08-aspendos.jpg" alt="Bölüm 8" class="acc-thumb">
                         <span class="acc-number">Bölüm 8</span>
                         <span class="acc-title">Giriş/Çıkış</span>
                     </div>
@@ -719,8 +703,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum08-aspendos.jpg" alt="Aspendos Antik Tiyatrosu — Antalya" class="acc-banner">
-                        <div class="acc-banner-caption">Aspendos Antik Tiyatrosu — Antalya</div>
                         <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
                     </div>
                 </div>
@@ -730,6 +712,7 @@
             <div class="accordion-item status-wip" data-index="8">
                 <div class="accordion-header" onclick="toggleAccordion(8)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum09-kapalicarsi.jpg" alt="Bölüm 9" class="acc-thumb">
                         <span class="acc-number">Bölüm 9</span>
                         <span class="acc-title">Çok Çekirdekli İşlemciler</span>
                     </div>
@@ -740,8 +723,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum09-kapalicarsi.jpg" alt="Kapalıçarşı — İstanbul" class="acc-banner">
-                        <div class="acc-banner-caption">Kapalıçarşı — İstanbul</div>
                         <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
                     </div>
                 </div>
@@ -751,6 +732,7 @@
             <div class="accordion-item status-wip" data-index="9">
                 <div class="accordion-header" onclick="toggleAccordion(9)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum10-nemrut.jpg" alt="Bölüm 10" class="acc-thumb">
                         <span class="acc-number">Bölüm 10</span>
                         <span class="acc-title">GPU ve Hızlandırıcılar</span>
                     </div>
@@ -761,8 +743,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum10-nemrut.jpg" alt="Nemrut Dağı — Adıyaman" class="acc-banner">
-                        <div class="acc-banner-caption">Nemrut Dağı — Adıyaman</div>
                         <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
                     </div>
                 </div>
@@ -772,6 +752,7 @@
             <div class="accordion-item status-wip" data-index="10">
                 <div class="accordion-header" onclick="toggleAccordion(10)">
                     <div class="accordion-left">
+                        <img src="gorseller/bolum11-ishakpasa.jpg" alt="Bölüm 11" class="acc-thumb">
                         <span class="acc-number">Bölüm 11</span>
                         <span class="acc-title">Güncel Mimariler</span>
                     </div>
@@ -782,8 +763,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/bolum11-ishakpasa.jpg" alt="İshak Paşa Sarayı — Ağrı" class="acc-banner">
-                        <div class="acc-banner-caption">İshak Paşa Sarayı — Ağrı</div>
                         <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
                     </div>
                 </div>
@@ -793,6 +772,7 @@
             <div class="accordion-item status-ready" data-index="11">
                 <div class="accordion-header" onclick="toggleAccordion(11)">
                     <div class="accordion-left">
+                        <img src="gorseller/ekA-gobeklitepe.jpg" alt="Ek A" class="acc-thumb">
                         <span class="acc-number">Ek A</span>
                         <span class="acc-title">Sayı Sistemleri ve Kodlama</span>
                     </div>
@@ -803,8 +783,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/ekA-gobeklitepe.jpg" alt="Göbeklitepe — Şanlıurfa" class="acc-banner">
-                        <div class="acc-banner-caption">Göbeklitepe — Şanlıurfa</div>
                         <div class="acc-detail-grid">
                             <div class="acc-col">
                                 <div class="acc-col-label">Alt Bölümler</div>
@@ -842,6 +820,7 @@
             <div class="accordion-item status-wip" data-index="12">
                 <div class="accordion-header" onclick="toggleAccordion(12)">
                     <div class="accordion-left">
+                        <img src="gorseller/ekB-galatakulesi.jpg" alt="Ek B" class="acc-thumb">
                         <span class="acc-number">Ek B</span>
                         <span class="acc-title">Sayısal Tasarım Temelleri</span>
                     </div>
@@ -852,8 +831,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/ekB-galatakulesi.jpg" alt="Galata Kulesi — İstanbul" class="acc-banner">
-                        <div class="acc-banner-caption">Galata Kulesi — İstanbul</div>
                         <p class="acc-wip-msg">Bu bölüm henüz hazırlanıyor...</p>
                     </div>
                 </div>
@@ -863,6 +840,7 @@
             <div class="accordion-item status-ready" data-index="13">
                 <div class="accordion-header" onclick="toggleAccordion(13)">
                     <div class="accordion-left">
+                        <img src="gorseller/ekC-efes.jpg" alt="Ek C" class="acc-thumb">
                         <span class="acc-number">Ek C</span>
                         <span class="acc-title">RISC-V Referans Kartı</span>
                     </div>
@@ -873,8 +851,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/ekC-efes.jpg" alt="Efes Antik Kenti — İzmir" class="acc-banner">
-                        <div class="acc-banner-caption">Efes Antik Kenti — İzmir</div>
                         <div class="acc-detail-grid">
                             <div class="acc-col">
                                 <div class="acc-col-label">Alt Bölümler</div>
@@ -911,6 +887,7 @@
             <div class="accordion-item status-ready" data-index="14">
                 <div class="accordion-header" onclick="toggleAccordion(14)">
                     <div class="accordion-left">
+                        <img src="gorseller/ekD-sumela.jpg" alt="Ek D" class="acc-thumb">
                         <span class="acc-number">Ek D</span>
                         <span class="acc-title">RISC-V Uygulama Çalışmaları ve Projeler</span>
                     </div>
@@ -921,8 +898,6 @@
                 </div>
                 <div class="accordion-body">
                     <div class="accordion-content">
-                        <img src="gorseller/ekD-sumela.jpg" alt="Sümela Manastırı — Trabzon" class="acc-banner">
-                        <div class="acc-banner-caption">Sümela Manastırı — Trabzon</div>
                         <div class="acc-detail-grid">
                             <div class="acc-col">
                                 <div class="acc-col-label">Alt Bölümler</div>
