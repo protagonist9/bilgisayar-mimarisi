@@ -1,0 +1,164 @@
+% =============================================================
+% Bilgisayar Mimarisi — Yayınevi Tanıtım Dosyası
+% İçerik: Kapak + Önsöz + Kitap İçeriği + Örnek Bölüm + Yazar
+% =============================================================
+\documentclass[12pt, a4paper, twoside, openright]{book}
+
+% Ana kitapla aynı preamble
+\input{preamble}
+\input{renk-modu}
+
+% Bu tanıtım dosyasında yer almayan bölümlere yapılan çapraz referansları çöz
+\makeatletter
+\AtBeginDocument{%
+  \newlabel{chap:basarim}{{2}{}{Bilgisayar Başarımı}{chapter.2}{}}%
+  \newlabel{chap:buyruk-kumesi}{{3}{}{Buyruk Kümesi Mimarisi}{chapter.3}{}}%
+  \newlabel{chap:programlama}{{4}{}{RISC-V ile Programlama}{chapter.4}{}}%
+  \newlabel{chap:aritmetik}{{5}{}{Aritmetik İşlemler}{chapter.5}{}}%
+  \newlabel{chap:islemci-tasarimi}{{6}{}{İşlemci Tasarımı}{chapter.6}{}}%
+  \newlabel{chap:boruhatti}{{7}{}{Boru Hattı}{chapter.7}{}}%
+  \newlabel{chap:bellek}{{8}{}{Bellek}{chapter.8}{}}%
+  \newlabel{chap:giris-cikis}{{9}{}{Giriş ve Çıkış Aygıtları}{chapter.9}{}}%
+  \newlabel{chap:cok-cekirdekli}{{10}{}{Çok Çekirdekli ve Koşut İşlemciler}{chapter.10}{}}%
+  \newlabel{chap:gpu-hizlandiricilar}{{11}{}{GPU ve Hızlandırıcılar}{chapter.11}{}}%
+  \newlabel{chap:guncel-mimariler}{{12}{}{Güncel Mimari Eğilimleri}{chapter.12}{}}%
+}
+\makeatother
+
+\begin{document}
+
+% --- Ön Sayfalar ---
+\frontmatter
+
+% ===== 1. KAPAK =====
+\input{kapak}
+
+% ===== 2. KÜNYE =====
+\cleardoublepage
+\thispagestyle{empty}
+\vspace*{\fill}
+\noindent
+{\small
+\textbf{Bilgisayar Mimarisi} --- RISC-V Tabanlı Yaklaşım\\[3pt]
+Prof.\ Dr.\ Oğuz Ergin\\[6pt]
+Sürüm \kitapsurum, \the\year\\[12pt]
+Bu kitap, lisans düzeyinde bilgisayar mimarisi derslerinde ders kitabı
+olarak kullanılmak üzere hazırlanmıştır.\\[6pt]
+Tüm hakları saklıdır.\\[24pt]
+\textit{Bu dosya yayınevi değerlendirmesi için hazırlanmış tanıtım nüshasıdır.\\
+Kitabın tamamı 12 bölüm, 4 ek ve yaklaşık 600 sayfadan oluşmaktadır.}
+}
+\vspace{2cm}
+
+% ===== 3. ÖNSÖZ =====
+\cleardoublepage
+\chapter*{Önsöz}
+\addcontentsline{toc}{chapter}{Önsöz}
+
+Bu kitap, lisans düzeyindeki bilgisayar mimarisi derslerinde kaynak kitap olarak kullanılmak üzere hazırlanmıştır. Kitabın amacı, bilgisayar mühendisliği ve ilgili mühendislik dallarındaki öğrencilere, çağdaş bilgisayar sistemlerinin temel yapısını ve çalışma prensiplerini Türkçe olarak sunmaktır.
+
+Kitap boyunca RISC-V buyruk kümesi mimarisi temel alınmıştır. RISC-V, açık kaynaklı ve modüler yapısıyla hem akademik hem de endüstriyel alanda giderek yaygınlaşan çağdaş bir mimaridir. Bu tercih, öğrencilerin güncel ve geleceğe yönelik bir mimari üzerinden kavramları öğrenmesini sağlamaktadır.
+
+İlk bölümde bilgisayarların tarihsel gelişimi ve temel kavramlar ele alınmaktadır. İkinci bölümde başarım değerlendirmesi, üçüncü bölümde buyruk kümesi mimarisi, dördüncü bölümde RISC-V ile programlama, beşinci bölümde aritmetik işlemler, altıncı bölümde işlemci tasarımı ve yedinci bölümde boru hattı yöntemleri anlatılmaktadır. Sekizinci bölüm bellek hiyerarşisine, dokuzuncu bölüm giriş/çıkış sistemlerine ayrılmıştır. Onuncu bölümde çok çekirdekli işlemciler, on birinci bölümde GPU ve hızlandırıcılar, on ikinci bölümde ise güncel mimari eğilimleri tartışılmaktadır. Ek~A'da sayı sistemleri ve kodlama, Ek~B'de sayısal tasarım temelleri, Ek~C'de RISC-V referans kartı, Ek~D'de ise uygulamalı çalışma rehberi ve mini projeler sunulmaktadır.
+
+Her bölümün başında, Türkiye'nin mimari mirasından bir eser fotoğrafı yer almaktadır. Bu eserler, bilgisayar mimarisi kavramlarıyla tematik bir bağ kurularak seçilmiştir.
+
+Bu kitabın hazırlanmasında destek ve katkılarından dolayı Kasırga araştırma takımındaki öğrencilerime teşekkür ederim.
+
+\vspace{1cm}
+\begin{flushright}
+\textit{Oğuz Ergin}\\
+Ankara, \the\year
+\end{flushright}
+\cleardoublepage
+
+% ===== 4. KİTABIN İÇERİĞİ (tam yapı özeti) =====
+\chapter*{Kitabın İçeriği}
+\addcontentsline{toc}{chapter}{Kitabın İçeriği}
+
+\vspace{0.3cm}
+\noindent
+{\small\itshape Aşağıda kitabın tam içerik yapısı sunulmaktadır. Bu tanıtım dosyasında yalnızca Bölüm~1 örnek olarak yer almaktadır.}
+
+\vspace{0.8cm}
+
+\renewcommand{\arraystretch}{1.4}
+\noindent
+\begin{longtable}{@{}>{\bfseries\color{bolumrenk}}r@{\hspace{0.5cm}}p{12.8cm}}
+
+\multicolumn{2}{@{}l}{\large\bfseries\color{bolumrenk} Ana Bölümler}\\[4pt]
+\hline\\[-8pt]
+\endfirsthead
+\multicolumn{2}{@{}l}{\large\bfseries\color{bolumrenk} Kitabın İçeriği \textnormal{\textit{(devam)}}}\\[4pt]
+\hline\\[-8pt]
+\endhead
+
+1 & \textbf{Bilgisayar Mimarisine Giriş}\\
+  & {\small Bilgisayarların tarihsel gelişimi, Moore Yasası, işlemci ve yonga üretimi, programların çalıştırılması, güç tüketimi, RISC-V'e giriş, yapay zekâ ve mimari.}\\[2pt]
+
+2 & \textbf{Bilgisayar Başarımı}\\
+  & {\small Başarım ölçütleri, yürütme süresi, Amdahl Yasası, SPEC kıyaslama araçları, enerji verimliliği.}\\[2pt]
+
+3 & \textbf{Buyruk Kümesi Mimarisi}\\
+  & {\small RISC-V buyruk biçimleri, aritmetik ve mantık buyrukları, bellek erişimi, dallanma ve döngüler, yordamlar, yığın yapısı.}\\[2pt]
+
+4 & \textbf{RISC-V ile Programlama}\\
+  & {\small Çevirici dil programlama, yazmaç kullanım kuralları, yığın yönetimi, yordam çağrıları, dizgi ve dizi işlemleri, başarım çözümlemesi.}\\[2pt]
+
+5 & \textbf{Aritmetik İşlemler}\\
+  & {\small Toplama ve çıkarma devreleri, çarpma ve bölme algoritmaları, kayan nokta aritmetiği, IEEE~754 standardı.}\\[2pt]
+
+6 & \textbf{İşlemci Tasarımı}\\
+  & {\small Tek çevrimli ve çok çevrimli veri yolu tasarımı, denetim birimi, ALU tasarımı, durum makineleri.}\\[2pt]
+
+7 & \textbf{Boru Hattı}\\
+  & {\small Boru hattı kavramı, veri ve denetim sorunları, yönlendirme, dallanma öngörüsü, ileri boru hattı teknikleri.}\\[2pt]
+
+8 & \textbf{Bellek}\\
+  & {\small Bellek hiyerarşisi, önbellek tasarımı, sanal bellek, ESÖ (TLB), bellek tutarlılığı.}\\[2pt]
+
+9 & \textbf{Giriş ve Çıkış Aygıtları}\\
+  & {\small G/Ç arayüzleri, yol (bus) yapıları, kesmeler, DMA, disk ve depolama sistemleri.}\\[2pt]
+
+10 & \textbf{Çok Çekirdekli ve Koşut İşlemciler}\\
+  & {\small Koşut hesaplama, çok çekirdekli mimariler, önbellek tutarlılığı, MESI protokolü, bellek tutarlılık modelleri.}\\[2pt]
+
+11 & \textbf{GPU ve Hızlandırıcılar}\\
+  & {\small GPU mimarisi, SIMT modeli, CUDA programlama, alana özgü hızlandırıcılar, TPU.}\\[2pt]
+
+12 & \textbf{Güncel Mimari Eğilimleri}\\
+  & {\small RISC-V ekosistemi, ARM ve x86 karşılaştırması, yongacık yaklaşımı, kuantum hesaplama, güvenlik açıkları.}\\[6pt]
+
+\multicolumn{2}{@{}l}{\large\bfseries\color{bolumrenk} Ekler}\\[4pt]
+\hline\\[-8pt]
+
+A & \textbf{Sayı Sistemleri ve Kodlama}\\
+  & {\small İkili, sekizli, onaltılı sistemler; ikiye tümleyen, BCD, ASCII ve Unicode kodlama.}\\[2pt]
+
+B & \textbf{Sayısal Tasarım Temelleri}\\
+  & {\small Boole cebri, kapı devreleri, birleşik ve ardışıl mantık, sonlu durum makineleri.}\\[2pt]
+
+C & \textbf{RISC-V Referans Kartı}\\
+  & {\small RV32I buyruk tablosu, yazmaç haritası, buyruk biçimleri, sözde buyruklar.}\\[2pt]
+
+D & \textbf{RISC-V Uygulama Çalışmaları ve Projeler}\\
+  & {\small Ripes benzetimliği rehberi, örnek projeler, mini tasarım ödevleri.}\\[2pt]
+
+\end{longtable}
+\renewcommand{\arraystretch}{1.0}
+
+\vspace{0.8cm}
+\noindent
+{\small\itshape Kitapta ayrıca Terimler Sözlüğü (İngilizce--Türkçe), Kaynakça, Önerilen Kaynaklar ve Dizin bölümleri bulunmaktadır. Her bölüm çok sayıda çözümlü örnek, şekil, tablo ve bölüm sonu alıştırması içermektedir.}
+
+\cleardoublepage
+
+% ===== 5. ÖRNEK BÖLÜM: Bölüm 1 =====
+\mainmatter
+\include{bolum01-giris/bolum01}
+
+% ===== 6. YAZAR HAKKINDA =====
+\backmatter
+\input{yazar-hakkinda}
+
+\end{document}

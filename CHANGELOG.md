@@ -4,6 +4,84 @@ Bu dosya, kitabın sürümler arasındaki önemli değişikliklerini takip eder.
 
 ---
 
+## [0.3.5] — 2026-03-19
+
+### Yeni bölüm
+- **Bölüm 4 — RISC-V ile Programlama** eklendi
+  - Temel aritmetik ve bellek erişim örnekleri (yığıta okuma/yazma, bellek işlemleri)
+  - Yığıt kullanımı: yazmaç saklama, altyordam çağrıları, yığıt çerçevesi
+  - Döngüler ve dallanma: toplam hesaplama, doğrusal arama, kabarcık sıralama
+  - Karakter dizisi işleme: strlen, strcpy, palindrom (çevirmece)
+  - Yapılar ve bağlı listeler: bellek düzeni, hizalama, düğüm gezinme
+  - Özyineleme: Fibonacci, çağrı ağacı TikZ şekli, yığıt büyümesi TikZ şekli
+  - Çok fonksiyonlu programlar: yaprak/yaprak olmayan ayrımı
+  - Kod eniyileme: güç azaltma, döngü açma, matris işleme
+  - Donanım etkileşimi: MMIO LED, UART seri iletişim
+  - Başarım çözümlemesi: buyruk sayımı, BBÇ hesabı, bellek erişim oranı
+  - Hata ayıklama ve yaygın yanılgılar
+  - 24 çözümlü örnek, 6 TikZ şekli, yazmaç izleme tabloları, 30 alıştırma
+
+### Bölüm numaralandırması
+- Bölüm 4 eklenmesiyle eski bölümler yeniden numaralandırıldı (eski 4→5, 5→6, ..., 11→12)
+
+### Bölüm 1 — Yeni içerik
+- **Dört Tasarım İlkesi** alt bölümü eklendi: küçük olan hızlıdır, olağan durumu hızlandır, ödünleşme, yalınlık düzenden gelir
+- **Bilgi Notu**: "Tasarım İlkeleri Yalnızca Donanım İçin mi?" — günlük hayat örnekleri ve YouTube video bağlantısı
+- **Örnek 1.6** (yeni): Dennard ölçeklemesi nicel hesaplama — iki kuşak işlemci karşılaştırması
+- **Moore yasası tartışma sorusu** (yeni alıştırma)
+- Eski Örnek 1.6 (MTTF) → Örnek 1.7 olarak yeniden numaralandırıldı
+- Çapraz referanslar eklendi (güç tüketimi→B6/B7, yazılım katmanları→B3/B4, güvenilirlik→B8/B9)
+
+### Bölüm 2 — Yeni içerik
+- **Yeni şekil**: Amdahl Yasası hızlanma eğrileri (pgfplots, 5 koşut oran)
+- **Yeni şekil**: Gecikme vs işlem hacmi karşılaştırma diyagramı
+- **Örnek 2.14** (yeni): Enerji-gecikme çarpımı (EDP) çözümlü örneği — DVFS bağlantısı
+- **2 yeni alıştırma**: Amdahl yasası web tarayıcısı (3 senaryo) + SPEC CPU2017 geometrik ortalama
+- Çapraz referanslar eklendi (Amdahl→B7, saat çevrimi→B6)
+
+### Bölüm 3 — Yeni içerik ve şekil iyileştirmeleri
+- **Örnek 3.20** (yeni): Adresleme kipleri çözümlü sayısal örnek (5 buyruk, tüm kipler)
+- **Yeni TikZ şekli**: İç içe altyordam çağrısında çağıran/çağrılan yığıt çerçeveleri
+- Adresleme kipi şekilleri (3.14--3.18) Şekil 3.11 buyruk biçimi stiliyle tutarlı hale getirildi
+- Bit numaraları tüm adresleme kipi şekillerine eklendi
+
+### Bölüm 4 — Ek içerik
+- **Yeni TikZ şekli**: Fibonacci n=4 yığıt çerçevelerinin birikmesi (yığıt tepesi yukarıda)
+- **auipc bilgi notu**: PS değeri ve konumdan bağımsız kod mekanizması
+- **17 yeni alıştırma** (13→30): C→RISC-V dönüşümleri, yazmaç kuralları, yığıt analizi, hata ayıklama, başarım
+- Çapraz referanslar eklendi (derleyici→B7, bellek→B8, başarım→B2)
+
+### Ek D — İyileştirmeler
+- **10 yeni alıştırma** (0→10): RARS çalıştırma, Verilog modül tasarımı, yazmaç öbeği genişletme, önbellek analizi
+- **2 yeni TikZ şekli**: Yazmaç öbeği blok diyagramı, Verilog modül hiyerarşisi
+- "Yazmaç Dosyası" → "Yazmaç Öbeği" terminoloji düzeltmesi
+- "Testbench" → "Doğrulama ortamı" terminoloji düzeltmesi
+
+### Altyapı
+- **Sürüm yönetimi yeniden yapılandırıldı**: `surum-ayarlari.tex` merkezi kontrol dosyası
+- `\bolumekle` / `\ekekle` makroları: dosya varsa include, yoksa otomatik atla
+- `\kitapsurum` komutu: sürüm numarası tek yerden yönetiliyor
+- İçindekiler'e Şekil Listesi ve Tablo Listesi eklendi
+- Kapak sonrası boşluk düzeltildi (cleardoublepage → clearpage)
+- İthaf sayfası: fotoğraf büyütüldü (0.85→0.95), dikey ortalama
+- `\lstlistingname` → "Kod" (Listing → Kod)
+
+### Terminoloji
+| Eski kullanım | Yeni kullanım |
+|---|---|
+| mobil | taşınabilir |
+| alternatif | seçenek |
+| yazmaç dosyası | yazmaç öbeği |
+| Testbench | Doğrulama ortamı |
+| Listing | Kod |
+
+### Hata düzeltmeleri
+- Bölüm 2: `sinyalsari` tanımsız renk → `orange!20` ile değiştirildi
+- Bölüm 2: lstlisting içinde `&` → `adres()` ile değiştirildi
+- Referanslar [0] sorunu çözüldü (biber tam derleme sırası)
+
+---
+
 ## [0.3.0] — 2026-03-16
 
 ### Yeni bölüm

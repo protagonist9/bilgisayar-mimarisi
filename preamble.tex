@@ -145,6 +145,7 @@
 
 % --- Kod Listeleme ---
 \usepackage{listings}
+\renewcommand{\lstlistingname}{Kod}
 \lstloadlanguages{[ANSI]C}  % listings 1.11b uyumsuzluk düzeltmesi: C dilini önceden yükle
 \lstset{
     basicstyle=\ttfamily\footnotesize,
@@ -230,7 +231,7 @@
 % --- Kaynakça ---
 \usepackage{csquotes}
 \DeclareQuoteAlias{american}{turkish}
-\usepackage[style=numeric, sorting=nyt, backend=biber, defernumbers=true]{biblatex}
+\usepackage[style=numeric, sorting=nyt, backend=biber, defernumbers=false]{biblatex}
 \addbibresource{kaynakca.bib}
 
 % --- Dizin ---
@@ -389,14 +390,17 @@
 \makeatother
 
 % --- Bölüm açılış fotoğrafı ---
-\newcommand{\bolumfoto}[2]{%
+\newcommand{\bolumfoto}[3][]{%
     \thispagestyle{empty}%
     \vspace*{\fill}%
     \begin{center}%
     \begin{minipage}{\textwidth}%
     \centering
-    \includegraphics[width=\textwidth,height=0.6\textheight,keepaspectratio]{#1}\\[8pt]%
-    {\small\color{bolumrenk}\textit{#2}}%
+    \includegraphics[width=\textwidth,height=0.55\textheight,keepaspectratio]{#2}\\[8pt]%
+    {\small\color{bolumrenk}\textit{#3}}%
+    \ifx\relax#1\relax\else\\[12pt]%
+    {\small\itshape #1}%
+    \fi
     \end{minipage}%
     \end{center}%
     \vspace*{\fill}%

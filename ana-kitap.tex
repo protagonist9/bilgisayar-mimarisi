@@ -10,8 +10,8 @@
 % Renk modu seçimi (renkli / iki renkli / tek renkli baskı)
 \input{renk-modu}
 
-% --- Yalnızca belirli bölümleri derlemek için (bitince kaldır) ---
-\includeonly{bolum01-giris/bolum01,bolum02-basarim/bolum02,bolum03-buyruk-kumesi/bolum03,ekA-sayi-sistemleri/ekA,ekC-risc-v-referans/ekC,ekD-pratik-rehber/ekD}
+% Sürüm ayarları, çalışma modu ve bölüm yönetim makroları
+\input{surum-ayarlari}
 
 \begin{document}
 
@@ -21,15 +21,15 @@
 % Kapak Sayfası (Devre Tahtası konsepti)
 \input{kapak}
 
-% Künyeli Boş Sayfa
-\cleardoublepage
+% Künye Sayfası (kapağın hemen arkası, sol sayfa)
+\clearpage
 \thispagestyle{empty}
 \vspace*{\fill}
 \noindent
 {\small
 \textbf{Bilgisayar Mimarisi} --- RISC-V Tabanlı Yaklaşım\\[3pt]
 Prof.\ Dr.\ Oğuz Ergin\\[6pt]
-Sürüm 0.3.0, \the\year\\[6pt]
+Sürüm \kitapsurum, \the\year\\[6pt]
 ISBN: 978-625-00-6081-0\\[12pt]
 Bu kitap, lisans düzeyinde bilgisayar mimarisi derslerinde ders kitabı
 olarak kullanılmak üzere hazırlanmıştır.\\[6pt]
@@ -42,11 +42,11 @@ Tüm hakları saklıdır.
 % İthaf
 \cleardoublepage
 \thispagestyle{empty}
-\vspace*{1.5cm}
+\vspace*{\fill}
 \begin{center}
-\includegraphics[width=0.85\textwidth]{gorseller/ithaf-canakkale.jpg}
+\includegraphics[width=0.95\textwidth]{gorseller/ithaf-canakkale.jpg}
 
-\vspace{12pt}
+\vspace{14pt}
 \textit{\large Vatan uğruna can veren bu ülkenin\\[6pt]
 gerçek mimarlarının anısına \ldots}
 \end{center}
@@ -57,11 +57,13 @@ gerçek mimarlarının anısına \ldots}
 \chapter*{Önsöz}
 \addcontentsline{toc}{chapter}{Önsöz}
 
-Bu kitap, lisans düzeyindeki bilgisayar mimarisi derslerinde kaynak kitap olarak kullanılmak üzere hazırlanmıştır. Kitabın amacı, bilgisayar mühendisliği ve ilgili mühendislik dallarındaki öğrencilere, modern bilgisayar sistemlerinin temel yapısını ve çalışma prensiplerini Türkçe olarak sunmaktır.
+Bu kitap, lisans düzeyindeki bilgisayar mimarisi derslerinde kaynak kitap olarak kullanılmak üzere hazırlanmıştır. Kitabın amacı, bilgisayar mühendisliği ve ilgili mühendislik dallarındaki öğrencilere, çağdaş bilgisayar sistemlerinin temel yapısını ve çalışma prensiplerini Türkçe olarak sunmaktır.
 
-Kitap boyunca RISC-V buyruk kümesi mimarisi temel alınmıştır. RISC-V, açık kaynaklı ve modüler yapısıyla hem akademik hem de endüstriyel alanda giderek yaygınlaşan modern bir mimaridir. Bu tercih, öğrencilerin güncel ve geleceğe yönelik bir mimari üzerinden kavramları öğrenmesini sağlamaktadır.
+Kitap boyunca RISC-V buyruk kümesi mimarisi temel alınmıştır. RISC-V, açık kaynaklı ve modüler yapısıyla hem akademik hem de endüstriyel alanda giderek yaygınlaşan çağdaş bir mimaridir. Bu tercih, öğrencilerin güncel ve geleceğe yönelik bir mimari üzerinden kavramları öğrenmesini sağlamaktadır.
 
-İlk bölümde bilgisayarların tarihsel gelişimi ve temel kavramlar ele alınmaktadır. İkinci bölümde başarım değerlendirmesi, üçüncü bölümde buyruk kümesi mimarisi, dördüncü bölümde aritmetik işlemler, beşinci bölümde işlemci tasarımı ve altıncı bölümde boru hattı yöntemleri anlatılmaktadır. Yedinci bölüm bellek hiyerarşisine, sekizinci bölüm giriş/çıkış sistemlerine ayrılmıştır. Dokuzuncu bölümde çok çekirdekli işlemciler, onuncu bölümde GPU ve hızlandırıcılar, on birinci bölümde ise güncel mimari eğilimleri tartışılmaktadır. Ek~A'da sayı sistemleri ve kodlama, Ek~B'de sayısal tasarım temelleri, Ek~C'de RISC-V referans kartı, Ek~D'de ise uygulamalı çalışma rehberi ve mini projeler sunulmaktadır.
+İlk bölümde bilgisayarların tarihsel gelişimi ve temel kavramlar ele alınmaktadır. İkinci bölümde başarım değerlendirmesi, üçüncü bölümde buyruk kümesi mimarisi, dördüncü bölümde RISC-V ile programlama, beşinci bölümde aritmetik işlemler, altıncı bölümde işlemci tasarımı ve yedinci bölümde boru hattı yöntemleri anlatılmaktadır. Sekizinci bölüm bellek hiyerarşisine, dokuzuncu bölüm giriş/çıkış sistemlerine ayrılmıştır. Onuncu bölümde çok çekirdekli işlemciler, on birinci bölümde GPU ve hızlandırıcılar, on ikinci bölümde ise güncel mimari eğilimleri tartışılmaktadır. Ek~A'da sayı sistemleri ve kodlama, Ek~B'de sayısal tasarım temelleri, Ek~C'de RISC-V referans kartı, Ek~D'de ise uygulamalı çalışma rehberi ve mini projeler sunulmaktadır.
+
+Türkiye'de bilgisayar mimarisi alanında Türkçe kaynak üretme çabası uzun bir geçmişe sahiptir. Eşref Adalı'nın \emph{Mikroişlemciler Mikrobilgisayarlar}~\cite{adali} kitabı, M.~Morris Mano'nun Türkçeye çevrilen \emph{Bilgisayar Sistemleri Mimarisi}~\cite{mano2002tr} eseri, Mehmet Bodur'un EMO yayını olan \emph{Bilgisayar Organizasyonu: RISC Donanımına Giriş}~\cite{bodur2003} kitabı, Şirzat Kahramanlı'nın \emph{Bilgisayar Mimarisi}~\cite{kahramanli} eseri, Patterson ve Hennessy'nin Türkçeye kazandırılan \emph{Bilgisayar Mimarisi ve Tasarım}~\cite{patterson2021tr} çevirisi ve Cengiz Uğurkaya ile Osman Aliefendioğlu'nun \emph{Çağdaş Bilgisayar Mimarisi}~\cite{colkesen2026} kitabı bu alandaki öncü çalışmalardır. Bu kitap, söz konusu değerli çabaların bir sonraki adımı olarak RISC-V buyruk kümesi mimarisi üzerine odaklanmakta ve açık erişim felsefesiyle Türkçe teknik içerik birikimine katkı sunmayı amaçlamaktadır.
 
 Her bölümün başında, Türkiye'nin mimari mirasından bir eser fotoğrafı yer almaktadır. Bu eserler, bilgisayar mimarisi kavramlarıyla tematik bir bağ kurularak seçilmiştir.
 
@@ -78,33 +80,35 @@ Ankara, \the\year
 \tableofcontents
 \cleardoublepage
 \listoffigures
+\addcontentsline{toc}{chapter}{Şekil Listesi}
 \cleardoublepage
 \listoftables
+\addcontentsline{toc}{chapter}{Tablo Listesi}
 \cleardoublepage
 \listofbilginotlari
 
 % --- Ana İçerik ---
 \mainmatter
 
-\include{bolum01-giris/bolum01}
-\include{bolum02-basarim/bolum02}
-\include{bolum03-buyruk-kumesi/bolum03}
-\include{bolum04-aritmetik/bolum04}
-\include{bolum05-islemci-tasarimi/bolum05}
-\include{bolum06-boru-hatti/bolum06}
-\include{bolum07-bellek/bolum07}
-\include{bolum08-giris-cikis/bolum08}
-\include{bolum09-cok-cekirdekli/bolum09}
-\include{bolum10-gpu-hizlandiricilar/bolum10}
-\include{bolum11-guncel-mimariler/bolum11}
+\bolumekle{bolum01-giris/bolum01}{chap:giris}{1}{Bilgisayar Mimarisine Giriş}
+\bolumekle{bolum02-basarim/bolum02}{chap:basarim}{2}{Bilgisayar Başarımı}
+\bolumekle{bolum03-buyruk-kumesi/bolum03}{chap:buyruk-kumesi}{3}{Buyruk Kümesi Mimarisi}
+\bolumekle{bolum04-programlama/bolum04-programlama}{chap:programlama}{4}{RISC-V ile Programlama}
+\bolumekle{bolum05-aritmetik/bolum05}{chap:aritmetik}{5}{Aritmetik İşlemler}
+\bolumekle{bolum06-islemci-tasarimi/bolum06}{chap:islemci-tasarimi}{6}{İşlemci Tasarımı}
+\bolumekle{bolum07-boru-hatti/bolum07}{chap:boruhatti}{7}{Boru Hattı}
+\bolumekle{bolum08-bellek/bolum08}{chap:bellek}{8}{Bellek}
+\bolumekle{bolum09-giris-cikis/bolum09}{chap:giris-cikis}{9}{Giriş ve Çıkış Aygıtları}
+\bolumekle{bolum10-cok-cekirdekli/bolum10}{chap:cok-cekirdekli}{10}{Çok Çekirdekli ve Koşut İşlemciler}
+\bolumekle{bolum11-gpu-hizlandiricilar/bolum11}{chap:gpu-hizlandiricilar}{11}{GPU ve Hızlandırıcılar}
+\bolumekle{bolum12-guncel-mimariler/bolum12}{chap:guncel-mimariler}{12}{Güncel Mimari Eğilimleri}
 
 % --- Ekler ---
 \appendix
-\include{ekA-sayi-sistemleri/ekA}
-%\include{ekB-sayisal-tasarim/ekB}  % henüz yayınlanmadı
-\stepcounter{chapter}  % Ek B'nin yerini koru (C ve D numaraları kaymasın)
-\include{ekC-risc-v-referans/ekC}
-\include{ekD-pratik-rehber/ekD}
+\ekekle{ekA-sayi-sistemleri/ekA}{ch:sayi-sistemleri}{A}{Sayı Sistemleri ve Kodlama}
+\ekekle{ekB-sayisal-tasarim/ekB}{ch:sayisal-tasarim}{B}{Sayısal Tasarım Temelleri}
+\ekekle{ekC-risc-v-referans/ekC}{app:risc-v-referans}{C}{RISC-V Referans Kartı}
+\ekekle{ekD-pratik-rehber/ekD}{app:pratik-rehber}{D}{RISC-V Uygulama Çalışmaları ve Projeler}
 
 % --- Arka Sayfalar ---
 \backmatter
@@ -117,9 +121,12 @@ Ankara, \the\year
 % Kaynakça (metin içi atıf verilen kaynaklar)
 \printbibliography[keyword=atif, title={Kaynakça}]
 
-% Önerilen Kaynaklar (ek okuma listesi)
+% Türkçe Kaynaklar
 \nocite{*}
-\printbibliography[notkeyword=atif, title={Önerilen Kaynaklar}]
+\printbibliography[keyword=turkcekaynak, title={Türkçe Kaynaklar}]
+
+% Önerilen Kaynaklar (ek okuma listesi)
+\printbibliography[notkeyword=atif, notkeyword=turkcekaynak, title={Önerilen Kaynaklar}]
 
 % Dizin
 \printindex

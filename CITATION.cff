@@ -23,7 +23,7 @@ keywords:
   - bellek hiyerarşisi
 license: CC-BY-NC-ND-4.0
 isbn: "978-625-00-6081-0"
-version: "0.3.0"
-date-released: "2026-03-16"
+version: "0.3.5"
+date-released: "2026-03-19"
 doi: "10.5281/zenodo.18903609"
 url: "https://github.com/prof-oguzergin/bilgisayar-mimarisi"

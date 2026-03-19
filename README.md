@@ -1,6 +1,8 @@
 # Bilgisayar Mimarisi: RISC-V Tabanlı Yaklaşım
 
-**Oğuz Ergin** — University of Sharjah
+**Oğuz Ergin** — TOBB ETÜ
+
+**Sürüm 0.3.5** — 4 bölüm + 3 ek yayında (318 sayfa)
 
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18903609.svg)](https://doi.org/10.5281/zenodo.18903609)
@@ -31,15 +33,16 @@ Bu kitap, RISC-V buyruk kümesi mimarisi temelinde yazılmış Türkçe bir bilg
 |-------|------|-------|
 | 1 | Giriş | ✅ Yayında |
 | 2 | Başarım | ✅ Yayında |
-| 3 | Buyruk Kümesi Mimarisi | 🔧 Hazırlanıyor |
-| 4 | Aritmetik Birimler | 🔧 Hazırlanıyor |
-| 5 | İşlemci Tasarımı | 🔧 Hazırlanıyor |
-| 6 | Boru Hattı | 🔧 Hazırlanıyor |
-| 7 | Bellek Hiyerarşisi | 🔧 Hazırlanıyor |
-| 8 | Giriş/Çıkış | 🔧 Hazırlanıyor |
-| 9 | Çok Çekirdekli İşlemciler | 🔧 Hazırlanıyor |
-| 10 | GPU ve Hızlandırıcılar | 🔧 Hazırlanıyor |
-| 11 | Güncel Mimariler | 🔧 Hazırlanıyor |
+| 3 | Buyruk Kümesi Mimarisi | ✅ Yayında |
+| 4 | RISC-V ile Programlama | ✅ Yayında |
+| 5 | Aritmetik Birimler | 🔧 Hazırlanıyor |
+| 6 | İşlemci Tasarımı | 🔧 Hazırlanıyor |
+| 7 | Boru Hattı | 🔧 Hazırlanıyor |
+| 8 | Bellek Hiyerarşisi | 🔧 Hazırlanıyor |
+| 9 | Giriş/Çıkış | 🔧 Hazırlanıyor |
+| 10 | Çok Çekirdekli İşlemciler | 🔧 Hazırlanıyor |
+| 11 | GPU ve Hızlandırıcılar | 🔧 Hazırlanıyor |
+| 12 | Güncel Mimariler | 🔧 Hazırlanıyor |
 | Ek A | Sayı Sistemleri ve Kodlama | ✅ Yayında |
 | Ek B | Sayısal Tasarım Temelleri | 🔧 Hazırlanıyor |
 | Ek C | RISC-V Referans Kartı | ✅ Yayında |
